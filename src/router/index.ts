@@ -31,6 +31,22 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/UsersView.vue'),
     meta: { requiresAuth: true },
   },
+  
+  //ROUTER CỦA REQUESTER 
+  {
+    path: '/requester',
+    name: 'requester-dashboard',
+    component: () => import('@/views/RequesterDashboard.vue'),
+    //meta: { requiresAuth: true }, 
+  },
+  {
+    path: '/requester/create',
+    name: 'create-request',
+    component: () => import('@/views/CreateRequestView.vue'),
+   //meta: { requiresAuth: true },
+  },
+  // ────────────────────────────────────────────────────────
+  
   {
     // Catch-all 404
     path: '/:pathMatch(.*)*',
