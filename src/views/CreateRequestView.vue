@@ -103,9 +103,40 @@ const removeSupply = (index: number) => {
 
 // Logic gửi Form (Hiện tại Mock data, sau này ghép API ở đây)
 const submitRequest = () => {
-  console.log('Dữ liệu chuẩn bị gửi xuống Backend:', formData.value)
-  alert('Gửi yêu cầu cứu trợ thành công! Hệ thống đang xử lý.')
-  // Gửi xong thì tự động quay về trang chủ
+  // 1. Tạo thời gian thực
+  const now = new Date()
+  const formattedTime = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1).toString().padStart(2, '0')}/${now.getFullYear()} - ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`
+
+  // 2. LƯU YÊU CẦU MỚI VÀO BẢNG 'relief_requests'
+  const newRequest = {
+    id: Date.now(),
+    title: formData.value.title,
+    location: formData.value.location,
+    priority: formData.value.priority,
+    description: formData.value.description,
+    supplies: formData.value.supplies,
+    status: 'Đang xử lý',
+    time: formattedTime
+  }
+  const existingRequests = JSON.parse(localStorage.getItem('relief_requests') || '[]')
+  existingRequests.unshift(newRequest)
+  localStorage.setItem('relief_requests', JSON.stringify(existingRequests))
+
+  // 3. TẠO THÔNG BÁO MỚI VÀ LƯU VÀO BẢNG 'relief_notifications' (LOGIC MỚI BỔ SUNG Ở ĐÂY)
+  const existingNotes = JSON.parse(localStorage.getItem('relief_notifications') || '[]')
+  const newNotification = {
+    id: Date.now() + 1, // Cộng 1 để ID không bị trùng với request
+    type: 'success',
+    title: 'Đã tạo yêu cầu cứu trợ mới',
+    message: `Hệ thống đã ghi nhận yêu cầu "${formData.value.title}" của bạn. Yêu cầu đang chờ điều phối viên xử lý và phân công tình nguyện viên.`,
+    time: 'Vừa xong',
+    isRead: false // Chấm xanh báo chưa đọc
+  }
+  existingNotes.unshift(newNotification)
+  localStorage.setItem('relief_notifications', JSON.stringify(existingNotes))
+
+  // 4. Thông báo và chuyển hướng
+  alert('Gửi yêu cầu cứu trợ thành công!')
   router.push('/requester')
 }
 </script>

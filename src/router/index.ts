@@ -45,6 +45,13 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/CreateRequestView.vue'),
    //meta: { requiresAuth: true },
   },
+{
+    path: '/requester/notifications',
+    name: 'requester-notifications',
+    component: () => import('@/views/NotificationsView.vue'),
+    // meta: { requiresAuth: true },
+  },
+
   // ────────────────────────────────────────────────────────
   
   {
