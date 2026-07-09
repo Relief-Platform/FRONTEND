@@ -88,18 +88,52 @@
         </svg>
         Google login
       </button>
+
+      <!-- ── Mock credentials (chỉ hiển thị khi MOCK mode) ── -->
+      <div v-if="isMockMode" class="mock-panel">
+        <button class="mock-toggle" @click="showMock = !showMock" type="button">
+          🧪 Tài khoản test {{ showMock ? '▴' : '▾' }}
+        </button>
+        <div v-if="showMock" class="mock-list">
+          <button
+            v-for="acc in mockAccounts"
+            :key="acc.role"
+            class="mock-item"
+            type="button"
+            @click="fillMock(acc)"
+          >
+            <span class="mock-role" :class="`mock-role--${acc.role}`">{{ acc.role }}</span>
+            <span class="mock-email">{{ acc.email }}</span>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { MOCK_ACCOUNTS } from '@/mocks/auth.mock'
+import { USE_MOCK_AUTH } from '@/config/env'
 import { useAuthStore } from '@/stores/auth'
 import { loginWithGoogle } from '@/features/auth/auth.api'
 
 const router = useRouter()
 const authStore = useAuthStore()
+
+// ── Mock panel state ────────────────────────────────────────
+const isMockMode = ref(USE_MOCK_AUTH)
+const showMock = ref(false)
+const mockAccounts = MOCK_ACCOUNTS
+
+/** Click vào tài khoản test → tự điền form + đăng nhập ngay */
+function fillMock(acc: { email: string; password: string }): void {
+  formData.identifier = acc.email
+  formData.password = acc.password
+  showMock.value = false
+  handleLogin()
+}
 
 const showPassword = ref(false)
 const isLoading = ref(false)
@@ -121,10 +155,15 @@ const handleLogin = async () => {
     // Gọi qua authStore (Pinia) — tự động lưu token vào tokenStorage
     await authStore.login(formData.identifier, formData.password)
 
-    console.log('Đăng nhập thành công')
-
-    // Chuyển hướng về trang chủ sau khi đăng nhập
-    router.push('/home')
+    // Redirect tới dashboard phù hợp với role
+    const roleRoutes: Record<string, string> = {
+      admin:       '/admin',
+      coordinator: '/coordinator',
+      volunteer:   '/volunteer',
+      requester:   '/requester',
+    }
+    const dest = authStore.role ? (roleRoutes[authStore.role] ?? '/home') : '/home'
+    router.push(dest)
   } catch (error) {
     const message = error instanceof Error
       ? error.message
@@ -408,4 +447,60 @@ const handleForgotPassword = () => {
 .google-icon {
   flex-shrink: 0;
 }
+
+/* ===== Mock credentials panel (dev only) ===== */
+.mock-panel { margin-top: 18px; }
+
+.mock-toggle {
+  width: 100%;
+  padding: 9px 14px;
+  background: #fffbeb;
+  border: 1.5px dashed #d69e2e;
+  border-radius: 8px;
+  color: #744210;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  transition: background-color 0.2s;
+}
+.mock-toggle:hover { background: #fef3c7; }
+
+.mock-list {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.mock-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 12px;
+  background: #f9fafb;
+  border: 1px solid #e2e8f0;
+  border-radius: 7px;
+  cursor: pointer;
+  width: 100%;
+  text-align: left;
+  transition: background-color 0.15s, border-color 0.15s;
+}
+.mock-item:hover { background: #eef2ff; border-color: #1a4f8d; }
+
+.mock-role {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+.mock-role--admin       { background: rgba(197,48,48,0.12);  color: #c53030; }
+.mock-role--coordinator { background: rgba(43,108,176,0.12); color: #2b6cb0; }
+.mock-role--volunteer   { background: rgba(39,103,73,0.12);  color: #276749; }
+.mock-role--requester   { background: rgba(151,90,22,0.12);  color: #975a16; }
+
+.mock-email { font-size: 13px; color: #4a5568; }
 </style>
