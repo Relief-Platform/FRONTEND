@@ -87,6 +87,26 @@ const routes: RouteRecordRaw[] = [
       title: 'Thông báo',
     },
   },
+  {
+    path: '/requester/request/:id',
+    name: 'request-detail',
+    component: () => import('@/views/requester/RequestDetailView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['requester', 'coordinator', 'admin'],
+      title: 'Chi tiết yêu cầu',
+    },
+  },
+  {
+  path: '/requester/my-requests',
+  name: 'my-requests',
+  component: () => import('@/views/requester/MyRequestsView.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['requester', 'coordinator', 'admin'],
+    title: 'Yêu cầu của tôi',
+  },
+},
 
   // ────────────────────────────────────────────────────────────
   //  VOLUNTEER – volunteer | coordinator | admin

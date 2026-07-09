@@ -14,26 +14,30 @@
       </div>
 
       <nav class="menu">
-        <a href="#" class="menu-item active">
+        <router-link to="/requester" class="menu-item" exact-active-class="active">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
           Trang chủ
-        </a>
-        <a href="#" class="menu-item">
+        </router-link>
+
+        <router-link to="/requester/my-requests" class="menu-item" active-class="active">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
           Yêu cầu của tôi
-        </a>
-        <a href="#" class="menu-item">
+        </router-link>
+
+        <router-link to="/requester/tracking" class="menu-item" active-class="active">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
           Theo dõi hỗ trợ
-        </a>
-        <a href="#" class="menu-item" @click.prevent="$router.push('/requester/notifications')">
-  <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-  Thông báo
-</a>
-        <a href="#" class="menu-item">
+        </router-link>
+
+        <router-link to="/requester/notifications" class="menu-item" active-class="active">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+          Thông báo
+        </router-link>
+
+        <router-link to="/requester/guide" class="menu-item" active-class="active">
           <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
           Hướng dẫn
-        </a>
+        </router-link>
       </nav>
 
       <div class="profile-min">
@@ -68,7 +72,7 @@
             <h2 class="main-heading">Chúng tôi luôn sẵn sàng!</h2>
             <p class="sub-text">Tạo yêu cầu cứu trợ khẩn cấp để được hỗ trợ nhanh nhất.</p>
           </div>
-          <button class="btn-emergency" @click="$router.push('/requester/create')">
+          <button class="btn-emergency" @click="router.push('/requester/create')">
             <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             YÊU CẦU CỨU TRỢ KHẨN CẤP
           </button>
@@ -76,61 +80,28 @@
 
         <!-- Grid 2 cột -->
         <div class="dashboard-grid">
-          
+
           <!-- Cột trái: Yêu cầu gần đây -->
           <section class="card recent-requests">
             <h3 class="card-title">Yêu cầu gần đây</h3>
             <div class="request-list">
-              
-              <div class="request-item">
+              <div class="request-item" v-for="item in recentRequests" :key="item.id">
                 <div class="req-info">
                   <div class="req-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
                   </div>
                   <div>
-                    <h4>Ngập lụt tại xã Tân Lập, Quảng Trị</h4>
-                    <span class="time">10/06/2024 - 08:30</span>
+                    <h4>{{ item.title }}</h4>
+                    <span class="time">{{ item.time }}</span>
                   </div>
                 </div>
                 <div class="req-actions">
-                  <span class="badge badge-processing">Đang xử lý</span>
-                  <button class="btn-outline">Xem chi tiết</button>
-                </div>
-              </div>
-              
-              <div class="request-item">
-                <div class="req-info">
-                  <div class="req-icon">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
-                  </div>
-                  <div>
-                    <h4>Sạt lở tại thôn Đông Hà</h4>
-                    <span class="time">08/06/2024 - 14:20</span>
-                  </div>
-                </div>
-                <div class="req-actions">
-                  <span class="badge badge-received">Đã tiếp nhận</span>
-                  <button class="btn-outline">Xem chi tiết</button>
-                </div>
-              </div>
-
-              <div class="request-item">
-                <div class="req-info">
-                  <div class="req-icon">
-                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
-                  </div>
-                  <div>
-                    <h4>Thiếu nước sạch sinh hoạt</h4>
-                    <span class="time">05/06/2024 - 09:15</span>
-                  </div>
-                </div>
-                <div class="req-actions">
-                  <span class="badge badge-completed">Đã hoàn thành</span>
-                  <button class="btn-outline">Xem chi tiết</button>
+                  <span :class="['badge', badgeClass[item.status]]">{{ item.statusText }}</span>
+                  <button class="btn-outline" @click="goToDetail(item.id)">Xem chi tiết</button>
                 </div>
               </div>
             </div>
-            <a href="#" class="view-all">Xem tất cả yêu cầu →</a>
+            <a href="#" class="view-all" @click.prevent="router.push('/requester/my-requests')">Xem tất cả yêu cầu →</a>
           </section>
 
           <!-- Cột phải: Hướng dẫn nhanh -->
@@ -169,7 +140,7 @@
               </p>
             </div>
           </section>
-          
+
         </div>
       </div>
     </main>
@@ -178,7 +149,45 @@
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
+
 const router = useRouter()
+
+// Map trạng thái -> class css badge (khớp với style .badge-xxx sẵn có)
+const badgeClass: Record<string, string> = {
+  processing: 'badge-processing',
+  received: 'badge-received',
+  completed: 'badge-completed',
+}
+
+// Data mock danh sách yêu cầu gần đây (sau này thay bằng API)
+const recentRequests = [
+  {
+    id: 1,
+    title: 'Ngập lụt tại xã Tân Lập, Quảng Trị',
+    time: '10/06/2024 - 08:30',
+    status: 'processing',
+    statusText: 'Đang xử lý',
+  },
+  {
+    id: 2,
+    title: 'Sạt lở tại thôn Đông Hà',
+    time: '08/06/2024 - 14:20',
+    status: 'received',
+    statusText: 'Đã tiếp nhận',
+  },
+  {
+    id: 3,
+    title: 'Thiếu nước sạch sinh hoạt',
+    time: '05/06/2024 - 09:15',
+    status: 'completed',
+    statusText: 'Đã hoàn thành',
+  },
+]
+
+// Điều hướng sang trang chi tiết theo id
+const goToDetail = (id: number) => {
+  router.push({ name: 'request-detail', params: { id } })
+}
 </script>
 
 <style scoped>
@@ -259,7 +268,7 @@ const router = useRouter()
 .menu-item .icon {
   width: 20px;
   height: 20px;
-  color: #94a3b8; /* Màu icon nhạt */
+  color: #94a3b8;
 }
 
 .menu-item.active {
@@ -433,7 +442,6 @@ const router = useRouter()
   margin: 0 0 20px 0;
 }
 
-/* Danh sách yêu cầu */
 .request-list {
   display: flex;
   flex-direction: column;
@@ -472,7 +480,7 @@ const router = useRouter()
 .req-icon svg {
   width: 20px;
   height: 20px;
-  color: #64748b; 
+  color: #64748b;
 }
 
 .req-info h4 {
@@ -527,7 +535,6 @@ const router = useRouter()
   font-weight: 500;
 }
 
-/* Cột phải */
 .right-column {
   display: flex;
   flex-direction: column;
@@ -560,7 +567,7 @@ const router = useRouter()
 .guide-icon {
   width: 20px;
   height: 20px;
-  color: #64748b; /* Màu icon nhạt */
+  color: #64748b;
 }
 
 .guide-list li:hover {
