@@ -1,27 +1,84 @@
 <template>
   <div class="app-layout">
-    <!-- ── Navbar ─────────────────────────────── -->
+    <!-- ── Navbar ───────────────────────────────────────────── -->
     <nav class="navbar">
       <router-link to="/home" class="navbar__brand">
-        <span class="text-navy">Relief</span><span class="text-orange">Connect</span>
+        <span class="brand-navy">Relief</span><span class="brand-orange">Connect</span>
       </router-link>
 
-      <div class="navbar__actions">
-        <!-- Nav links (thêm route tuỳ dự án) -->
+      <div class="navbar__links">
+        <!-- Public link -->
         <router-link to="/home" class="nav-link">Trang chủ</router-link>
-        <router-link to="/users" class="nav-link">Người dùng</router-link>
 
-        <!-- User info + Logout -->
-        <div v-if="authStore.isLoggedIn" class="navbar__user">
-          <span class="navbar__username">{{ authStore.user?.fullName ?? 'Người dùng' }}</span>
-          <button id="logout-btn" class="navbar__logout" @click="handleLogout">
-            Đăng xuất
-          </button>
-        </div>
+        <!-- Requester + Coordinator + Admin -->
+        <router-link
+          v-if="auth.hasRole('requester', 'coordinator', 'admin')"
+          to="/requester"
+          class="nav-link"
+        >Yêu cầu hỗ trợ</router-link>
+
+        <!-- Volunteer + Coordinator + Admin -->
+        <router-link
+          v-if="auth.hasRole('volunteer', 'coordinator', 'admin')"
+          to="/volunteer"
+          class="nav-link"
+        >Tình nguyện</router-link>
+
+        <!-- Coordinator + Admin -->
+        <router-link
+          v-if="auth.hasRole('coordinator', 'admin')"
+          to="/coordinator"
+          class="nav-link"
+        >Điều phối</router-link>
+
+        <!-- Admin only -->
+        <router-link
+          v-if="auth.hasRole('admin')"
+          to="/admin"
+          class="nav-link nav-link--admin"
+        >Admin</router-link>
+        <router-link
+          v-if="auth.hasRole('admin')"
+          to="/users"
+          class="nav-link"
+        >Người dùng</router-link>
+      </div>
+
+      <div class="navbar__right">
+        <!-- Guest: show login/register -->
+        <template v-if="!auth.isLoggedIn">
+          <router-link to="/login"    class="nav-btn nav-btn--ghost">Đăng nhập</router-link>
+          <router-link to="/register" class="nav-btn nav-btn--primary">Đăng ký</router-link>
+        </template>
+
+        <!-- Logged-in: avatar dropdown -->
+        <template v-else>
+          <div class="user-menu" @click="showMenu = !showMenu" v-click-outside="() => (showMenu = false)">
+            <div class="user-avatar">{{ initials }}</div>
+            <div class="user-info">
+              <span class="user-name">{{ auth.user?.fullName }}</span>
+              <span class="user-role" :style="{ color: roleColor }">{{ roleLabel }}</span>
+            </div>
+            <span class="chevron" :class="{ rotated: showMenu }">▾</span>
+
+            <!-- Dropdown -->
+            <Transition name="fade">
+              <div v-if="showMenu" class="user-dropdown">
+                <router-link to="/profile" class="dropdown-item" @click="showMenu = false">
+                  👤 Hồ sơ cá nhân
+                </router-link>
+                <div class="dropdown-divider" />
+                <button id="logout-btn" class="dropdown-item dropdown-item--danger" @click="handleLogout">
+                  🚪 Đăng xuất
+                </button>
+              </div>
+            </Transition>
+          </div>
+        </template>
       </div>
     </nav>
 
-    <!-- ── Page content ───────────────────────── -->
+    <!-- ── Page content ──────────────────────────────────────── -->
     <main class="app-layout__main">
       <RouterView />
     </main>
@@ -29,15 +86,43 @@
 </template>
 
 <script setup lang="ts">
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ROLE_LABELS, ROLE_COLORS } from '@/features/auth/auth.types'
 
 const router = useRouter()
-const authStore = useAuthStore()
+const auth   = useAuthStore()
+const showMenu = ref(false)
 
-function handleLogout(): void {
-  authStore.logout()
-  router.push('/login')
+const roleLabel = computed(() => auth.role ? ROLE_LABELS[auth.role] : '')
+const roleColor = computed(() => auth.role ? ROLE_COLORS[auth.role] : '#4a5568')
+const initials  = computed(() =>
+  auth.user?.fullName
+    .split(' ')
+    .slice(-2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase() ?? '?',
+)
+
+async function handleLogout(): Promise<void> {
+  showMenu.value = false
+  await auth.logout()
+  router.push('/home')
+}
+
+// ── Directive: click outside ────────────────────────────────
+const vClickOutside = {
+  mounted(el: HTMLElement, binding: { value: () => void }) {
+    el._clickOutside = (e: Event) => {
+      if (!el.contains(e.target as Node)) binding.value()
+    }
+    document.addEventListener('click', el._clickOutside)
+  },
+  unmounted(el: HTMLElement) {
+    document.removeEventListener('click', el._clickOutside)
+  },
 }
 </script>
 
@@ -46,63 +131,92 @@ function handleLogout(): void {
 
 /* ── Navbar ── */
 .navbar {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 32px;
-  height: 60px;
-  background: #ffffff;
-  box-shadow: 0 1px 8px rgba(0,0,0,0.08);
-  position: sticky;
-  top: 0;
-  z-index: 100;
+  display: flex; align-items: center; gap: var(--space-4);
+  padding: 0 var(--space-8); height: var(--navbar-height);
+  background: #fff; box-shadow: 0 1px 8px rgba(0,0,0,0.08);
+  position: sticky; top: 0; z-index: 100;
 }
-
 .navbar__brand {
-  font-size: 22px;
-  font-weight: 800;
-  text-decoration: none;
-  letter-spacing: -0.5px;
+  font-size: 22px; font-weight: 900; text-decoration: none;
+  letter-spacing: -0.5px; white-space: nowrap; margin-right: var(--space-4);
 }
-.text-navy  { color: #1a3b5c; }
-.text-orange { color: #e27d24; }
+.brand-navy   { color: #1a3b5c; }
+.brand-orange { color: #e27d24; }
 
-.navbar__actions {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
+.navbar__links { display: flex; align-items: center; gap: var(--space-1); flex: 1; }
 
 .nav-link {
-  font-size: 14px;
-  font-weight: 500;
-  color: #4a5568;
-  text-decoration: none;
-  transition: color 0.2s;
+  padding: 6px 12px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600; color: #4a5568;
+  text-decoration: none; transition: all var(--transition-fast); white-space: nowrap;
 }
-.nav-link:hover,
-.nav-link.router-link-active { color: #1a4f8d; }
+.nav-link:hover, .nav-link.router-link-active { color: #1a4f8d; background: rgba(26,79,141,0.07); }
+.nav-link--admin { color: #c53030; }
+.nav-link--admin:hover { background: rgba(197,48,48,0.08); }
 
-.navbar__user {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.navbar__username { font-size: 14px; font-weight: 600; color: #1a3b5c; }
+.navbar__right { display: flex; align-items: center; gap: var(--space-2); margin-left: auto; }
 
-.navbar__logout {
-  font-size: 13px;
-  font-weight: 600;
-  color: #c53030;
-  background: none;
-  border: 1.5px solid #c53030;
-  border-radius: 6px;
-  padding: 5px 12px;
-  cursor: pointer;
-  transition: background-color 0.2s, color 0.2s;
+.nav-btn {
+  padding: 7px 16px; border-radius: var(--radius-md);
+  font-size: 13px; font-weight: 600; text-decoration: none;
+  transition: all var(--transition-fast); white-space: nowrap;
 }
-.navbar__logout:hover { background: #c53030; color: #fff; }
+.nav-btn--ghost   { color: #1a4f8d; border: 1.5px solid #1a4f8d; }
+.nav-btn--ghost:hover { background: rgba(26,79,141,0.07); }
+.nav-btn--primary { background: #1a4f8d; color: #fff; }
+.nav-btn--primary:hover { background: #123766; color: #fff; }
+
+/* ── User menu ── */
+.user-menu {
+  display: flex; align-items: center; gap: var(--space-2);
+  cursor: pointer; padding: 6px var(--space-2); border-radius: var(--radius-md);
+  position: relative; user-select: none;
+  transition: background var(--transition-fast);
+}
+.user-menu:hover { background: #f8fafc; }
+
+.user-avatar {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: #1a4f8d; color: #fff;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; flex-shrink: 0;
+}
+.user-info { display: flex; flex-direction: column; line-height: 1.2; }
+.user-name  { font-size: 13px; font-weight: 700; color: #1a3b5c; }
+.user-role  { font-size: 11px; font-weight: 600; }
+
+.chevron { font-size: 12px; color: #a0aec0; transition: transform var(--transition-fast); }
+.chevron.rotated { transform: rotate(180deg); }
+
+/* ── Dropdown ── */
+.user-dropdown {
+  position: absolute; top: calc(100% + 6px); right: 0;
+  background: #fff; border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg); border: 1px solid var(--color-border-soft);
+  min-width: 190px; overflow: hidden; z-index: 200;
+}
+.dropdown-item {
+  display: flex; align-items: center; gap: 8px;
+  padding: 11px 16px; font-size: 14px; font-weight: 500;
+  color: #2d3748; text-decoration: none;
+  width: 100%; background: none; border: none; cursor: pointer;
+  transition: background var(--transition-fast); text-align: left;
+}
+.dropdown-item:hover { background: #f8fafc; }
+.dropdown-item--danger { color: #c53030; }
+.dropdown-item--danger:hover { background: rgba(197,48,48,0.06); }
+.dropdown-divider { border-top: 1px solid var(--color-border-soft); }
+
+/* ── Fade transition ── */
+.fade-enter-active, .fade-leave-active { transition: opacity 0.15s, transform 0.15s; }
+.fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-6px); }
 
 /* ── Main ── */
-.app-layout__main { flex: 1; background: #f0f2f5; }
+.app-layout__main { flex: 1; background: var(--color-bg); }
+
+@media (max-width: 768px) {
+  .navbar { padding: 0 var(--space-4); }
+  .navbar__links { display: none; }
+  .user-info { display: none; }
+}
 </style>
