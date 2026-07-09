@@ -101,6 +101,56 @@ const routes: RouteRecordRaw[] = [
       title: 'Dashboard – Tình nguyện viên',
     },
   },
+  {
+    path: '/volunteer/my-tasks',
+    name: 'volunteer-my-tasks',
+    component: () => import('@/views/volunteer/MyTasksView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['volunteer', 'coordinator', 'admin'],
+      title: 'Nhiệm vụ của tôi',
+    },
+  },
+  {
+    path: '/volunteer/history',
+    name: 'volunteer-history',
+    component: () => import('@/views/volunteer/ActivityHistoryView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['volunteer', 'coordinator', 'admin'],
+      title: 'Lịch sử hoạt động',
+    },
+  },
+  {
+    path: '/volunteer/skills',
+    name: 'volunteer-skills',
+    component: () => import('@/views/volunteer/SkillsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['volunteer', 'coordinator', 'admin'],
+      title: 'Đăng ký kỹ năng',
+    },
+  },
+  {
+    path: '/volunteer/notifications',
+    name: 'volunteer-notifications',
+    component: () => import('@/views/volunteer/NotificationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['volunteer', 'coordinator', 'admin'],
+      title: 'Thông báo',
+    },
+  },
+  {
+    path: '/volunteer/profile',
+    name: 'volunteer-profile',
+    component: () => import('@/views/volunteer/VolunteerProfileView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['volunteer', 'coordinator', 'admin'],
+      title: 'Hồ sơ cá nhân – Tình nguyện viên',
+    },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  COORDINATOR – coordinator | admin
