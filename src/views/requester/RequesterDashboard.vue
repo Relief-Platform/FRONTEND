@@ -1,369 +1,261 @@
 <template>
-  <div class="requester-layout">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="brand">
-        <svg class="logo-svg" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M12 22C12 22 20 18 20 12V5L12 2L4 5V12C4 18 12 22 12 22Z" fill="#1e3a8a"/>
-          <path d="M12 15.5C12 15.5 15 13 15 10.5C15 9.11929 13.8807 8 12.5 8C12 8 11.5 8.5 11.5 8.5C11.5 8.5 11 8 10.5 8C9.11929 8 8 9.11929 8 10.5C8 13 11 15.5 12 15.5Z" fill="white"/>
-        </svg>
-        <div class="brand-text">
-          <h2><span class="brand-relief">Relief</span><span class="brand-connect">Connect</span></h2>
-          <p>Kết nối yêu thương</p>
+  <RequesterLayout>
+    <div class="req-dashboard">
+      <!-- Banner khẩn cấp -->
+      <section class="banner-section">
+        <div class="banner-content">
+          <h3 class="highlight-text">KHI BẠN CẦN HỖ TRỢ,</h3>
+          <h2 class="main-heading">Chúng tôi luôn sẵn sàng!</h2>
+          <p class="sub-text">Tạo yêu cầu cứu trợ khẩn cấp để được hỗ trợ nhanh nhất.</p>
         </div>
-      </div>
+        <button class="btn-emergency" @click="router.push('/requester/create')">
+          <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+          YÊU CẦU CỨU TRỢ KHẨN CẤP
+        </button>
+      </section>
 
-      <nav class="menu">
-        <router-link to="/requester" class="menu-item" exact-active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-          Trang chủ
-        </router-link>
-
-        <router-link to="/requester/my-requests" class="menu-item" active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-          Yêu cầu của tôi
-        </router-link>
-
-        <router-link to="/requester/tracking" class="menu-item" active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
-          Theo dõi hỗ trợ
-        </router-link>
-
-        <router-link to="/requester/notifications" class="menu-item" active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-          Thông báo
-        </router-link>
-
-        <router-link to="/requester/guide" class="menu-item" active-class="active">
-          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
-          Hướng dẫn
-        </router-link>
-      </nav>
-
-      <div class="profile-min">
-        <div class="avatar-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
-        </div>
-        <div class="info">
-          <strong>UBND xã Tân Lập</strong>
-          <span>Đại diện điểm nóng</span>
-        </div>
-        <div class="chevron">
-          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>
-        </div>
-      </div>
-    </aside>
-
-    <!-- Main Content -->
-    <main class="main-content">
-      <header class="top-header">
-        <div class="header-right">
-          <span class="greeting">Xin chào, <strong>UBND xã Tân Lập</strong></span>
-          <svg class="bell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
-          <svg class="chevron-down" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-        </div>
-      </header>
-
-      <div class="content-body">
-        <!-- Banner -->
-        <section class="banner-section">
-          <div class="banner-content">
-            <h3 class="highlight-text">KHI BẠN CẦN HỖ TRỢ,</h3>
-            <h2 class="main-heading">Chúng tôi luôn sẵn sàng!</h2>
-            <p class="sub-text">Tạo yêu cầu cứu trợ khẩn cấp để được hỗ trợ nhanh nhất.</p>
+      <!-- Header dashboard -->
+      <div class="dash-header">
+        <div>
+          <div class="role-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
+            Người yêu cầu hỗ trợ
           </div>
-          <button class="btn-emergency" @click="router.push('/requester/create')">
-            <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-            YÊU CẦU CỨU TRỢ KHẨN CẤP
-          </button>
+          <h1 class="dash-title">Tổng quan yêu cầu</h1>
+          <p class="dash-sub">Theo dõi tình trạng các yêu cầu cứu trợ của bạn</p>
+        </div>
+        <div class="dash-date">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+          {{ currentDate }}
+        </div>
+      </div>
+
+      <!-- 4 stat cards -->
+      <div class="stat-grid">
+        <div
+          v-for="(card, i) in statCards"
+          :key="card.label"
+          class="stat-card"
+          :style="{ '--card-color': card.color, '--card-bg': card.bg, '--delay': `${i * 80}ms` }"
+        >
+          <div class="stat-card__header">
+            <div class="stat-card__icon-wrap">
+              <span v-html="card.icon" />
+            </div>
+            <div class="stat-card__trend" :class="card.trendUp ? 'trend--up' : 'trend--neutral'">
+              <svg v-if="card.trendUp" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+              <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              {{ card.trend }}
+            </div>
+          </div>
+          <div class="stat-card__body">
+            <div class="stat-card__value">{{ card.value }}</div>
+            <div class="stat-card__unit">{{ card.unit }}</div>
+          </div>
+          <div class="stat-card__label">{{ card.label }}</div>
+          <div class="stat-card__bar-wrap">
+            <div class="stat-card__bar" :style="{ width: card.progress + '%' }" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Grid 2 cột -->
+      <div class="dashboard-grid">
+        <!-- Cột trái: Yêu cầu gần đây -->
+        <section class="dash-panel recent-requests">
+          <div class="panel-header">
+            <h2 class="panel-title">Yêu cầu gần đây</h2>
+            <a href="#" class="panel-link" @click.prevent="router.push('/requester/my-requests')">Xem tất cả →</a>
+          </div>
+          <div class="request-list">
+            <div class="request-item" v-for="item in recentRequests" :key="item.id">
+              <div class="request-dot" :class="`dot--${item.status}`" />
+              <div class="request-content">
+                <p class="request-title">{{ item.title }}</p>
+                <p class="request-meta">{{ item.time }}</p>
+              </div>
+              <span class="request-tag" :class="`tag--${item.status}`">{{ item.statusText }}</span>
+              <button class="btn-outline" @click="goToDetail(item.id)">Chi tiết</button>
+            </div>
+          </div>
         </section>
 
-        <!-- Grid 2 cột -->
-        <div class="dashboard-grid">
+        <!-- Cột phải: Hành động nhanh + tiến độ + liên hệ -->
+        <section class="right-column">
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2 class="panel-title">Hành động nhanh</h2>
+            </div>
+            <div class="quick-actions">
+              <button
+                v-for="qa in quickActions"
+                :key="qa.label"
+                class="quick-action-btn"
+                :style="{ '--qa-color': qa.color }"
+                @click="qa.action"
+              >
+                <div class="qa-icon" v-html="qa.icon" />
+                <span>{{ qa.label }}</span>
+              </button>
+            </div>
 
-          <!-- Cột trái: Yêu cầu gần đây -->
-          <section class="card recent-requests">
-            <h3 class="card-title">Yêu cầu gần đây</h3>
-            <div class="request-list">
-              <div class="request-item" v-for="item in recentRequests" :key="item.id">
-                <div class="req-info">
-                  <div class="req-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
-                  </div>
-                  <div>
-                    <h4>{{ item.title }}</h4>
-                    <span class="time">{{ item.time }}</span>
-                  </div>
+            <!-- Progress ring: tỷ lệ yêu cầu đã hoàn thành -->
+            <div class="progress-section">
+              <div class="progress-ring-wrap">
+                <svg width="100" height="100" viewBox="0 0 100 100">
+                  <circle cx="50" cy="50" r="42" fill="none" stroke="#e9ecef" stroke-width="10"/>
+                  <circle
+                    cx="50" cy="50" r="42"
+                    fill="none"
+                    stroke="url(#reqRingGrad)"
+                    stroke-width="10"
+                    stroke-linecap="round"
+                    :stroke-dasharray="`${2 * Math.PI * 42}`"
+                    :stroke-dashoffset="`${2 * Math.PI * 42 * (1 - progressPercent / 100)}`"
+                    transform="rotate(-90 50 50)"
+                  />
+                  <defs>
+                    <linearGradient id="reqRingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stop-color="#9f1239"/>
+                      <stop offset="100%" stop-color="#ea580c"/>
+                    </linearGradient>
+                  </defs>
+                </svg>
+                <div class="ring-label">
+                  <span class="ring-pct">{{ progressPercent }}%</span>
+                  <span class="ring-sub">hoàn thành</span>
                 </div>
-                <div class="req-actions">
-                  <span :class="['badge', badgeClass[item.status]]">{{ item.statusText }}</span>
-                  <button class="btn-outline" @click="goToDetail(item.id)">Xem chi tiết</button>
+              </div>
+              <div class="progress-info">
+                <p class="progress-info-title">Tiến độ xử lý yêu cầu</p>
+                <p class="progress-info-desc">Bạn có {{ completedRequests }} / {{ totalRequests }} yêu cầu đã được hoàn thành</p>
+                <div class="progress-legend">
+                  <span class="legend-dot" style="background: #ea580c"/> <span>Hoàn thành: {{ completedRequests }}</span>
+                  <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>Còn lại: {{ totalRequests - completedRequests }}</span>
                 </div>
               </div>
             </div>
-            <a href="#" class="view-all" @click.prevent="router.push('/requester/my-requests')">Xem tất cả yêu cầu →</a>
-          </section>
+          </div>
 
-          <!-- Cột phải: Hướng dẫn nhanh -->
-          <section class="right-column">
-            <div class="card quick-guides">
-              <h3 class="card-title">Hướng dẫn nhanh</h3>
-              <ul class="guide-list">
-                <li>
-                  <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                  Hướng dẫn tạo yêu cầu cứu trợ
-                </li>
-                <li>
-                  <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
-                  Các loại hỗ trợ có thể nhận
-                </li>
-                <li>
-                  <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                  Quy trình hỗ trợ
-                </li>
-                <li>
-                  <svg class="guide-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                  Liên hệ hỗ trợ
-                </li>
-              </ul>
-            </div>
-
-            <div class="card emergency-contact">
-              <p class="contact-title">Thông tin liên hệ khẩn cấp</p>
-              <p class="phone">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
-                1900 1234
-              </p>
-              <p class="email">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-                hotro@reliefconnect.vn
-              </p>
-            </div>
-          </section>
-
-        </div>
+          <div class="dash-panel emergency-contact">
+            <p class="contact-title">Thông tin liên hệ khẩn cấp</p>
+            <p class="phone">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
+              1900 1234
+            </p>
+            <p class="email">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+              hotro@reliefconnect.vn
+            </p>
+          </div>
+        </section>
       </div>
-    </main>
-  </div>
+    </div>
+  </RequesterLayout>
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import { useRouter } from 'vue-router'
+import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 
 const router = useRouter()
 
-// Map trạng thái -> class css badge (khớp với style .badge-xxx sẵn có)
-const badgeClass: Record<string, string> = {
-  processing: 'badge-processing',
-  received: 'badge-received',
-  completed: 'badge-completed',
-}
+const currentDate = computed(() =>
+  new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+)
 
-// Data mock danh sách yêu cầu gần đây (sau này thay bằng API)
 const recentRequests = [
+  { id: 1, title: 'Ngập lụt tại xã Tân Lập, Quảng Trị', time: '10/06/2024 - 08:30', status: 'processing', statusText: 'Đang xử lý' },
+  { id: 2, title: 'Sạt lở tại thôn Đông Hà', time: '08/06/2024 - 14:20', status: 'received', statusText: 'Đã tiếp nhận' },
+  { id: 3, title: 'Thiếu nước sạch sinh hoạt', time: '05/06/2024 - 09:15', status: 'completed', statusText: 'Đã hoàn thành' },
+]
+
+const totalRequests = recentRequests.length
+const completedRequests = computed(() => recentRequests.filter((r) => r.status === 'completed').length)
+const progressPercent = computed(() => Math.round((completedRequests.value / totalRequests) * 100))
+
+const statCards = [
   {
-    id: 1,
-    title: 'Ngập lụt tại xã Tân Lập, Quảng Trị',
-    time: '10/06/2024 - 08:30',
-    status: 'processing',
-    statusText: 'Đang xử lý',
+    label: 'Yêu cầu đang xử lý',
+    value: '1',
+    unit: 'yêu cầu',
+    trend: '+1 tuần này',
+    trendUp: true,
+    progress: 35,
+    color: '#e27d24',
+    bg: 'linear-gradient(135deg, #fef3e2 0%, #fde8c8 100%)',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
   },
   {
-    id: 2,
-    title: 'Sạt lở tại thôn Đông Hà',
-    time: '08/06/2024 - 14:20',
-    status: 'received',
-    statusText: 'Đã tiếp nhận',
+    label: 'Đã tiếp nhận',
+    value: '1',
+    unit: 'yêu cầu',
+    trend: 'Đang gom vật tư',
+    trendUp: false,
+    progress: 50,
+    color: '#3182ce',
+    bg: 'linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8a2 2 0 0 0-2-2h-3l-2-2H9L7 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6"/><circle cx="17" cy="17" r="4"/><path d="M17 15.5v3"/></svg>`,
   },
   {
-    id: 3,
-    title: 'Thiếu nước sạch sinh hoạt',
-    time: '05/06/2024 - 09:15',
-    status: 'completed',
-    statusText: 'Đã hoàn thành',
+    label: 'Đã hoàn thành',
+    value: '1',
+    unit: 'yêu cầu',
+    trend: 'Tất cả thời gian',
+    trendUp: false,
+    progress: 75,
+    color: '#276749',
+    bg: 'linear-gradient(135deg, #e8f5ee 0%, #c6f6d5 100%)',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`,
+  },
+  {
+    label: 'Tổng yêu cầu đã gửi',
+    value: '3',
+    unit: 'yêu cầu',
+    trend: 'Từ trước đến nay',
+    trendUp: false,
+    progress: 100,
+    color: '#6b46c1',
+    bg: 'linear-gradient(135deg, #f3eeff 0%, #e9d8fd 100%)',
+    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b46c1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
 ]
 
-// Điều hướng sang trang chi tiết theo id
+const quickActions = [
+  {
+    label: 'Tạo yêu cầu mới',
+    color: '#e11d48',
+    action: () => router.push('/requester/create'),
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
+  },
+  {
+    label: 'Yêu cầu của tôi',
+    color: '#3182ce',
+    action: () => router.push('/requester/my-requests'),
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
+  },
+  {
+    label: 'Theo dõi hỗ trợ',
+    color: '#6b46c1',
+    action: () => router.push('/requester/tracking'),
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
+  },
+  {
+    label: 'Hồ sơ cá nhân',
+    color: '#276749',
+    action: () => router.push('/profile'),
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  },
+]
+
 const goToDetail = (id: number) => {
   router.push({ name: 'request-detail', params: { id } })
 }
 </script>
 
 <style scoped>
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
-* {
-  font-family: 'Inter', sans-serif;
-  box-sizing: border-box;
-}
-
-.requester-layout {
-  display: flex;
-  height: 100vh;
-  background-color: #f8fafc;
-}
-
-/* --- SIDEBAR --- */
-.sidebar {
-  width: 260px;
-  background-color: #ffffff;
-  border-right: 1px solid #e2e8f0;
-  display: flex;
-  flex-direction: column;
-  padding: 24px 16px;
-}
-
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-bottom: 32px;
-  padding: 0 8px;
-}
-
-.logo-svg {
-  width: 32px;
-  height: 32px;
-}
-
-.brand-text h2 {
-  font-size: 20px;
-  color: #1e3a8a;
-  margin: 0;
-  font-weight: 800;
-  letter-spacing: -0.5px;
-}
-
-.brand-relief { color: #1e3a8a; }
-.brand-connect { color: #ea580c; }
-
-.brand-text p {
-  font-size: 11px;
-  color: #64748b;
-  margin: 2px 0 0 0;
-  font-weight: 500;
-}
-
-.menu {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.menu-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  text-decoration: none;
-  color: #475569;
-  font-size: 14px;
-  font-weight: 500;
-  border-radius: 8px;
-  transition: all 0.2s;
-}
-
-.menu-item .icon {
-  width: 20px;
-  height: 20px;
-  color: #94a3b8;
-}
-
-.menu-item.active {
-  background-color: #eff6ff;
-  color: #2563eb;
-  font-weight: 600;
-}
-
-.menu-item.active .icon {
-  color: #2563eb;
-}
-
-.menu-item:hover:not(.active) {
-  background-color: #f1f5f9;
-}
-
-.profile-min {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px 8px 0;
-  border-top: 1px solid #e2e8f0;
-  cursor: pointer;
-}
-
-.avatar-icon {
-  background: #f1f5f9;
-  padding: 8px;
-  border-radius: 50%;
-  color: #64748b;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.avatar-icon svg {
-  width: 20px;
-  height: 20px;
-}
-
-.profile-min .info strong {
-  display: block;
-  font-size: 13px;
-  color: #0f172a;
-}
-
-.profile-min .info span {
-  font-size: 11px;
-  color: #64748b;
-}
-
-.chevron {
-  margin-left: auto;
-  color: #94a3b8;
-}
-
-/* --- MAIN CONTENT --- */
-.main-content {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-}
-
-.top-header {
-  height: 64px;
-  background-color: #ffffff;
-  border-bottom: 1px solid #e2e8f0;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  padding: 0 32px;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-  font-size: 14px;
-  color: #475569;
-}
-
-.bell-icon, .chevron-down {
-  width: 20px;
-  height: 20px;
-  color: #64748b;
-  cursor: pointer;
-}
-
-.content-body {
-  padding: 32px;
-  max-width: 1200px;
-  margin: 0 auto;
-  width: 100%;
-}
+.req-dashboard { max-width: 1200px; margin: 0 auto; }
 
 /* --- BANNER --- */
 .banner-section {
@@ -375,221 +267,101 @@ const goToDetail = (id: number) => {
   align-items: center;
   margin-bottom: 24px;
 }
-
-.highlight-text {
-  color: #e11d48;
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0 0 8px 0;
-}
-
-.main-heading {
-  color: #be123c;
-  font-size: 28px;
-  font-weight: 700;
-  margin: 0 0 12px 0;
-}
-
-.sub-text {
-  color: #881337;
-  font-size: 14px;
-  margin: 0;
-}
-
+.highlight-text { color: #e11d48; font-size: 16px; font-weight: 700; margin: 0 0 8px 0; }
+.main-heading { color: #be123c; font-size: 28px; font-weight: 700; margin: 0 0 12px 0; }
+.sub-text { color: #881337; font-size: 14px; margin: 0; }
 .btn-emergency {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background-color: #e11d48;
-  color: white;
-  border: none;
-  padding: 16px 28px;
-  font-size: 15px;
-  font-weight: 600;
-  border-radius: 8px;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);
-  transition: background 0.2s;
+  display: flex; align-items: center; gap: 8px;
+  background-color: #e11d48; color: white; border: none; padding: 16px 28px;
+  font-size: 15px; font-weight: 600; border-radius: 8px; cursor: pointer;
+  box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3); transition: background 0.2s;
 }
+.btn-emergency .alert-icon { width: 20px; height: 20px; }
+.btn-emergency:hover { background-color: #be123c; }
 
-.btn-emergency .alert-icon {
-  width: 20px;
-  height: 20px;
-}
+/* --- DASH HEADER --- */
+.dash-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
+.role-badge { display: inline-flex; align-items: center; gap: 6px; background: rgba(225,29,72,0.10); color: #e11d48; font-size: 11.5px; font-weight: 700; padding: 4px 12px; border-radius: 99px; margin-bottom: 10px; letter-spacing: 0.3px; }
+.dash-title { font-size: 26px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.5px; line-height: 1.2; }
+.dash-sub { font-size: 13.5px; color: #718096; margin-top: 4px; }
+.dash-date { display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: #718096; background: #fff; border: 1px solid #e9ecef; border-radius: 10px; padding: 8px 14px; white-space: nowrap; flex-shrink: 0; }
 
-.btn-emergency:hover {
-  background-color: #be123c;
-}
+/* --- STAT GRID --- */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 18px; margin-bottom: 24px; }
+.stat-card { background: var(--card-bg); border-radius: 16px; padding: 20px; border: 1px solid rgba(0,0,0,0.04); box-shadow: 0 2px 12px rgba(0,0,0,0.05); transition: transform 0.22s ease, box-shadow 0.22s ease; animation: fadeUp 0.4s ease both; animation-delay: var(--delay); cursor: default; }
+.stat-card:hover { transform: translateY(-4px); box-shadow: 0 8px 24px rgba(0,0,0,0.10); }
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+.stat-card__header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+.stat-card__icon-wrap { width: 44px; height: 44px; border-radius: 12px; background: rgba(255,255,255,0.7); display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); }
+.stat-card__trend { display: flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 99px; background: rgba(255,255,255,0.65); }
+.trend--up { color: #276749; } .trend--neutral { color: #718096; }
+.stat-card__body { display: flex; align-items: baseline; gap: 6px; margin-bottom: 4px; }
+.stat-card__value { font-size: 34px; font-weight: 900; color: #1a2d3d; line-height: 1; letter-spacing: -1px; }
+.stat-card__unit { font-size: 12px; font-weight: 600; color: var(--card-color); }
+.stat-card__label { font-size: 12.5px; color: #718096; font-weight: 500; margin-bottom: 12px; }
+.stat-card__bar-wrap { height: 4px; background: rgba(255,255,255,0.6); border-radius: 99px; overflow: hidden; }
+.stat-card__bar { height: 100%; background: var(--card-color); border-radius: 99px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
 
 /* --- GRID LAYOUT --- */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: 2fr 1fr;
-  gap: 24px;
-}
+.dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 18px; }
+.dash-panel { background: #fff; border-radius: 16px; padding: 22px; box-shadow: 0 2px 12px rgba(0,0,0,0.05); border: 1px solid #e9ecef; }
+.panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 18px; }
+.panel-title { font-size: 15px; font-weight: 700; color: #1a1a2e; margin: 0; }
+.panel-link { font-size: 12.5px; font-weight: 600; color: #ea580c; text-decoration: none; }
+.panel-link:hover { text-decoration: underline; }
 
-.card {
-  background: #ffffff;
+/* Danh sách yêu cầu (đồng bộ dạng activity-list của Volunteer) */
+.request-list { display: flex; flex-direction: column; gap: 4px; }
+.request-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; transition: background 0.15s ease; }
+.request-item:hover { background: #f8fafc; }
+.request-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.dot--processing { background: #e27d24; }
+.dot--received { background: #16a34a; }
+.dot--completed { background: #0d9488; }
+.request-content { flex: 1; min-width: 0; }
+.request-title { margin: 0; font-size: 13.5px; font-weight: 600; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.request-meta { margin: 2px 0 0 0; font-size: 11.5px; color: #a0aec0; }
+.request-tag { font-size: 10.5px; font-weight: 700; padding: 3px 9px; border-radius: 99px; flex-shrink: 0; }
+.tag--processing { background: rgba(226,125,36,0.10); color: #c46a18; }
+.tag--received { background: rgba(22,163,74,0.10); color: #16a34a; }
+.tag--completed { background: rgba(13,148,136,0.10); color: #0d9488; }
+.btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #475569; padding: 6px 14px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; flex-shrink: 0; transition: all 0.15s ease; }
+.btn-outline:hover { background: #fff; border-color: #ea580c; color: #ea580c; }
+
+.right-column { display: flex; flex-direction: column; gap: 18px; }
+
+/* Quick actions */
+.quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 22px; }
+.quick-action-btn { display: flex; align-items: center; gap: 9px; padding: 12px 14px; border-radius: 11px; background: #f8fafc; border: 1px solid #e9ecef; color: #2d3748; font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.18s ease; font-family: inherit; }
+.quick-action-btn:hover { background: var(--qa-color); color: #fff; border-color: var(--qa-color); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.12); }
+.quick-action-btn:hover .qa-icon { filter: brightness(10); }
+.qa-icon { display: flex; align-items: center; justify-content: center; color: var(--qa-color); flex-shrink: 0; }
+
+/* Progress ring */
+.progress-section {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px;
+  background: linear-gradient(135deg, #fff1ee, #ffe8e0);
   border-radius: 12px;
-  padding: 24px;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(159,18,57,0.12);
 }
+.progress-ring-wrap { position: relative; flex-shrink: 0; }
+.ring-label { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; }
+.ring-pct { font-size: 20px; font-weight: 900; color: #1a1a2e; line-height: 1; }
+.ring-sub { font-size: 9px; color: #718096; font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }
+.progress-info-title { font-size: 13.5px; font-weight: 700; color: #1a1a2e; margin-bottom: 6px; }
+.progress-info-desc { font-size: 12px; color: #718096; line-height: 1.5; margin-bottom: 10px; }
+.progress-legend { display: flex; align-items: center; gap: 8px; font-size: 11.5px; color: #4a5568; font-weight: 500; flex-wrap: wrap; }
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
 
-.card-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #0f172a;
-  margin: 0 0 20px 0;
-}
+.emergency-contact { background: #f8fafc; }
+.contact-title { font-size: 13px; font-weight: 600; color: #475569; margin: 0 0 12px 0; }
+.phone, .email { font-size: 14px; color: #0f172a; font-weight: 500; margin: 0 0 8px 0; }
 
-.request-list {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.request-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-bottom: 16px;
-  border-bottom: 1px solid #f1f5f9;
-}
-
-.request-item:last-child {
-  border-bottom: none;
-  padding-bottom: 0;
-}
-
-.req-info {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.req-icon {
-  background: #f8fafc;
-  padding: 10px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.req-icon svg {
-  width: 20px;
-  height: 20px;
-  color: #64748b;
-}
-
-.req-info h4 {
-  margin: 0 0 4px 0;
-  font-size: 14px;
-  color: #1e293b;
-  font-weight: 600;
-}
-
-.req-info .time {
-  font-size: 12px;
-  color: #64748b;
-}
-
-.req-actions {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.badge {
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.badge-processing { background: #fff7ed; color: #ea580c; }
-.badge-received { background: #f0fdf4; color: #16a34a; }
-.badge-completed { background: #f0fdfa; color: #0d9488; }
-
-.btn-outline {
-  background: transparent;
-  border: 1px solid #e2e8f0;
-  color: #475569;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  cursor: pointer;
-}
-
-.btn-outline:hover { background: #f8fafc; }
-
-.view-all {
-  display: block;
-  text-align: center;
-  margin-top: 20px;
-  color: #2563eb;
-  text-decoration: none;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.right-column {
-  display: flex;
-  flex-direction: column;
-  gap: 24px;
-}
-
-.guide-list {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.guide-list li {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px;
-  background: #f8fafc;
-  border-radius: 8px;
-  color: #334155;
-  font-size: 14px;
-  font-weight: 500;
-  cursor: pointer;
-  border: 1px solid transparent;
-}
-
-.guide-icon {
-  width: 20px;
-  height: 20px;
-  color: #64748b;
-}
-
-.guide-list li:hover {
-  border-color: #e2e8f0;
-  background: #ffffff;
-}
-
-.emergency-contact {
-  background: #f8fafc;
-}
-
-.contact-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #475569;
-  margin: 0 0 12px 0;
-}
-
-.phone, .email {
-  font-size: 14px;
-  color: #0f172a;
-  font-weight: 500;
-  margin: 0 0 8px 0;
-}
+/* --- Responsive --- */
+@media (max-width: 1200px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 900px) { .dashboard-grid { grid-template-columns: 1fr; } .stat-grid { grid-template-columns: repeat(2, 1fr); } .dash-header { flex-direction: column; gap: 14px; } }
+@media (max-width: 500px) { .stat-grid { grid-template-columns: 1fr; } }
 </style>

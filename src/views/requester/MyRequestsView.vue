@@ -1,6 +1,6 @@
 <template>
-  <div class="my-requests-layout">
-    <div class="container">
+  <RequesterLayout>
+    <div class="my-requests-page">
 
       <div class="page-header">
         <div>
@@ -50,12 +50,13 @@
       </div>
 
     </div>
-  </div>
+  </RequesterLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 
 const router = useRouter()
 
@@ -64,7 +65,6 @@ const badgeClass: Record<string, string> = {
   received: 'badge-received',
   completed: 'badge-completed',
 }
-
 
 const allRequests = [
   { id: 1, title: 'Ngập lụt tại xã Tân Lập, Quảng Trị', time: '10/06/2024 - 08:30', status: 'processing', statusText: 'Đang xử lý' },
@@ -92,13 +92,7 @@ const goToDetail = (id: number) => {
 </script>
 
 <style scoped>
-.my-requests-layout {
-  min-height: 100vh;
-  background-color: #f8fafc;
-  padding: 40px 20px;
-}
-
-.container {
+.my-requests-page {
   max-width: 1000px;
   margin: 0 auto;
 }
@@ -112,18 +106,20 @@ const goToDetail = (id: number) => {
 
 .page-header h2 {
   font-size: 24px;
-  color: #0f172a;
+  font-weight: 800;
+  color: #1a1a2e;
+  letter-spacing: -0.5px;
   margin: 0 0 4px 0;
 }
 
 .subtitle {
-  font-size: 14px;
-  color: #64748b;
+  font-size: 13.5px;
+  color: #718096;
   margin: 0;
 }
 
 .btn-primary {
-  background-color: #2563eb;
+  background-color: #e11d48;
   color: white;
   border: none;
   padding: 12px 20px;
@@ -131,13 +127,15 @@ const goToDetail = (id: number) => {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease;
 }
-.btn-primary:hover { background-color: #1d4ed8; }
+.btn-primary:hover { background-color: #be123c; }
 
 .filter-bar {
   display: flex;
   gap: 8px;
   margin-bottom: 20px;
+  flex-wrap: wrap;
 }
 
 .filter-tab {
@@ -149,19 +147,22 @@ const goToDetail = (id: number) => {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
+.filter-tab:hover { background: #f8fafc; }
 
 .filter-tab.active {
-  background: #eff6ff;
-  border-color: #2563eb;
-  color: #2563eb;
+  background: #fff1eb;
+  border-color: #ea580c;
+  color: #ea580c;
 }
 
 .card {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 24px;
-  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 22px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
 }
 
 .empty-state {
@@ -240,6 +241,13 @@ const goToDetail = (id: number) => {
   font-size: 13px;
   font-weight: 500;
   cursor: pointer;
+  transition: all 0.15s ease;
 }
-.btn-outline:hover { background: #f8fafc; }
+.btn-outline:hover { background: #fff; border-color: #ea580c; color: #ea580c; }
+
+@media (max-width: 600px) {
+  .page-header { flex-direction: column; gap: 14px; }
+  .request-item { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .req-actions { width: 100%; justify-content: space-between; }
+}
 </style>
