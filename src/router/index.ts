@@ -107,7 +107,26 @@ const routes: RouteRecordRaw[] = [
     title: 'Yêu cầu của tôi',
   },
 },
-
+{
+  path: '/requester/tracking',
+  name: 'requester-tracking',
+  component: () => import('@/views/requester/TrackingView.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['requester', 'coordinator', 'admin'],
+    title: 'Theo dõi hỗ trợ',
+  },
+},
+{
+  path: '/requester/guide',
+  name: 'requester-guide',
+  component: () => import('@/views/requester/GuideView.vue'),
+  meta: {
+    requiresAuth: true,
+    roles: ['requester', 'coordinator', 'admin'],
+    title: 'Hướng dẫn',
+  },
+},
   // ────────────────────────────────────────────────────────────
   //  VOLUNTEER – volunteer | coordinator | admin
   // ────────────────────────────────────────────────────────────
