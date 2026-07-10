@@ -10,6 +10,11 @@
     <div class="register-card">
       <h2 class="form-title">ĐĂNG KÝ NGƯỜI DÙNG</h2>
 
+      <!-- Thông báo lỗi -->
+      <div v-if="errorMessage" class="error-banner">
+        {{ errorMessage }}
+      </div>
+
       <form @submit.prevent="handleRegister">
         <!-- STEP 1 -->
         <div class="step-section">
@@ -17,23 +22,23 @@
           
           <div class="form-group">
             <label>Họ và tên</label>
-            <input type="text" v-model="formData.FullName" placeholder="Nguyễn Văn A" required />
+            <input type="text" v-model="formData.fullName" placeholder="Nguyễn Văn A" required />
           </div>
 
           <div class="form-group">
             <label>Email</label>
-            <input type="email" v-model="formData.Email" placeholder="example@email.com" required />
+            <input type="email" v-model="formData.email" placeholder="example@email.com" required />
           </div>
 
           <div class="form-group">
             <label>Số điện thoại</label>
-            <input type="tel" v-model="formData.Phone" placeholder="0912245678" required />
+            <input type="tel" v-model="formData.phoneNumber" placeholder="0912245678" required />
           </div>
 
           <div class="form-group">
             <label>Mật khẩu</label>
             <div class="input-with-icon">
-              <input :type="showPassword ? 'text' : 'password'" v-model="formData.Password" placeholder="••••••••••" required />
+              <input :type="showPassword ? 'text' : 'password'" v-model="formData.password" placeholder="••••••••••" required />
               <button type="button" class="icon-btn" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
                 <svg v-if="!showPassword" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z" />
@@ -49,7 +54,7 @@
 
           <div class="form-group">
             <label>Xác nhận mật khẩu</label>
-            <input type="password" v-model="formData.ConfirmPassword" placeholder="••••••••••" required />
+            <input type="password" v-model="formData.confirmPassword" placeholder="••••••••••" required />
             <span v-if="passwordMismatch" class="error-text">Mật khẩu xác nhận không khớp!</span>
           </div>
         </div>
@@ -60,7 +65,7 @@
           
           <div class="form-group">
             <label>Địa phương</label>
-            <select v-model="formData.Address" required>
+            <select v-model="formData.province">
               <option value="" disabled>Chọn Tỉnh / Thành Phố</option>
               <option value="Hà Nội">Hà Nội</option>
               <option value="TP. HCM">TP. HCM</option>
@@ -72,8 +77,8 @@
           </div>
 
           <div class="form-group">
-            <label>Kỹ năng / Chuyên môn</label>
-            <select v-model="formData.Skill" required>
+            <label>Kỹ năng / Chuyên môn (tùy chọn)</label>
+            <select v-model="formData.skill">
               <option value="" disabled>Chọn lĩnh vực</option>
               <option value="Y tế">Y tế</option>
               <option value="Vận chuyển">Vận chuyển</option>
@@ -84,14 +89,17 @@
           </div>
 
           <div class="form-group checkbox-group">
-            <input type="checkbox" id="commitment" v-model="formData.IsCommitted" required />
+            <input type="checkbox" id="commitment" v-model="formData.isCommitted" required />
             <label for="commitment">
               Tôi cam kết tham gia các hoạt động cứu trợ với tinh thần tự nguyện, minh bạch, công bằng. Tất cả thông tin trên là hoàn toàn chính xác.
             </label>
           </div>
         </div>
 
-        <button type="submit" class="submit-btn">Đăng ký</button>
+        <button type="submit" class="submit-btn" :disabled="isLoading">
+          <span v-if="isLoading">Đang xử lý...</span>
+          <span v-else>Đăng ký</span>
+        </button>
 
         
         <div class="login-redirect">
@@ -107,38 +115,61 @@
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { registerUser } from '@/features/auth/auth.api'
+import { useAuthStore } from '@/stores/auth'
 import type { RegisterPayload } from '@/features/auth/auth.types'
 
-const router = useRouter()
+const router   = useRouter()
+const authStore = useAuthStore()
+
 const showPassword = ref(false)
-const isLoading = ref(false)
+const isLoading    = ref(false)
 const errorMessage = ref('')
 
-const formData = reactive<RegisterPayload>({
-  FullName: '',
-  Email: '',
-  Phone: '',
-  Password: '',
-  ConfirmPassword: '',
-  Address: '',
+// field names khớp BE RegisterPayload (camelCase)
+const formData = reactive({
+  fullName:        '',
+  email:           '',
+  phoneNumber:     '',
+  password:        '',
+  confirmPassword: '',
+  province:        '',
+  // Skill & commitment chỉ dùng UI, không gửi BE
+  skill:           '',
+  isCommitted:     false,
 })
 
 const passwordMismatch = computed(() => {
-  return formData.ConfirmPassword !== '' && formData.Password !== formData.ConfirmPassword
+  return formData.confirmPassword !== '' && formData.password !== formData.confirmPassword
 })
 
 const handleRegister = async () => {
   if (passwordMismatch.value) {
-    alert('Vui lòng kiểm tra lại mật khẩu xác nhận!')
+    errorMessage.value = 'Mật khẩu xác nhận không khớp!'
     return
   }
 
   errorMessage.value = ''
-  isLoading.value = true
+  isLoading.value    = true
+
+  // Chỉ gửi các field BE yêu cầu
+  const payload: RegisterPayload = {
+    fullName:        formData.fullName,
+    email:           formData.email,
+    phoneNumber:     formData.phoneNumber,
+    password:        formData.password,
+    confirmPassword: formData.confirmPassword,
+    province:        formData.province || undefined,
+  }
 
   try {
-    await registerUser(formData)
-    alert('Đăng ký thành công!')
+    const result = await registerUser(payload)
+    // Lưu token + user sau khi đăng ký thành công (auto-login)
+    authStore.accessToken = result.accessToken
+    authStore.user        = result.user
+    import('@/lib/api/token-storage').then(({ tokenStorage }) => {
+      tokenStorage.set(result.accessToken)
+      tokenStorage.setRefresh(result.refreshToken)
+    })
     router.push('/login')
   } catch (error) {
     errorMessage.value = (error as Error).message || 'Đăng ký thất bại. Vui lòng thử lại!'
@@ -217,6 +248,18 @@ const handleRegister = async () => {
   color: #1a3b5c; 
   margin-bottom: 25px;
   font-weight: 700;
+}
+
+/* ===== Error Banner ===== */
+.error-banner {
+  background-color: #fff5f5;
+  color: #c53030;
+  border: 1px solid #fed7d7;
+  border-radius: 6px;
+  padding: 10px 14px;
+  font-size: 13px;
+  margin-bottom: 16px;
+  text-align: center;
 }
 
 

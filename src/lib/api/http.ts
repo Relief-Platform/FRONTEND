@@ -1,6 +1,6 @@
 // ============================================================
 //  Axios instance – single HTTP client cho toàn bộ app
-//  Interceptors tự động gắn Bearer token + xử lý 401
+//  Interceptors tự động gắn Bearer token + xử lý lỗi chuẩn
 // ============================================================
 
 import axios, { type AxiosError } from 'axios'
@@ -36,22 +36,44 @@ http.interceptors.request.use((config) => {
 })
 
 // ── Response interceptor: chuẩn hoá lỗi → ApiError ─────────
+// BE có thể trả message qua nhiều field khác nhau
+type BeErrorBody = {
+  message?: string
+  error?: string
+  title?: string
+  errors?: Record<string, string[]>
+}
+
 http.interceptors.response.use(
   (response) => response,
-  (error: AxiosError<{ message?: string }>) => {
+  (error: AxiosError<BeErrorBody>) => {
     const status = error.response?.status ?? 0
-    const message =
-      error.response?.data?.message ??
-      error.message ??
-      'Không thể kết nối đến máy chủ'
+    const body = error.response?.data
 
-    // 401 → xoá token (hết hạn / không hợp lệ)
-    if (status === 401) {
-      tokenStorage.remove()
-      // Redirect về login nếu cần:
-      // window.location.href = '/login'
+    // Ưu tiên: message > error > title > validation errors > network error
+    let message: string
+    if (body?.message) {
+      message = body.message
+    } else if (body?.error) {
+      message = body.error
+    } else if (body?.title) {
+      message = body.title
+    } else if (body?.errors) {
+      // .NET validation errors: { "Email": ["Email is invalid"] }
+      const firstField = Object.values(body.errors)[0]
+      message = Array.isArray(firstField) ? firstField[0] : 'Dữ liệu không hợp lệ'
+    } else {
+      message = error.message ?? 'Không thể kết nối đến máy chủ'
     }
 
-    return Promise.reject(new ApiError(status, message, error.response?.data))
+    // 401 → xoá token và redirect về trang login
+    if (status === 401) {
+      tokenStorage.clearAll()
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
+    }
+
+    return Promise.reject(new ApiError(status, message, body))
   },
 )

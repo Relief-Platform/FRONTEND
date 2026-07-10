@@ -1,5 +1,6 @@
 // ============================================================
 //  Auth – TypeScript interfaces & Role definitions
+//  Sync với BE spec: tất cả ID là GUID string
 // ============================================================
 
 // ── Roles ────────────────────────────────────────────────────
@@ -33,35 +34,68 @@ export const ROLE_PRIORITY: Record<UserRole, number> = {
 }
 
 // ── Payloads ─────────────────────────────────────────────────
+
+/** POST /api/auth/login */
 export interface LoginPayload {
-  Identifier: string // Email hoặc số điện thoại
-  Password: string
+  identifier: string  // Email hoặc số điện thoại
+  password: string
 }
 
+/** POST /api/auth/register */
 export interface RegisterPayload {
-  FullName: string
-  Email: string
-  Phone: string
-  Password: string
-  ConfirmPassword: string
-  Gender?: string
-  DateOfBirth?: string
-  Province?: string
-  District?: string
-  Address?: string
+  fullName: string
+  email: string
+  phoneNumber: string
+  password: string
+  confirmPassword: string
+  gender?: string
+  dateOfBirth?: string  // ISO 8601: "1999-12-31"
+  province?: string
+  district?: string
+  address?: string
+}
+
+/** POST /api/auth/change-password */
+export interface ChangePasswordPayload {
+  currentPassword: string
+  newPassword: string
+  confirmNewPassword: string
+}
+
+/** POST /api/auth/refresh-token */
+export interface RefreshTokenPayload {
+  refreshToken: string
 }
 
 // ── Models ───────────────────────────────────────────────────
+
+/**
+ * Thông tin user trả về từ BE.
+ * Field names khớp với JSON response của /api/auth/me và /api/auth/login
+ */
 export interface AuthUser {
-  id: string | number
+  id: string          // GUID: "3fa85f64-5717-4562-b3fc-2c963f66afa6"
   fullName: string
   email: string
-  phone?: string
-  role: UserRole        // bắt buộc có role (không còn optional)
-  avatar?: string
+  phoneNumber?: string
+  avatarUrl?: string | null  // nullable theo BE spec
+  isActive?: boolean
+  roleId: string      // GUID của role
+  role: UserRole      // FE tự resolve từ roleId hoặc BE trả kèm
 }
 
+/**
+ * Response từ /api/auth/login và /api/auth/register.
+ * Gồm cả accessToken + refreshToken.
+ */
 export interface AuthResponse {
-  token: string
+  accessToken: string
+  refreshToken: string
   user: AuthUser
+}
+
+/** Response từ /api/auth/refresh-token */
+export interface RefreshTokenResponse {
+  accessToken: string
+  refreshToken: string
 }
