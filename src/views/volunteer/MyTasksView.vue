@@ -1,57 +1,493 @@
 <template>
   <VolunteerLayout>
-    <div class="empty-page">
-      <div class="empty-icon">
-        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M9 11l3 3L22 4"/>
-          <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
-        </svg>
+    <div class="tasks-page">
+      <div class="page-header">
+        <div>
+          <div class="role-badge">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 11l3 3L22 4" />
+              <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+            </svg>
+            Tình nguyện viên
+          </div>
+          <h1 class="page-title">Nhiệm vụ của tôi</h1>
+          <p class="page-sub">Theo dõi các nhiệm vụ đang diễn ra, sắp tới và đã hoàn thành.</p>
+        </div>
+        <div class="page-badge">
+          <span class="page-badge__dot" />
+          {{ activeFilterLabel }}
+        </div>
       </div>
-      <h1 class="empty-title">Nhiệm vụ của tôi</h1>
-      <p class="empty-desc">Trang này đang được xây dựng. Vui lòng quay lại sau.</p>
-      <router-link to="/volunteer" class="back-btn">← Về Dashboard</router-link>
+
+      <div class="summary-grid">
+        <div class="summary-card summary-card--active">
+          <p class="summary-label">Đang thực hiện</p>
+          <strong class="summary-value">{{ activeCount }}</strong>
+        </div>
+        <div class="summary-card summary-card--upcoming">
+          <p class="summary-label">Sắp diễn ra</p>
+          <strong class="summary-value">{{ upcomingCount }}</strong>
+        </div>
+        <div class="summary-card summary-card--done">
+          <p class="summary-label">Đã hoàn thành</p>
+          <strong class="summary-value">{{ completedCount }}</strong>
+        </div>
+      </div>
+
+      <div class="filter-row">
+        <button
+          v-for="filter in filters"
+          :key="filter.value"
+          class="filter-pill"
+          :class="{ active: selectedFilter === filter.value }"
+          @click="selectedFilter = filter.value"
+        >
+          {{ filter.label }}
+        </button>
+      </div>
+
+      <div v-if="isLoading" class="loading-state">Đang tải nhiệm vụ...</div>
+      <div v-else-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
+
+      <div v-else-if="filteredTasks.length === 0" class="empty-state">
+        <p>Chưa có nhiệm vụ nào phù hợp với bộ lọc hiện tại.</p>
+      </div>
+
+      <div v-else class="task-list">
+        <article v-for="task in filteredTasks" :key="task.id" class="task-card">
+          <div class="task-card__header">
+            <div>
+              <h3 class="task-title">{{ task.title }}</h3>
+              <p class="task-address">{{ task.address }}</p>
+            </div>
+            <span class="task-status" :class="`status--${task.status}`">{{ task.statusLabel }}</span>
+          </div>
+
+          <div class="task-meta">
+            <div class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="4" width="18" height="18" rx="2" />
+                <line x1="16" y1="2" x2="16" y2="6" />
+                <line x1="8" y1="2" x2="8" y2="6" />
+                <line x1="3" y1="10" x2="21" y2="10" />
+              </svg>
+              <span>{{ task.date }}</span>
+            </div>
+            <div class="meta-item">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <polyline points="12 6 12 12 16 14" />
+              </svg>
+              <span>{{ task.time }}</span>
+            </div>
+          </div>
+
+          <div class="progress-block">
+            <div class="progress-top">
+              <span>Tiến độ</span>
+              <strong>{{ task.progress }}%</strong>
+            </div>
+            <div class="progress-bar">
+              <span :style="{ width: `${task.progress}%` }" />
+            </div>
+          </div>
+
+          <div class="task-footer">
+            <span class="task-note">{{ task.note }}</span>
+            <button class="detail-btn">Xem chi tiết</button>
+          </div>
+        </article>
+      </div>
     </div>
   </VolunteerLayout>
 </template>
 
 <script setup lang="ts">
+import { computed, onMounted, ref } from 'vue'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
+import { getMyTasks } from '@/features/tasks/tasks.api'
+import type { TaskItem } from '@/features/tasks/tasks.types'
+
+const selectedFilter = ref('all')
+const isLoading = ref(false)
+const errorMessage = ref('')
+
+const filters = [
+  { value: 'all', label: 'Tất cả' },
+  { value: 'ongoing', label: 'Đang thực hiện' },
+  { value: 'upcoming', label: 'Sắp diễn ra' },
+  { value: 'completed', label: 'Đã hoàn thành' },
+]
+
+const mockTasks: TaskItem[] = [
+  {
+    id: 1,
+    title: 'Cứu trợ tại Quảng Ninh',
+    address: 'Bãi biển Cửa Ông, Quảng Ninh',
+    date: '10/07/2026',
+    time: '08:00 - 12:00',
+    progress: 68,
+    status: 'ongoing',
+    statusLabel: 'Đang thực hiện',
+    note: 'Đã phân phát 120 thùng cứu trợ',
+  },
+  {
+    id: 2,
+    title: 'Phát quà cho người bị ảnh hưởng lũ lụt',
+    address: 'Đường Nguyễn Huệ, Đà Nẵng',
+    date: '12/07/2026',
+    time: '13:00 - 17:00',
+    progress: 32,
+    status: 'upcoming',
+    statusLabel: 'Sắp diễn ra',
+    note: 'Chuẩn bị nhóm vận chuyển và quà hỗ trợ',
+  },
+  {
+    id: 3,
+    title: 'Vệ sinh môi trường tại khu dân cư',
+    address: 'Phường 8, TP. Vũng Tàu',
+    date: '14/07/2026',
+    time: '07:30 - 10:30',
+    progress: 100,
+    status: 'completed',
+    statusLabel: 'Đã hoàn thành',
+    note: 'Đã hoàn tất và gửi báo cáo',
+  },
+  {
+    id: 4,
+    title: 'Hỗ trợ sơ cấp tại lễ hội cộng đồng',
+    address: 'Sân vận động Hòa Bình, Hà Nội',
+    date: '18/07/2026',
+    time: '15:00 - 18:00',
+    progress: 76,
+    status: 'ongoing',
+    statusLabel: 'Đang thực hiện',
+    note: 'Đội y tế đã sẵn sàng tại điểm tập kết',
+  },
+]
+
+const tasks = ref<TaskItem[]>([])
+
+async function loadTasks() {
+  isLoading.value = true
+  errorMessage.value = ''
+  try {
+    const result = await getMyTasks()
+    if (result.length > 0) {
+      tasks.value = result
+    } else {
+      tasks.value = mockTasks
+      errorMessage.value = 'Không có nhiệm vụ nào từ máy chủ, đang dùng dữ liệu mẫu.'
+    }
+  } catch {
+    tasks.value = mockTasks
+    errorMessage.value = 'Không thể kết nối API, đang dùng dữ liệu mẫu.'
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  void loadTasks()
+})
+
+const filteredTasks = computed(() => {
+  if (selectedFilter.value === 'all') return tasks.value
+  return tasks.value.filter((task) => task.status === selectedFilter.value)
+})
+
+const activeFilterLabel = computed(() => {
+  return filters.find((item) => item.value === selectedFilter.value)?.label ?? 'Tất cả'
+})
+
+const activeCount = computed(() => tasks.value.filter((task) => task.status === 'ongoing').length)
+const upcomingCount = computed(() => tasks.value.filter((task) => task.status === 'upcoming').length)
+const completedCount = computed(() => tasks.value.filter((task) => task.status === 'completed').length)
 </script>
 
 <style scoped>
-.empty-page {
+.tasks-page {
+  max-width: 1200px;
+}
+
+.page-header {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
+  justify-content: space-between;
+  align-items: flex-start;
   gap: 16px;
-  text-align: center;
+  margin-bottom: 20px;
 }
-.empty-icon {
-  width: 100px;
-  height: 100px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #e8f5ee, #c6f6d5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.empty-title { font-size: 22px; font-weight: 800; color: #1a3b5c; }
-.empty-desc  { font-size: 14px; color: #718096; max-width: 340px; line-height: 1.6; }
-.back-btn {
+
+.role-badge {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 10px 22px;
+  background: rgba(39, 103, 73, 0.1);
+  color: #276749;
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 999px;
+  margin-bottom: 10px;
+  letter-spacing: 0.3px;
+}
+
+.page-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #1a3b5c;
+  margin: 0;
+}
+
+.page-sub {
+  margin-top: 4px;
+  font-size: 13.5px;
+  color: #718096;
+}
+
+.page-badge {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #fff;
+  border: 1px solid #e9ecef;
+  border-radius: 999px;
+  padding: 8px 14px;
+  font-size: 12.5px;
+  color: #4a5568;
+  white-space: nowrap;
+}
+
+.page-badge__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #276749;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  background: #fff;
+  border: 1px solid #ecf2f7;
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.summary-card--active {
+  border-left: 4px solid #e27d24;
+}
+
+.summary-card--upcoming {
+  border-left: 4px solid #3182ce;
+}
+
+.summary-card--done {
+  border-left: 4px solid #276749;
+}
+
+.summary-label {
+  margin: 0 0 6px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.summary-value {
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a3b5c;
+}
+
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.filter-pill {
+  border: 1px solid #dce7ef;
+  background: #fff;
+  color: #4a5568;
+  padding: 8px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.filter-pill.active {
+  background: linear-gradient(135deg, #276749 0%, #48bb78 100%);
+  color: #fff;
+  border-color: transparent;
+}
+
+.task-list {
+  display: grid;
+  gap: 16px;
+}
+
+.loading-state,
+.empty-state,
+.error-banner {
+  background: #fff;
+  border: 1px solid #edf2f7;
+  border-radius: 16px;
+  padding: 18px;
+  color: #4a5568;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+}
+
+.error-banner {
+  border-color: #fed7d7;
+  color: #c53030;
+  background: #fff5f5;
+}
+
+.task-card {
+  background: #fff;
+  border: 1px solid #edf2f7;
+  border-radius: 18px;
+  padding: 18px;
+  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+}
+
+.task-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.task-title {
+  margin: 0 0 4px;
+  font-size: 18px;
+  font-weight: 800;
+  color: #1a3b5c;
+}
+
+.task-address {
+  margin: 0;
+  color: #718096;
+  font-size: 13px;
+}
+
+.task-status {
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.status--ongoing {
+  background: #fef3e2;
+  color: #b45309;
+}
+
+.status--upcoming {
+  background: #ebf8ff;
+  color: #2b6cb0;
+}
+
+.status--completed {
+  background: #e8f5ee;
+  color: #276749;
+}
+
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 14px;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #4a5568;
+  font-size: 13px;
+}
+
+.progress-block {
+  margin-bottom: 14px;
+}
+
+.progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4a5568;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.progress-bar {
+  width: 100%;
+  height: 10px;
+  border-radius: 999px;
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #276749 0%, #48bb78 100%);
+  transition: width 0.25s ease;
+}
+
+.task-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.task-note {
+  color: #718096;
+  font-size: 13px;
+}
+
+.detail-btn {
+  border: none;
   background: #276749;
   color: #fff;
+  padding: 8px 12px;
   border-radius: 10px;
-  font-size: 13.5px;
   font-weight: 600;
-  text-decoration: none;
-  margin-top: 8px;
-  transition: background 0.18s ease;
+  cursor: pointer;
 }
-.back-btn:hover { background: #1f5337; color: #fff; }
+
+.detail-btn:hover {
+  background: #1f5337;
+}
+
+@media (max-width: 900px) {
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header {
+    flex-direction: column;
+  }
+}
+
+@media (max-width: 640px) {
+  .task-card__header,
+  .task-footer {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
 </style>
