@@ -1,12 +1,13 @@
 // ============================================================
 //  Auth Store – Pinia
 //  Token + User + Role-based helpers
+//  Sync với BE spec: accessToken + refreshToken, GUID id
 // ============================================================
 
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { tokenStorage } from '@/lib/api/token-storage'
-import { loginUser, logoutUser } from '@/features/auth/auth.api'
+import { loginUser, logoutUser, getMe } from '@/features/auth/auth.api'
 import type { AuthUser, UserRole } from '@/features/auth/auth.types'
 import { ROLE_PRIORITY } from '@/features/auth/auth.types'
 
@@ -24,11 +25,11 @@ function readPersistedUser(): AuthUser | null {
 
 export const useAuthStore = defineStore('auth', () => {
   // ── State ──────────────────────────────────────────────────
-  const token = ref<string | null>(tokenStorage.get())
-  const user  = ref<AuthUser | null>(readPersistedUser())
+  const accessToken = ref<string | null>(tokenStorage.get())
+  const user        = ref<AuthUser | null>(readPersistedUser())
 
   // ── Getters ────────────────────────────────────────────────
-  const isLoggedIn = computed(() => !!token.value && !!user.value)
+  const isLoggedIn = computed(() => !!accessToken.value && !!user.value)
 
   /** Role hiện tại; null nếu chưa đăng nhập */
   const role = computed<UserRole | null>(() => user.value?.role ?? null)
@@ -53,27 +54,49 @@ export const useAuthStore = defineStore('auth', () => {
   const isRequester   = computed(() => hasRole('requester'))
 
   // ── Actions ────────────────────────────────────────────────
+
+  /**
+   * Đăng nhập — lưu cả accessToken + refreshToken
+   */
   async function login(identifier: string, password: string): Promise<void> {
     const result = await loginUser(identifier, password)
 
-    token.value = result.token
-    user.value  = result.user
+    accessToken.value = result.accessToken
+    user.value        = result.user
 
-    tokenStorage.set(result.token)
+    tokenStorage.set(result.accessToken)
+    tokenStorage.setRefresh(result.refreshToken)
     localStorage.setItem(USER_KEY, JSON.stringify(result.user))
   }
 
+  /**
+   * Đăng xuất — gọi BE blacklist token, xoá local storage
+   */
   async function logout(): Promise<void> {
     try { await logoutUser() } catch { /* ignore server error */ }
 
-    token.value = null
-    user.value  = null
+    accessToken.value = null
+    user.value        = null
 
-    tokenStorage.remove()
+    tokenStorage.clearAll()
     localStorage.removeItem(USER_KEY)
   }
 
-  /** Cập nhật thông tin user (sau khi edit profile) */
+  /**
+   * Lấy thông tin user mới nhất từ /api/auth/me
+   * Dùng sau khi F5 để đảm bảo data luôn sync với BE
+   */
+  async function fetchMe(): Promise<void> {
+    try {
+      const freshUser = await getMe()
+      user.value = freshUser
+      localStorage.setItem(USER_KEY, JSON.stringify(freshUser))
+    } catch {
+      // Token hết hạn → http interceptor sẽ redirect /login
+    }
+  }
+
+  /** Cập nhật thông tin user cục bộ (sau khi edit profile) */
   function updateUser(partial: Partial<AuthUser>): void {
     if (!user.value) return
     user.value = { ...user.value, ...partial }
@@ -82,11 +105,11 @@ export const useAuthStore = defineStore('auth', () => {
 
   return {
     // state
-    token, user,
+    accessToken, user,
     // computed
     isLoggedIn, role,
     isAdmin, isCoordinator, isVolunteer, isRequester,
     // methods
-    hasRole, isAtLeast, login, logout, updateUser,
+    hasRole, isAtLeast, login, logout, fetchMe, updateUser,
   }
 })

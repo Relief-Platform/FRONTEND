@@ -1,20 +1,29 @@
 // ============================================================
-//  Auth API
+//  Auth API — /api/auth
 //  Tự động dùng MOCK khi VITE_USE_MOCK_AUTH=true (.env.local)
 //  Khi backend sẵn sàng: đặt VITE_USE_MOCK_AUTH=false
 // ============================================================
 
 import { http } from '@/lib/api/http'
 import { mockLoginUser, mockRegisterUser } from '@/mocks/auth.mock'
-import type { LoginPayload, RegisterPayload, AuthResponse } from './auth.types'
+import type {
+  LoginPayload,
+  RegisterPayload,
+  ChangePasswordPayload,
+  RefreshTokenPayload,
+  AuthResponse,
+  AuthUser,
+  RefreshTokenResponse,
+} from './auth.types'
 
 /** true → dùng mock data; false → gọi real backend */
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
-// ── Login ─────────────────────────────────────────────────────
+// ── POST /api/auth/login ──────────────────────────────────────
 /**
- * Đăng nhập người dùng
- * POST /api/auth/login
+ * Đăng nhập người dùng.
+ * Body: { identifier, password }
+ * Response: { accessToken, refreshToken, user }
  */
 export async function loginUser(
   identifier: string,
@@ -22,15 +31,16 @@ export async function loginUser(
 ): Promise<AuthResponse> {
   if (USE_MOCK) return mockLoginUser(identifier, password)
 
-  const payload: LoginPayload = { Identifier: identifier, Password: password }
+  const payload: LoginPayload = { identifier, password }
   const { data } = await http.post<AuthResponse>('/auth/login', payload)
   return data
 }
 
-// ── Register ──────────────────────────────────────────────────
+// ── POST /api/auth/register ───────────────────────────────────
 /**
- * Đăng ký người dùng mới
- * POST /api/auth/register
+ * Đăng ký người dùng mới.
+ * Body: RegisterPayload (camelCase, khớp BE)
+ * Response: { accessToken, refreshToken, user }
  */
 export async function registerUser(
   userData: RegisterPayload,
@@ -41,10 +51,55 @@ export async function registerUser(
   return data
 }
 
-// ── Google OAuth ──────────────────────────────────────────────
+// ── POST /api/auth/refresh-token ──────────────────────────────
 /**
- * Đăng nhập bằng Google OAuth (redirect)
- * Backend C# sẽ xử lý OAuth và callback về frontend
+ * Làm mới access token bằng refresh token.
+ * 🔒 Không cần Authorization header (dùng refreshToken trong body)
+ */
+export async function refreshAccessToken(
+  refreshToken: string,
+): Promise<RefreshTokenResponse> {
+  const payload: RefreshTokenPayload = { refreshToken }
+  const { data } = await http.post<RefreshTokenResponse>('/auth/refresh-token', payload)
+  return data
+}
+
+// ── POST /api/auth/logout ─────────────────────────────────────
+/**
+ * Đăng xuất phía server (blacklist token).
+ * 🔒 Yêu cầu Authorization: Bearer <accessToken>
+ */
+export async function logoutUser(): Promise<void> {
+  if (USE_MOCK) return
+  await http.post('/auth/logout')
+}
+
+// ── GET /api/auth/me ──────────────────────────────────────────
+/**
+ * Lấy thông tin user đang đăng nhập.
+ * 🔒 Yêu cầu Authorization: Bearer <accessToken>
+ * Response: AuthUser
+ */
+export async function getMe(): Promise<AuthUser> {
+  const { data } = await http.get<AuthUser>('/auth/me')
+  return data
+}
+
+// ── POST /api/auth/change-password ───────────────────────────
+/**
+ * Đổi mật khẩu.
+ * 🔒 Yêu cầu Authorization: Bearer <accessToken>
+ * Body: { currentPassword, newPassword, confirmNewPassword }
+ */
+export async function changePassword(
+  payload: ChangePasswordPayload,
+): Promise<void> {
+  await http.post('/auth/change-password', payload)
+}
+
+// ── Google OAuth (redirect) ───────────────────────────────────
+/**
+ * Đăng nhập bằng Google OAuth — redirect sang BE xử lý.
  */
 export function loginWithGoogle(): void {
   if (USE_MOCK) {
@@ -52,24 +107,4 @@ export function loginWithGoogle(): void {
     return
   }
   window.location.href = `${http.defaults.baseURL}/auth/google`
-}
-
-// ── Refresh token (để sẵn khi backend cần) ───────────────────
-/**
- * Refresh JWT token
- * POST /api/auth/refresh
- */
-export async function refreshToken(token: string): Promise<AuthResponse> {
-  const { data } = await http.post<AuthResponse>('/auth/refresh', { token })
-  return data
-}
-
-// ── Logout (server-side invalidate nếu backend cần) ──────────
-/**
- * Logout phía server (blacklist token)
- * POST /api/auth/logout
- */
-export async function logoutUser(): Promise<void> {
-  if (USE_MOCK) return
-  await http.post('/auth/logout')
 }
