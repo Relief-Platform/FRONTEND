@@ -8,7 +8,7 @@
           <h2 class="main-heading">Chúng tôi luôn sẵn sàng!</h2>
           <p class="sub-text">Tạo yêu cầu cứu trợ khẩn cấp để được hỗ trợ nhanh nhất.</p>
         </div>
-        <button class="btn-emergency" @click="router.push('/requester/create')">
+        <button class="btn-emergency" @click="goToCreate">
           <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
           YÊU CẦU CỨU TRỢ KHẨN CẤP
         </button>
@@ -67,7 +67,9 @@
             <h2 class="panel-title">Yêu cầu gần đây</h2>
             <a href="#" class="panel-link" @click.prevent="router.push('/requester/my-requests')">Xem tất cả →</a>
           </div>
-          <div class="request-list">
+          <div v-if="isLoading" class="empty-state">Đang tải...</div>
+          <div v-else-if="recentRequests.length === 0" class="empty-state">Bạn chưa gửi yêu cầu nào.</div>
+          <div class="request-list" v-else>
             <div class="request-item" v-for="item in recentRequests" :key="item.id">
               <div class="request-dot" :class="`dot--${item.status}`" />
               <div class="request-content">
@@ -155,9 +157,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
+import { getReliefRequests } from '@/features/requests/requests.api'
+import {
+  STATUS_GROUP_MAP,
+  STATUS_LABEL_VI,
+  type ReliefRequestResponse,
+} from '@/features/requests/requests.types'
 
 const router = useRouter()
 
@@ -165,53 +173,85 @@ const currentDate = computed(() =>
   new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
 )
 
-const recentRequests = [
-  { id: 1, title: 'Ngập lụt tại xã Tân Lập, Quảng Trị', time: '10/06/2024 - 08:30', status: 'processing', statusText: 'Đang xử lý' },
-  { id: 2, title: 'Sạt lở tại thôn Đông Hà', time: '08/06/2024 - 14:20', status: 'received', statusText: 'Đã tiếp nhận' },
-  { id: 3, title: 'Thiếu nước sạch sinh hoạt', time: '05/06/2024 - 09:15', status: 'completed', statusText: 'Đã hoàn thành' },
-]
+// ── Danh sách yêu cầu (lấy từ API thật) ──────────────────
+const allRequests = ref<ReliefRequestResponse[]>([])
+const isLoading = ref(false)
 
-const totalRequests = recentRequests.length
-const completedRequests = computed(() => recentRequests.filter((r) => r.status === 'completed').length)
-const progressPercent = computed(() => Math.round((completedRequests.value / totalRequests) * 100))
+onMounted(async () => {
+  isLoading.value = true
+  allRequests.value = await getReliefRequests()
+  isLoading.value = false
+})
 
-const statCards = [
+const formatTime = (iso: string) => {
+  const d = new Date(iso)
+  return d.toLocaleDateString('vi-VN') + ' - ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+}
+
+const recentRequests = computed(() =>
+  [...allRequests.value]
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 3)
+    .map((r) => ({
+      id: r.id,
+      title: r.title,
+      time: formatTime(r.createdAt),
+      status: STATUS_GROUP_MAP[r.status],
+      statusText: STATUS_LABEL_VI[r.status],
+    })),
+)
+
+const totalRequests = computed(() => allRequests.value.length)
+const countByGroup = (group: string) =>
+  allRequests.value.filter((r) => STATUS_GROUP_MAP[r.status] === group).length
+
+const processingCount = computed(() => countByGroup('processing'))
+const receivedCount = computed(() => countByGroup('received'))
+const completedRequests = computed(() => countByGroup('completed'))
+const progressPercent = computed(() =>
+  totalRequests.value === 0 ? 0 : Math.round((completedRequests.value / totalRequests.value) * 100),
+)
+
+const shareOfTotal = (count: number) =>
+  totalRequests.value === 0 ? 0 : Math.round((count / totalRequests.value) * 100)
+
+const statCards = computed(() => [
   {
     label: 'Yêu cầu đang xử lý',
-    value: '1',
+    value: String(processingCount.value),
     unit: 'yêu cầu',
-    trend: '+1 tuần này',
-    trendUp: true,
-    progress: 35,
+    trend: 'Cần theo dõi',
+    trendUp: false,
+    progress: shareOfTotal(processingCount.value),
     color: '#e27d24',
     bg: 'linear-gradient(135deg, #fef3e2 0%, #fde8c8 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
   },
   {
     label: 'Đã tiếp nhận',
-    value: '1',
+    value: String(receivedCount.value),
     unit: 'yêu cầu',
-    trend: 'Đang gom vật tư',
+    trend: 'Đang triển khai',
     trendUp: false,
-    progress: 50,
+    progress: shareOfTotal(receivedCount.value),
     color: '#3182ce',
     bg: 'linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8a2 2 0 0 0-2-2h-3l-2-2H9L7 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6"/><circle cx="17" cy="17" r="4"/><path d="M17 15.5v3"/></svg>`,
   },
   {
     label: 'Đã hoàn thành',
-    value: '1',
+    value: String(completedRequests.value),
     unit: 'yêu cầu',
-    trend: 'Tất cả thời gian',
+    trend: 'Đã hỗ trợ xong',
     trendUp: false,
-    progress: 75,
+    progress: shareOfTotal(completedRequests.value),
     color: '#276749',
     bg: 'linear-gradient(135deg, #e8f5ee 0%, #c6f6d5 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`,
   },
   {
     label: 'Tổng yêu cầu đã gửi',
-    value: '3',
+    value: String(totalRequests.value),
     unit: 'yêu cầu',
     trend: 'Từ trước đến nay',
     trendUp: false,
@@ -220,13 +260,15 @@ const statCards = [
     bg: 'linear-gradient(135deg, #f3eeff 0%, #e9d8fd 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b46c1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
-]
+])
+
+const goToCreate = () => router.push({ path: '/requester/my-requests', query: { create: 'true' } })
 
 const quickActions = [
   {
     label: 'Tạo yêu cầu mới',
     color: '#e11d48',
-    action: () => router.push('/requester/create'),
+    action: goToCreate,
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
   },
   {
@@ -249,8 +291,8 @@ const quickActions = [
   },
 ]
 
-const goToDetail = (id: number) => {
-  router.push({ name: 'request-detail', params: { id } })
+const goToDetail = (id: string) => {
+  router.push({ path: '/requester/my-requests', query: { id } })
 }
 </script>
 
@@ -311,6 +353,7 @@ const goToDetail = (id: number) => {
 .panel-link:hover { text-decoration: underline; }
 
 /* Danh sách yêu cầu (đồng bộ dạng activity-list của Volunteer) */
+.empty-state { text-align: center; padding: 32px 0; color: #94a3b8; font-size: 13.5px; }
 .request-list { display: flex; flex-direction: column; gap: 4px; }
 .request-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-radius: 10px; transition: background 0.15s ease; }
 .request-item:hover { background: #f8fafc; }

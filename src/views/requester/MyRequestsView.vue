@@ -160,6 +160,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   createReliefRequest,
@@ -172,6 +173,9 @@ import {
   type ReliefRequestResponse,
 } from '@/features/requests/requests.types'
 
+const route = useRoute()
+const router = useRouter()
+
 // ── Danh sách yêu cầu ─────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
 const isLoading = ref(false)
@@ -182,7 +186,25 @@ const loadRequests = async () => {
   isLoading.value = false
 }
 
-onMounted(loadRequests)
+// Cho phép Dashboard mở thẳng modal tạo/chi tiết qua query (?create=true, ?id=...)
+onMounted(async () => {
+  await loadRequests()
+
+  if (route.query.create === 'true') {
+    openCreateModal()
+  }
+
+  const targetId = route.query.id as string | undefined
+  if (targetId) {
+    const found = allRequests.value.find((r) => r.id === targetId)
+    if (found) openDetailModal(found)
+  }
+
+  if (route.query.create || route.query.id) {
+    const { create, id, ...rest } = route.query
+    router.replace({ query: rest })
+  }
+})
 
 // ── Filter ────────────────────────────────────────────────
 const filterTabs = [
