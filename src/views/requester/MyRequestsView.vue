@@ -18,6 +18,7 @@
           v-for="tab in filterTabs"
           :key="tab.value"
           :class="['filter-tab', { active: activeFilter === tab.value }]"
+          :style="activeFilter === tab.value ? tab.activeStyle : undefined"
           @click="activeFilter = tab.value"
         >
           {{ tab.label }}
@@ -39,7 +40,7 @@
               </div>
               <div>
                 <h4>{{ item.title }}</h4>
-                <span class="time">{{ formatDate(item.createdAt) }}</span>
+                <span class="time">{{ formatDateTimeVI(item.createdAt) }}</span>
               </div>
             </div>
             <div class="req-actions">
@@ -144,7 +145,7 @@
             <div class="detail-row"><strong>Địa chỉ:</strong> {{ selectedRequest.address }}</div>
             <div class="detail-row"><strong>Số người ảnh hưởng:</strong> {{ selectedRequest.affectedPeople }}</div>
             <div class="detail-row"><strong>SĐT liên hệ:</strong> {{ selectedRequest.contactPhone }}</div>
-            <div class="detail-row"><strong>Ngày tạo:</strong> {{ formatDate(selectedRequest.createdAt) }}</div>
+            <div class="detail-row"><strong>Ngày tạo:</strong> {{ formatDateTimeVI(selectedRequest.createdAt) }}</div>
             <div class="detail-row"><strong>Mô tả:</strong> {{ selectedRequest.description }}</div>
             <div class="detail-row">
               <strong>Nhu cầu:</strong>
@@ -169,9 +170,15 @@ import {
 import {
   STATUS_LABEL_VI,
   STATUS_GROUP_MAP,
+  STATUS_GROUP_COLOR,
   type CreateReliefRequestPayload,
   type ReliefRequestResponse,
 } from '@/features/requests/requests.types'
+import {
+  badgeStyle,
+  formatDateTimeVI,
+  needsSummary,
+} from '@/features/requests/requests.helpers'
 
 const route = useRoute()
 const router = useRouter()
@@ -207,11 +214,37 @@ onMounted(async () => {
 })
 
 // ── Filter ────────────────────────────────────────────────
+// Tab active đổi màu theo đúng nhóm trạng thái:
+// đang xử lý = vàng, đã tiếp nhận = xanh dương, hoàn thành = xanh lá
 const filterTabs = [
-  { label: 'Tất cả', value: 'all' },
-  { label: 'Đang xử lý', value: 'processing' },
-  { label: 'Đã tiếp nhận', value: 'received' },
-  { label: 'Đã hoàn thành', value: 'completed' },
+  { label: 'Tất cả', value: 'all', activeStyle: undefined },
+  {
+    label: 'Đang xử lý',
+    value: 'processing',
+    activeStyle: {
+      background: STATUS_GROUP_COLOR.processing.bg,
+      borderColor: STATUS_GROUP_COLOR.processing.color,
+      color: STATUS_GROUP_COLOR.processing.color,
+    },
+  },
+  {
+    label: 'Đã tiếp nhận',
+    value: 'received',
+    activeStyle: {
+      background: STATUS_GROUP_COLOR.received.bg,
+      borderColor: STATUS_GROUP_COLOR.received.color,
+      color: STATUS_GROUP_COLOR.received.color,
+    },
+  },
+  {
+    label: 'Đã hoàn thành',
+    value: 'completed',
+    activeStyle: {
+      background: STATUS_GROUP_COLOR.completed.bg,
+      borderColor: STATUS_GROUP_COLOR.completed.color,
+      color: STATUS_GROUP_COLOR.completed.color,
+    },
+  },
 ]
 const activeFilter = ref('all')
 
@@ -219,34 +252,6 @@ const filteredRequests = computed(() => {
   if (activeFilter.value === 'all') return allRequests.value
   return allRequests.value.filter((r) => STATUS_GROUP_MAP[r.status] === activeFilter.value)
 })
-
-// ── Badge màu theo nhóm status ────────────────────────────
-const badgeStyle = (status: ReliefRequestResponse['status']) => {
-  const group = STATUS_GROUP_MAP[status]
-  const styles: Record<string, { bg: string; color: string }> = {
-    processing: { bg: '#fef3c7', color: '#b45309' },   // vàng
-    received:   { bg: '#dbeafe', color: '#1d4ed8' },   // xanh dương
-    completed:  { bg: '#dcfce7', color: '#15803d' },   // xanh lá
-    cancelled:  { bg: '#f1f5f9', color: '#64748b' },   // xám
-  }
-  const s = styles[group]
-  return { background: s.bg, color: s.color }
-}
-
-const formatDate = (iso: string) => {
-  const d = new Date(iso)
-  return d.toLocaleDateString('vi-VN') + ' - ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-}
-
-const needsSummary = (r: ReliefRequestResponse) => {
-  const list: string[] = []
-  if (r.needFood) list.push('Lương thực')
-  if (r.needWater) list.push('Nước sạch')
-  if (r.needMedicine) list.push('Thuốc men')
-  if (r.needBlanket) list.push('Chăn màn')
-  if (r.needShelter) list.push('Nơi trú ẩn')
-  return list.length ? list.join(', ') : 'Không có'
-}
 
 // ── Modal: Tạo mới ────────────────────────────────────────
 const showCreateModal = ref(false)
@@ -331,7 +336,7 @@ const closeDetailModal = () => { showDetailModal.value = false }
 .filter-bar { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
 .filter-tab { background: #fff; border: 1px solid #e2e8f0; color: #475569; padding: 8px 16px; border-radius: 20px; font-size: 13px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; }
 .filter-tab:hover { background: #f8fafc; }
-.filter-tab.active { background: #fff1eb; border-color: #ea580c; color: #ea580c; }
+.filter-tab.active { background: #fff1eb; border-color: #ea580c; color: #ea580c; font-weight: 600; }
 
 .card { background: #ffffff; border-radius: 16px; padding: 22px; border: 1px solid #e9ecef; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
 .empty-state { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 14px; }

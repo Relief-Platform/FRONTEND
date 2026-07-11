@@ -3,10 +3,17 @@
     <div class="notifications-page">
       <div class="page-header">
         <h2>Thông báo của bạn</h2>
-        <button class="btn-mark-read" @click="markAllAsRead">Đánh dấu tất cả đã đọc</button>
+        <button class="btn-mark-read" @click="handleMarkAllAsRead" :disabled="isMarking">
+          {{ isMarking ? 'Đang cập nhật...' : 'Đánh dấu tất cả đã đọc' }}
+        </button>
       </div>
 
-      <div class="notifications-list">
+      <div v-if="isLoading" class="empty-state">Đang tải...</div>
+      <div v-else-if="notifications.length === 0" class="empty-state">
+        Bạn chưa có thông báo nào.
+      </div>
+
+      <div class="notifications-list" v-else>
         <div
           v-for="note in notifications"
           :key="note.id"
@@ -21,7 +28,7 @@
           <div class="note-content">
             <h4>{{ note.title }}</h4>
             <p>{{ note.message }}</p>
-            <span class="note-time">{{ note.time }}</span>
+            <span class="note-time">{{ formatDateTimeVI(note.createdAt) }}</span>
           </div>
 
           <div class="note-status" v-if="!note.isRead">
@@ -36,40 +43,34 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
+import {
+  getNotifications,
+  markAllNotificationsRead,
+} from '@/features/notifications/notifications.api'
+import type { NotificationItem } from '@/features/notifications/notifications.types'
+import { formatDateTimeVI } from '@/features/requests/requests.helpers'
 
-const notifications = ref<any[]>([])
+const notifications = ref<NotificationItem[]>([])
+const isLoading = ref(false)
+const isMarking = ref(false)
 
-onMounted(() => {
-  const savedNotes = JSON.parse(localStorage.getItem('relief_notifications') || 'null')
+const loadNotifications = async () => {
+  isLoading.value = true
+  notifications.value = await getNotifications()
+  isLoading.value = false
+}
 
-  if (savedNotes) {
-    notifications.value = savedNotes
-  } else {
-    const initialNotes = [
-      {
-        id: 1, type: 'success', title: 'Yêu cầu cứu trợ đã được tiếp nhận',
-        message: 'Yêu cầu "Ngập lụt tại xã Tân Lập, Quảng Trị" của bạn đã được điều phối viên xác nhận và đang chờ phân công tình nguyện viên.',
-        time: 'Vừa xong', isRead: false
-      },
-      {
-        id: 2, type: 'system', title: 'Cập nhật trạng thái tự động',
-        message: 'Thông báo khẩn cấp từ yêu cầu của bạn đã được gửi đến các đội Y tế khu vực lân cận.',
-        time: '2 giờ trước', isRead: false
-      },
-      {
-        id: 3, type: 'alert', title: 'Cảnh báo thời tiết xấu',
-        message: 'Khu vực Quảng Trị dự báo sẽ có mưa lớn trong 12 giờ tới. Vui lòng giữ liên lạc và chuẩn bị phương án dự phòng.',
-        time: '1 ngày trước', isRead: true
-      }
-    ]
-    notifications.value = initialNotes
-    localStorage.setItem('relief_notifications', JSON.stringify(initialNotes))
+onMounted(loadNotifications)
+
+const handleMarkAllAsRead = async () => {
+  isMarking.value = true
+  try {
+    await markAllNotificationsRead()
+    // Cập nhật UI ngay, không cần reload toàn bộ
+    notifications.value = notifications.value.map((n) => ({ ...n, isRead: true }))
+  } finally {
+    isMarking.value = false
   }
-})
-
-const markAllAsRead = () => {
-  notifications.value.forEach(n => n.isRead = true)
-  localStorage.setItem('relief_notifications', JSON.stringify(notifications.value))
 }
 </script>
 
@@ -102,6 +103,14 @@ const markAllAsRead = () => {
   padding: 8px;
 }
 .btn-mark-read:hover { text-decoration: underline; }
+.btn-mark-read:disabled { opacity: 0.6; cursor: not-allowed; }
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #94a3b8;
+  font-size: 14px;
+}
 
 .notifications-list {
   display: flex;

@@ -47,3 +47,19 @@ export const STATUS_LABEL_VI: Record<ReliefRequestStatus, string> = {
   Completed:  'Đã hoàn thành',
   Cancelled:  'Đã hủy',
 }
+
+// ── Màu theo nhóm status (single source of truth cho MỌI view) ──
+//  Quy ước design: đang xử lý = VÀNG, đã tiếp nhận = XANH DƯƠNG,
+//  hoàn thành = XANH LÁ, hủy = XÁM
+export interface StatusColor {
+  bg: string     // nền badge/tag (nhạt)
+  color: string  // chữ badge/tag (đậm)
+  dot: string    // chấm tròn trạng thái
+}
+
+export const STATUS_GROUP_COLOR: Record<StatusGroup, StatusColor> = {
+  processing: { bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' }, // vàng
+  received:   { bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6' }, // xanh dương
+  completed:  { bg: '#dcfce7', color: '#15803d', dot: '#22c55e' }, // xanh lá
+  cancelled:  { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' }, // xám
+}
