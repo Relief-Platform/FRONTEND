@@ -20,12 +20,12 @@
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <input
-            id="email"
-            type="email"
-            v-model="formData.email"
-            placeholder="Email tài khoản"
+            id="username"
+            type="text"
+            v-model="formData.usernameOrEmail"
+            placeholder="Tên đăng nhập hoặc email"
             required
-            autocomplete="email"
+            autocomplete="username"
           />
         </div>
 
@@ -113,7 +113,7 @@ const mockAccounts = MOCK_ACCOUNTS
 
 /** Click vào tài khoản test → tự điền form + đăng nhập ngay */
 function fillMock(acc: { email: string; password: string }): void {
-  formData.email = acc.email
+  formData.usernameOrEmail = acc.email
   formData.password = acc.password
   showMock.value = false
   void handleLogin()
@@ -124,7 +124,7 @@ const isLoading      = ref(false)
 const errorMessage   = ref('')
 
 const formData = reactive({
-  email:    '',   // Email tài khoản
+  usernameOrEmail: '',
   password: '',
 })
 
@@ -136,8 +136,12 @@ const handleLogin = async () => {
   isLoading.value    = true
 
   try {
-    // authStore.login() gọi BE với { email, password } rồi lưu token
-    await authStore.login(formData.email, formData.password)
+    const identifier = formData.usernameOrEmail.trim()
+    if (!identifier) {
+      throw new Error('Vui lòng nhập tên đăng nhập hoặc email.')
+    }
+
+    await authStore.login(identifier, formData.password)
 
     // Redirect tới dashboard phù hợp với role (PascalCase từ BE)
     const roleRoutes: Record<string, string> = {
