@@ -1,6 +1,6 @@
 // ============================================================
 //  Single source of truth cho tất cả biến môi trường
-//  Sửa file .env.local để thay đổi URL backend
+//  Production BE: https://disasterrelief-api.runasp.net
 // ============================================================
 
 const env = import.meta.env
@@ -14,6 +14,6 @@ export const APP_TITLE: string = env.VITE_APP_TITLE ?? 'ReliefConnect'
 
 /**
  * Dùng mock data thay vì gọi real backend.
- * Đặt VITE_USE_MOCK_AUTH=false trong .env.local khi backend sẵn sàng.
+ * Đặt VITE_USE_MOCK_AUTH=false trong .env.local khi connect BE thật.
  */
 export const USE_MOCK_AUTH: boolean = env.VITE_USE_MOCK_AUTH === 'true'

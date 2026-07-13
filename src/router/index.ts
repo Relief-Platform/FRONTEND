@@ -63,8 +63,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/requester/RequesterDashboard.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['requester', 'coordinator', 'admin'],
+      roles: ['Requester', 'Admin'],
       title: 'Dashboard – Yêu cầu hỗ trợ',
+    },
+  },
+  {
+    path: '/requester/create',
+    name: 'create-request',
+    component: () => import('@/views/requester/CreateRequestView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Requester', 'Admin'],
+      title: 'Tạo yêu cầu hỗ trợ',
     },
   },
   {
@@ -73,8 +83,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/requester/NotificationsView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['requester', 'coordinator', 'admin'],
+      roles: ['Requester', 'Admin'],
       title: 'Thông báo',
+    },
+  },
+  {
+    path: '/requester/request/:id',
+    name: 'request-detail',
+    component: () => import('@/views/requester/RequestDetailView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Requester', 'Admin'],
+      title: 'Chi tiết yêu cầu',
     },
   },
   {
@@ -83,7 +103,7 @@ const routes: RouteRecordRaw[] = [
   component: () => import('@/views/requester/MyRequestsView.vue'),
   meta: {
     requiresAuth: true,
-    roles: ['requester', 'coordinator', 'admin'],
+    roles: ['Requester', 'Admin'],
     title: 'Yêu cầu của tôi',
   },
 },
@@ -93,7 +113,7 @@ const routes: RouteRecordRaw[] = [
   component: () => import('@/views/requester/TrackingView.vue'),
   meta: {
     requiresAuth: true,
-    roles: ['requester', 'coordinator', 'admin'],
+    roles: ['Requester', 'Admin'],
     title: 'Theo dõi hỗ trợ',
   },
 },
@@ -103,7 +123,7 @@ const routes: RouteRecordRaw[] = [
   component: () => import('@/views/requester/GuideView.vue'),
   meta: {
     requiresAuth: true,
-    roles: ['requester', 'coordinator', 'admin'],
+    roles: ['Requester', 'Admin'],
     title: 'Hướng dẫn',
   },
 },
@@ -116,7 +136,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/VolunteerDashboard.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Dashboard – Tình nguyện viên',
     },
   },
@@ -126,7 +146,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/MyTasksView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Nhiệm vụ của tôi',
     },
   },
@@ -136,7 +156,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/ActivityHistoryView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Lịch sử hoạt động',
     },
   },
@@ -146,7 +166,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/SkillsView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Đăng ký kỹ năng',
     },
   },
@@ -156,7 +176,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/NotificationsView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Thông báo',
     },
   },
@@ -166,7 +186,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/volunteer/VolunteerProfileView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['volunteer', 'coordinator', 'admin'],
+      roles: ['Volunteer', 'Admin'],
       title: 'Hồ sơ cá nhân – Tình nguyện viên',
     },
   },
@@ -180,7 +200,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/coordinator/CoordinatorDashboard.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['coordinator', 'admin'],
+      roles: ['Admin'],
       title: 'Dashboard – Điều phối viên',
     },
   },
@@ -194,7 +214,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/admin/AdminDashboard.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['admin'],
+      roles: ['Admin'],
       title: 'Dashboard – Quản trị',
     },
   },
@@ -204,7 +224,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/admin/UsersView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['admin'],
+      roles: ['Admin'],
       title: 'Quản lý người dùng',
     },
   },

@@ -114,26 +114,26 @@
 <script setup lang="ts">
 import { reactive, ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
-import { registerUser } from '@/features/auth/auth.api'
+import { registerUser, toAuthUser } from '@/features/auth/auth.api'
+import { tokenStorage } from '@/lib/api/token-storage'
 import { useAuthStore } from '@/stores/auth'
 import type { RegisterPayload } from '@/features/auth/auth.types'
 
-const router   = useRouter()
+const router    = useRouter()
 const authStore = useAuthStore()
 
 const showPassword = ref(false)
 const isLoading    = ref(false)
 const errorMessage = ref('')
 
-// field names khớp BE RegisterPayload (camelCase)
+// Chỉ giữ các field BE register nhận: email, password, confirmPassword, fullName
 const formData = reactive({
   fullName:        '',
   email:           '',
-  phoneNumber:     '',
   password:        '',
   confirmPassword: '',
+  // Các field UI-only (không gửi BE)
   province:        '',
-  // Skill & commitment chỉ dùng UI, không gửi BE
   skill:           '',
   isCommitted:     false,
 })
@@ -151,26 +151,24 @@ const handleRegister = async () => {
   errorMessage.value = ''
   isLoading.value    = true
 
-  // Chỉ gửi các field BE yêu cầu
+  // Chỉ gửi 4 field BE yêu cầu
   const payload: RegisterPayload = {
     fullName:        formData.fullName,
     email:           formData.email,
-    phoneNumber:     formData.phoneNumber,
     password:        formData.password,
     confirmPassword: formData.confirmPassword,
-    province:        formData.province || undefined,
   }
 
   try {
     const result = await registerUser(payload)
-    // Lưu token + user sau khi đăng ký thành công (auto-login)
+    // BE trả LoginResult sau register → auto-login luôn
+    tokenStorage.set(result.accessToken)
+    tokenStorage.setRefresh(result.refreshToken)
     authStore.accessToken = result.accessToken
-    authStore.user        = result.user
-    import('@/lib/api/token-storage').then(({ tokenStorage }) => {
-      tokenStorage.set(result.accessToken)
-      tokenStorage.setRefresh(result.refreshToken)
-    })
-    router.push('/login')
+    authStore.user        = toAuthUser(result)
+    localStorage.setItem('auth_user', JSON.stringify(authStore.user))
+    // Mặc định Requester → redirect về /requester
+    await router.push('/requester')
   } catch (error) {
     errorMessage.value = (error as Error).message || 'Đăng ký thất bại. Vui lòng thử lại!'
     console.error('Lỗi đăng ký:', error)
