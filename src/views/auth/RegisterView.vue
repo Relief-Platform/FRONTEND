@@ -19,7 +19,7 @@
         <!-- STEP 1 -->
         <div class="step-section">
           <h3 class="step-title">Step 1:</h3>
-          
+
           <div class="form-group">
             <label>Họ và tên</label>
             <input type="text" v-model="formData.fullName" placeholder="Nguyễn Văn A" required />
@@ -59,10 +59,10 @@
           </div>
         </div>
 
-      
+
         <div class="step-section">
           <h3 class="step-title">Step 2:</h3>
-          
+
           <div class="form-group">
             <label>Địa phương</label>
             <select v-model="formData.province">
@@ -72,7 +72,7 @@
               <option value="Đà Nẵng">Đà Nẵng</option>
               <option value="Hải Phòng">Hải Phòng</option>
               <option value="Cần Thơ">Cần Thơ</option>
-              
+
             </select>
           </div>
 
@@ -101,7 +101,7 @@
           <span v-else>Đăng ký</span>
         </button>
 
-        
+
         <div class="login-redirect">
           Đã có tài khoản?
           <router-link to="/login" class="login-link">Đăng nhập</router-link>
@@ -126,10 +126,12 @@ const showPassword = ref(false)
 const isLoading    = ref(false)
 const errorMessage = ref('')
 
-// Chỉ giữ các field BE register nhận: email, password, confirmPassword, fullName
+// Field BE register nhận: email, password, confirmPassword, fullName, phoneNumber
+// (BE thật validate "The PhoneNumber field is required" — kiểm chứng 2026-07-13)
 const formData = reactive({
   fullName:        '',
   email:           '',
+  phoneNumber:     '',
   password:        '',
   confirmPassword: '',
   // Các field UI-only (không gửi BE)
@@ -151,10 +153,13 @@ const handleRegister = async () => {
   errorMessage.value = ''
   isLoading.value    = true
 
-  // Chỉ gửi 4 field BE yêu cầu
-  const payload: RegisterPayload = {
+  // Gửi đủ field BE yêu cầu (kèm phoneNumber — bắt buộc)
+  // Dùng intersection type để không phải sửa auth.types.ts;
+  // khi nào owner phần auth thêm phoneNumber vào RegisterPayload thì bỏ phần `& {...}` đi.
+  const payload: RegisterPayload & { phoneNumber: string } = {
     fullName:        formData.fullName,
     email:           formData.email,
+    phoneNumber:     formData.phoneNumber,
     password:        formData.password,
     confirmPassword: formData.confirmPassword,
   }
@@ -200,26 +205,26 @@ const handleRegister = async () => {
 
 
 .logo-img {
-  height: 50px; 
+  height: 50px;
   margin-bottom: 5px;
 }
 
 
 .brand-name {
-  font-size: 32px; 
+  font-size: 32px;
   margin: 0 0 5px 0;
   font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  font-weight: 800; 
-  letter-spacing: -0.5px; 
+  font-weight: 800;
+  letter-spacing: -0.5px;
   line-height: 1;
 }
 
 .text-navy {
-  color: #1a3b5c; 
+  color: #1a3b5c;
 }
 
 .text-orange {
-  color: #e27d24; 
+  color: #e27d24;
 }
 
 
@@ -243,7 +248,7 @@ const handleRegister = async () => {
 .form-title {
   text-align: center;
   font-size: 20px;
-  color: #1a3b5c; 
+  color: #1a3b5c;
   margin-bottom: 25px;
   font-weight: 700;
 }
@@ -307,7 +312,7 @@ const handleRegister = async () => {
   position: relative;
 }
 .input-with-icon input {
-  padding-right: 40px; 
+  padding-right: 40px;
 }
 .icon-btn {
   position: absolute;
@@ -352,7 +357,7 @@ const handleRegister = async () => {
 .submit-btn {
   width: 100%;
   padding: 12px;
-  background-color: #1a4f8d; 
+  background-color: #1a4f8d;
   color: white;
   font-size: 16px;
   font-weight: bold;
