@@ -20,12 +20,12 @@
       <form @submit.prevent="handleLogin">
         <div class="form-group">
           <input
-            id="identifier"
-            type="text"
-            v-model="formData.identifier"
-            placeholder="Email hoặc Số điện thoại"
+            id="email"
+            type="email"
+            v-model="formData.email"
+            placeholder="Email tài khoản"
             required
-            autocomplete="username"
+            autocomplete="email"
           />
         </div>
 
@@ -74,21 +74,6 @@
         </span>
       </div>
 
-      <div class="divider-row">
-        <span class="or-text">or</span>
-      </div>
-
-      <!-- Google Login -->
-      <button class="google-btn" type="button" @click="handleGoogleLogin" id="google-login-btn">
-        <svg class="google-icon" viewBox="0 0 24 24" width="20" height="20">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Google login
-      </button>
-
       <!-- ── Mock credentials (chỉ hiển thị khi MOCK mode) ── -->
       <div v-if="isMockMode" class="mock-panel">
         <button class="mock-toggle" @click="showMock = !showMock" type="button">
@@ -117,30 +102,29 @@ import { useRouter } from 'vue-router'
 import { MOCK_ACCOUNTS } from '@/mocks/auth.mock'
 import { USE_MOCK_AUTH } from '@/config/env'
 import { useAuthStore } from '@/stores/auth'
-import { loginWithGoogle } from '@/features/auth/auth.api'
 
-const router = useRouter()
+const router    = useRouter()
 const authStore = useAuthStore()
 
 // ── Mock panel state ────────────────────────────────────────
 const isMockMode = ref(USE_MOCK_AUTH)
-const showMock = ref(false)
+const showMock   = ref(false)
 const mockAccounts = MOCK_ACCOUNTS
 
 /** Click vào tài khoản test → tự điền form + đăng nhập ngay */
 function fillMock(acc: { email: string; password: string }): void {
-  formData.identifier = acc.email
+  formData.email = acc.email
   formData.password = acc.password
   showMock.value = false
-  handleLogin()
+  void handleLogin()
 }
 
-const showPassword = ref(false)
-const isLoading = ref(false)
-const errorMessage = ref('')
+const showPassword   = ref(false)
+const isLoading      = ref(false)
+const errorMessage   = ref('')
 
 const formData = reactive({
-  identifier: '', // Email hoặc số điện thoại
+  email:    '',   // Email tài khoản
   password: '',
 })
 
@@ -149,27 +133,26 @@ const formData = reactive({
 // ============================================================
 const handleLogin = async () => {
   errorMessage.value = ''
-  isLoading.value = true
+  isLoading.value    = true
 
   try {
-    // Gọi qua authStore (Pinia) — tự động lưu token vào tokenStorage
-    await authStore.login(formData.identifier, formData.password)
+    // authStore.login() gọi BE với { email, password } rồi lưu token
+    await authStore.login(formData.email, formData.password)
 
-    // Redirect tới dashboard phù hợp với role
+    // Redirect tới dashboard phù hợp với role (PascalCase từ BE)
     const roleRoutes: Record<string, string> = {
-      admin:       '/admin',
-      coordinator: '/coordinator',
-      volunteer:   '/volunteer',
-      requester:   '/requester',
+      Admin:            '/admin',
+      Volunteer:        '/volunteer',
+      Requester:        '/requester',
+      WarehouseManager: '/admin',     // chưa có dashboard riêng → dùng admin tạm
+      Organization:     '/requester', // chưa có dashboard riêng → dùng requester tạm
     }
     const dest = authStore.role ? (roleRoutes[authStore.role] ?? '/home') : '/home'
-    router.push(dest)
+    await router.push(dest)
   } catch (error) {
-    const message = error instanceof Error
+    errorMessage.value = error instanceof Error
       ? error.message
       : 'Đăng nhập thất bại. Vui lòng thử lại!'
-
-    errorMessage.value = message
     console.error('Lỗi đăng nhập:', error)
   } finally {
     isLoading.value = false
@@ -177,19 +160,10 @@ const handleLogin = async () => {
 }
 
 // ============================================================
-//  Đăng nhập bằng Google
-// ============================================================
-const handleGoogleLogin = () => {
-  // Gọi hàm trong api/auth.js — sẽ redirect sang Google OAuth
-  loginWithGoogle()
-}
-
-// ============================================================
 //  Quên mật khẩu — thêm logic/route sau
 // ============================================================
 const handleForgotPassword = () => {
   alert('Tính năng đang phát triển!')
-  // router.push('/forgot-password') // uncomment khi có trang quên mật khẩu
 }
 </script>
 

@@ -1,13 +1,12 @@
 // ============================================================
 //  Auth Store – Pinia
-//  Token + User + Role-based helpers
-//  Sync với BE spec: accessToken + refreshToken, GUID id
+//  Sync với BE thực tế: LoginResult → AuthUser, role PascalCase
 // ============================================================
 
 import { ref, computed } from 'vue'
 import { defineStore } from 'pinia'
 import { tokenStorage } from '@/lib/api/token-storage'
-import { loginUser, logoutUser, getMe } from '@/features/auth/auth.api'
+import { loginUser, logoutUser, getMe, toAuthUser } from '@/features/auth/auth.api'
 import type { AuthUser, UserRole } from '@/features/auth/auth.types'
 import { ROLE_PRIORITY } from '@/features/auth/auth.types'
 
@@ -31,7 +30,7 @@ export const useAuthStore = defineStore('auth', () => {
   // ── Getters ────────────────────────────────────────────────
   const isLoggedIn = computed(() => !!accessToken.value && !!user.value)
 
-  /** Role hiện tại; null nếu chưa đăng nhập */
+  /** Role hiện tại (PascalCase khớp BE): "Admin" | "Volunteer" | ... */
   const role = computed<UserRole | null>(() => user.value?.role ?? null)
 
   /** Kiểm tra user có role cụ thể không */
@@ -40,40 +39,51 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Kiểm tra user có quyền >= minRole theo hierarchy không
-   * VD: isAtLeast('coordinator') → true nếu là coordinator hoặc admin
+   * Kiểm tra user có quyền >= minRole theo hierarchy không.
+   * VD: isAtLeast('Volunteer') → true nếu là Volunteer, WarehouseManager hoặc Admin
    */
   function isAtLeast(minRole: UserRole): boolean {
     if (!user.value) return false
     return ROLE_PRIORITY[user.value.role] >= ROLE_PRIORITY[minRole]
   }
 
-  const isAdmin       = computed(() => hasRole('admin'))
-  const isCoordinator = computed(() => hasRole('coordinator'))
-  const isVolunteer   = computed(() => hasRole('volunteer'))
-  const isRequester   = computed(() => hasRole('requester'))
+  const isAdmin            = computed(() => hasRole('Admin'))
+  const isVolunteer        = computed(() => hasRole('Volunteer'))
+  const isRequester        = computed(() => hasRole('Requester'))
+  const isWarehouseManager = computed(() => hasRole('WarehouseManager'))
+  const isOrganization     = computed(() => hasRole('Organization'))
 
   // ── Actions ────────────────────────────────────────────────
 
   /**
-   * Đăng nhập — lưu cả accessToken + refreshToken
+   * Đăng nhập.
+   * loginUser() trả LoginResult, toAuthUser() map sang AuthUser để lưu store.
+   * Lưu cả accessToken + refreshToken vào localStorage.
    */
-  async function login(identifier: string, password: string): Promise<void> {
-    const result = await loginUser(identifier, password)
+  async function login(email: string, password: string): Promise<void> {
+    const result = await loginUser(email, password)
 
     accessToken.value = result.accessToken
-    user.value        = result.user
+    user.value        = toAuthUser(result)
 
     tokenStorage.set(result.accessToken)
     tokenStorage.setRefresh(result.refreshToken)
-    localStorage.setItem(USER_KEY, JSON.stringify(result.user))
+    localStorage.setItem(USER_KEY, JSON.stringify(user.value))
   }
 
   /**
-   * Đăng xuất — gọi BE blacklist token, xoá local storage
+   * Đăng xuất.
+   * Gửi refreshToken lên BE để blacklist, sau đó xoá local state.
    */
   async function logout(): Promise<void> {
-    try { await logoutUser() } catch { /* ignore server error */ }
+    const refreshToken = tokenStorage.getRefresh()
+    try {
+      if (refreshToken) {
+        await logoutUser(refreshToken)
+      }
+    } catch {
+      // Bỏ qua lỗi server — vẫn xoá local state
+    }
 
     accessToken.value = null
     user.value        = null
@@ -83,16 +93,24 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   /**
-   * Lấy thông tin user mới nhất từ /api/auth/me
-   * Dùng sau khi F5 để đảm bảo data luôn sync với BE
+   * Lấy thông tin user mới nhất từ /api/auth/me.
+   * Gọi khi app khởi động (sau F5) để đảm bảo data đồng bộ với BE.
    */
   async function fetchMe(): Promise<void> {
     try {
-      const freshUser = await getMe()
-      user.value = freshUser
-      localStorage.setItem(USER_KEY, JSON.stringify(freshUser))
+      const me = await getMe()
+      // Giữ lại expiresAt từ store cũ vì /me không trả expiresAt
+      const current = user.value
+      user.value = {
+        userId:    me.userId,
+        fullName:  me.fullName,
+        email:     me.email,
+        role:      me.role,
+        expiresAt: current?.expiresAt ?? '',
+      }
+      localStorage.setItem(USER_KEY, JSON.stringify(user.value))
     } catch {
-      // Token hết hạn → http interceptor sẽ redirect /login
+      // Token hết hạn → http interceptor tự redirect /login
     }
   }
 
@@ -108,7 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken, user,
     // computed
     isLoggedIn, role,
-    isAdmin, isCoordinator, isVolunteer, isRequester,
+    isAdmin, isVolunteer, isRequester, isWarehouseManager, isOrganization,
     // methods
     hasRole, isAtLeast, login, logout, fetchMe, updateUser,
   }
