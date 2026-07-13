@@ -1,10 +1,9 @@
 <template>
-  <AppLayout>
+  <AdminLayout>
     <div class="page-container">
       <!-- Header -->
       <div class="page-header">
         <h1 class="page-title">Quản lý người dùng</h1>
-        <BaseButton id="add-user-btn" @click="openCreate">+ Thêm người dùng</BaseButton>
       </div>
 
       <!-- Search bar -->
@@ -22,6 +21,15 @@
             </svg>
           </template>
         </BaseInput>
+
+        <select v-model="selectedRole" class="role-filter" @change="onRoleChange">
+          <option value="">Tất cả vai trò</option>
+          <option value="Admin">Admin</option>
+          <option value="Volunteer">Volunteer</option>
+          <option value="Requester">Requester</option>
+          <option value="WarehouseManager">Warehouse Manager</option>
+          <option value="Organization">Organization</option>
+        </select>
       </div>
 
       <!-- Table -->
@@ -41,6 +49,7 @@
               <th>Họ và tên</th>
               <th>Email</th>
               <th>Điện thoại</th>
+              <th>Trạng thái</th>
               <th>Vai trò</th>
               <th>Thao tác</th>
             </tr>
@@ -51,10 +60,16 @@
               <td class="font-semibold">{{ user.fullName }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.phone ?? '—' }}</td>
+              <td>
+                <span class="status-badge" :class="user.isActive ? 'status--active' : 'status--inactive'">
+                  {{ user.isActive ? 'Hoạt động' : 'Đã khoá' }}
+                </span>
+              </td>
               <td><span class="role-badge">{{ user.role ?? 'User' }}</span></td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--edit" @click="openEdit(user)">Sửa</button>
-                <button class="action-btn action-btn--delete" @click="handleDelete(user.id)">Xóa</button>
+                <button class="action-btn action-btn--edit" @click="openEditRole(user)">Đổi Role</button>
+                <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">Khoá</button>
+                <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">Mở Khoá</button>
               </td>
             </tr>
           </tbody>
@@ -71,13 +86,13 @@
 
     <!-- Dialog -->
     <UserFormDialog v-model="showDialog" :edit-data="editTarget" @saved="onSaved" />
-  </AppLayout>
+  </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue'
-import AppLayout from '@/components/layout/AppLayout.vue'
-import BaseButton from '@/components/ui/BaseButton.vue'
+import { ElMessage } from 'element-plus'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseSpinner from '@/components/ui/BaseSpinner.vue'
@@ -95,39 +110,70 @@ const { confirm } = useConfirm()
 
 const showDialog = ref(false)
 const editTarget = ref<User | null>(null)
+const selectedRole = ref('')
 
 onMounted(() => store.fetchUsers())
 
 watch(debouncedQuery, () => {
   store.page = 1
-  store.fetchUsers()
+  store.fetchUsers() // Note: FE search API not implemented in Backend, but we trigger fetch anyway
 })
+
+function onRoleChange() {
+  store.currentRoleFilter = selectedRole.value || undefined
+  store.page = 1
+  store.fetchUsers()
+}
 
 function changePage(delta: number): void {
   store.page += delta
   store.fetchUsers()
 }
 
-function openCreate(): void {
-  editTarget.value = null
-  showDialog.value = true
-}
-function openEdit(user: User): void {
+function openEditRole(user: User): void {
   editTarget.value = user
   showDialog.value = true
 }
-async function handleDelete(id: string | number): Promise<void> {
-  if (await confirm('Bạn có chắc chắn muốn xóa người dùng này?')) {
-    await store.removeUser(id)
+
+async function toggleStatus(user: User): Promise<void> {
+  const action = user.isActive ? 'khoá' : 'mở khoá'
+  if (await confirm(`Bạn có chắc chắn muốn ${action} người dùng này?`)) {
+    try {
+      if (user.isActive) {
+        await store.deactivate(user.id)
+      } else {
+        await store.activate(user.id)
+      }
+      ElMessage.success(`${action === 'khoá' ? 'Khoá' : 'Mở khoá'} thành công`)
+    } catch (err) {
+      ElMessage.error((err as Error).message || `Không thể ${action}`)
+    }
   }
 }
+
 function onSaved(): void {
   store.fetchUsers()
 }
 </script>
 
 <style scoped>
-.users-toolbar { margin-bottom: var(--space-4); }
+.users-toolbar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+}
+
+.role-filter {
+  padding: 8px 12px;
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  font-size: 14px;
+  color: var(--color-text-primary);
+  outline: none;
+  cursor: pointer;
+}
 
 /* Table */
 .users-table { width: 100%; border-collapse: collapse; font-size: 14px; }
@@ -149,6 +195,17 @@ function onSaved(): void {
 }
 .users-table tbody tr:hover { background: #f8fafc; }
 .users-table tbody tr:last-child td { border-bottom: none; }
+
+/* Status badge */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+}
+.status--active { background: rgba(39, 103, 73, 0.1); color: #276749; }
+.status--inactive { background: rgba(197, 48, 48, 0.1); color: #c53030; }
 
 /* Role badge */
 .role-badge {
@@ -176,6 +233,8 @@ function onSaved(): void {
 .action-btn--edit:hover  { background: rgba(26,79,141,0.2); }
 .action-btn--delete { background: rgba(197,48,48,0.1); color: var(--color-danger); }
 .action-btn--delete:hover { background: rgba(197,48,48,0.2); }
+.action-btn--activate { background: rgba(39,103,73,0.1); color: #276749; }
+.action-btn--activate:hover { background: rgba(39,103,73,0.2); }
 
 /* States */
 .users-loading,
