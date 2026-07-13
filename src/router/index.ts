@@ -8,7 +8,7 @@
 //  ├── admin/       → AdminDashboard, UsersView
 //  ├── coordinator/ → CoordinatorDashboard
 //  ├── volunteer/   → VolunteerDashboard
-//  └── requester/   → RequesterDashboard, CreateRequestView, NotificationsView
+//  └── requester/   → RequesterDashboard, MyRequestsView, NotificationsView
 // ============================================================
 
 import './types'                                        // RouteMeta augmentation
@@ -68,16 +68,6 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/requester/create',
-    name: 'create-request',
-    component: () => import('@/views/requester/CreateRequestView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: ['requester', 'coordinator', 'admin'],
-      title: 'Tạo yêu cầu hỗ trợ',
-    },
-  },
-  {
     path: '/requester/notifications',
     name: 'requester-notifications',
     component: () => import('@/views/requester/NotificationsView.vue'),
@@ -85,16 +75,6 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['requester', 'coordinator', 'admin'],
       title: 'Thông báo',
-    },
-  },
-  {
-    path: '/requester/request/:id',
-    name: 'request-detail',
-    component: () => import('@/views/requester/RequestDetailView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: ['requester', 'coordinator', 'admin'],
-      title: 'Chi tiết yêu cầu',
     },
   },
   {
