@@ -1,110 +1,141 @@
 // ============================================================
 //  Auth API — /api/auth
-//  Tự động dùng MOCK khi VITE_USE_MOCK_AUTH=true (.env.local)
-//  Khi backend sẵn sàng: đặt VITE_USE_MOCK_AUTH=false
+//  Base URL: https://disasterrelief-api.runasp.net
+//  Mock mode: VITE_USE_MOCK_AUTH=true (.env.local)
+//  Real mode: VITE_USE_MOCK_AUTH=false
 // ============================================================
 
 import { http } from '@/lib/api/http'
 import { mockLoginUser, mockRegisterUser } from '@/mocks/auth.mock'
 import type {
+  ApiResponse,
   LoginPayload,
   RegisterPayload,
-  ChangePasswordPayload,
   RefreshTokenPayload,
-  AuthResponse,
+  ChangePasswordPayload,
+  LogoutPayload,
+  LoginResult,
   AuthUser,
-  RefreshTokenResponse,
+  RefreshResult,
+  MeResult,
 } from './auth.types'
 
 /** true → dùng mock data; false → gọi real backend */
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
+// ── Helper: unwrap ApiResponse<T> ────────────────────────────
+/**
+ * Mọi response BE đều bọc trong ApiResponse<T>.
+ * Hàm này kiểm tra isSuccess và trả về result, hoặc ném lỗi với errorMessages.
+ */
+function unwrap<T>(response: ApiResponse<T>): T {
+  if (!response.isSuccess || response.result === null) {
+    const msg = response.errorMessages.length > 0
+      ? response.errorMessages.join(' | ')
+      : 'Đã có lỗi xảy ra'
+    throw new Error(msg)
+  }
+  return response.result
+}
+
 // ── POST /api/auth/login ──────────────────────────────────────
 /**
- * Đăng nhập người dùng.
- * Body: { identifier, password }
- * Response: { accessToken, refreshToken, user }
+ * Đăng nhập — nhận accessToken + refreshToken.
+ * accessToken hết hạn sau 60 phút.
+ * Body: { email, password }
  */
 export async function loginUser(
-  identifier: string,
+  email: string,
   password: string,
-): Promise<AuthResponse> {
-  if (USE_MOCK) return mockLoginUser(identifier, password)
+): Promise<LoginResult> {
+  if (USE_MOCK) return mockLoginUser(email, password)
 
-  const payload: LoginPayload = { identifier, password }
-  const { data } = await http.post<AuthResponse>('/auth/login', payload)
-  return data
+  const payload: LoginPayload = { email, password }
+  const { data } = await http.post<ApiResponse<LoginResult>>('/auth/login', payload)
+  return unwrap(data)
 }
 
 // ── POST /api/auth/register ───────────────────────────────────
 /**
- * Đăng ký người dùng mới.
- * Body: RegisterPayload (camelCase, khớp BE)
- * Response: { accessToken, refreshToken, user }
+ * Đăng ký tài khoản mới — role mặc định là "Requester".
+ * Body: { email, password, confirmPassword, fullName }
  */
 export async function registerUser(
   userData: RegisterPayload,
-): Promise<AuthResponse> {
+): Promise<LoginResult> {
   if (USE_MOCK) return mockRegisterUser()
 
-  const { data } = await http.post<AuthResponse>('/auth/register', userData)
-  return data
+  const { data } = await http.post<ApiResponse<LoginResult>>('/auth/register', userData)
+  return unwrap(data)
 }
 
 // ── POST /api/auth/refresh-token ──────────────────────────────
 /**
- * Làm mới access token bằng refresh token.
- * 🔒 Không cần Authorization header (dùng refreshToken trong body)
+ * Làm mới accessToken bằng refreshToken còn hạn (7 ngày).
+ * Gọi khi nhận 401 do accessToken hết hạn (60 phút).
+ * Không cần Authorization header.
+ * Body: { refreshToken }
  */
 export async function refreshAccessToken(
   refreshToken: string,
-): Promise<RefreshTokenResponse> {
+): Promise<RefreshResult> {
   const payload: RefreshTokenPayload = { refreshToken }
-  const { data } = await http.post<RefreshTokenResponse>('/auth/refresh-token', payload)
-  return data
+  const { data } = await http.post<ApiResponse<RefreshResult>>('/auth/refresh-token', payload)
+  return unwrap(data)
 }
 
 // ── POST /api/auth/logout ─────────────────────────────────────
 /**
- * Đăng xuất phía server (blacklist token).
- * 🔒 Yêu cầu Authorization: Bearer <accessToken>
+ * Thu hồi 1 refreshToken phía server.
+ * Theo spec BE: gửi refreshToken trong body để blacklist.
+ * 🔒 Không cần đăng nhập (theo bảng endpoint trong API-Reference-FE.md).
  */
-export async function logoutUser(): Promise<void> {
+export async function logoutUser(refreshToken: string): Promise<void> {
   if (USE_MOCK) return
-  await http.post('/auth/logout')
+  const payload: LogoutPayload = { refreshToken }
+  await http.post('/auth/logout', payload)
 }
 
 // ── GET /api/auth/me ──────────────────────────────────────────
 /**
- * Lấy thông tin user đang đăng nhập.
+ * Lấy thông tin user hiện tại từ JWT claim.
  * 🔒 Yêu cầu Authorization: Bearer <accessToken>
- * Response: AuthUser
  */
-export async function getMe(): Promise<AuthUser> {
-  const { data } = await http.get<AuthUser>('/auth/me')
-  return data
+export async function getMe(): Promise<MeResult> {
+  const { data } = await http.get<ApiResponse<MeResult>>('/auth/me')
+  return unwrap(data)
 }
 
 // ── POST /api/auth/change-password ───────────────────────────
 /**
- * Đổi mật khẩu.
+ * Đổi mật khẩu tài khoản hiện tại.
  * 🔒 Yêu cầu Authorization: Bearer <accessToken>
  * Body: { currentPassword, newPassword, confirmNewPassword }
  */
 export async function changePassword(
   payload: ChangePasswordPayload,
 ): Promise<void> {
-  await http.post('/auth/change-password', payload)
+  const { data } = await http.post<ApiResponse<null>>('/auth/change-password', payload)
+  // Chỉ kiểm tra lỗi — result null là bình thường với action không trả data
+  if (!data.isSuccess) {
+    const msg = data.errorMessages.length > 0
+      ? data.errorMessages.join(' | ')
+      : 'Đổi mật khẩu thất bại'
+    throw new Error(msg)
+  }
 }
 
-// ── Google OAuth (redirect) ───────────────────────────────────
+// ── Alias: map LoginResult → AuthUser ────────────────────────
 /**
- * Đăng nhập bằng Google OAuth — redirect sang BE xử lý.
+ * Chuyển LoginResult (BE response) thành AuthUser (FE store format).
+ * Dùng sau login/register/refresh để lưu vào store.
  */
-export function loginWithGoogle(): void {
-  if (USE_MOCK) {
-    alert('[MOCK] Google OAuth chưa hỗ trợ trong chế độ mock')
-    return
+export function toAuthUser(result: LoginResult): AuthUser {
+  return {
+    userId:    result.userId,
+    fullName:  result.fullName,
+    email:     result.email,
+    role:      result.role,
+    expiresAt: result.expiresAt,
   }
-  window.location.href = `${http.defaults.baseURL}/auth/google`
 }

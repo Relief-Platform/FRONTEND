@@ -1,145 +1,126 @@
 // ============================================================
-//  Mock Auth Data – dùng để test trước khi connect backend
-//  ĐỔI sang real API: xem src/features/auth/auth.api.ts
-//  Format khớp BE spec: GUID id, phoneNumber, avatarUrl,
-//  accessToken + refreshToken
+//  Mock Auth Data – test khi chưa connect backend
+//  Format khớp BE thực tế: LoginResult (không phải AuthResponse cũ)
+//  Seed account thật trên Production: admin@relief.vn / Admin@123
 // ============================================================
 
-import type { AuthUser, AuthResponse, UserRole } from '@/features/auth/auth.types'
+import type { LoginResult, AuthUser, UserRole } from '@/features/auth/auth.types'
 
-// ── Mock user database ───────────────────────────────────────
+// ── Mock credentials ─────────────────────────────────────────
 interface MockCredential {
-  identifier: string   // email hoặc phone
+  email: string
   password: string
-  user: AuthUser
+  result: LoginResult  // khớp với response thật của BE
 }
 
+// Mật khẩu mock dùng "Pass@123" để đúng format yêu cầu độ phức tạp
 export const MOCK_CREDENTIALS: MockCredential[] = [
   {
-    identifier: 'admin@relief.vn',
-    password: '123456',
-    user: {
-      id: '11111111-1111-1111-1111-111111111111',
-      fullName: 'Nguyễn Quản Trị',
-      email: 'admin@relief.vn',
-      phoneNumber: '0901000001',
-      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Admin&backgroundColor=c53030&fontColor=fff',
-      isActive: true,
-      roleId: 'aaaa0000-0000-0000-0000-000000000001',
-      role: 'admin',
+    email:    'admin@relief.vn',
+    password: 'Admin@123',   // đúng password seed thật trên BE
+    result: {
+      userId:       '2e2e12d0-eaf1-44a7-a8cf-08dedfe3aa11', // seed GUID thật từ BE
+      fullName:     'System Administrator',
+      email:        'admin@relief.vn',
+      role:         'Admin',
+      accessToken:  'mock.admin.access.token',
+      refreshToken: 'mock.admin.refresh.token',
+      expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     },
   },
   {
-    identifier: 'coordinator@relief.vn',
-    password: '123456',
-    user: {
-      id: '22222222-2222-2222-2222-222222222222',
-      fullName: 'Trần Điều Phối',
-      email: 'coordinator@relief.vn',
-      phoneNumber: '0902000002',
-      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Coordinator&backgroundColor=2b6cb0&fontColor=fff',
-      isActive: true,
-      roleId: 'aaaa0000-0000-0000-0000-000000000002',
-      role: 'coordinator',
+    email:    'volunteer@relief.vn',
+    password: 'Pass@123',
+    result: {
+      userId:       '33333333-3333-3333-3333-333333333333',
+      fullName:     'Lê Tình Nguyện',
+      email:        'volunteer@relief.vn',
+      role:         'Volunteer',
+      accessToken:  'mock.volunteer.access.token',
+      refreshToken: 'mock.volunteer.refresh.token',
+      expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     },
   },
   {
-    identifier: 'volunteer@relief.vn',
-    password: '123456',
-    user: {
-      id: '33333333-3333-3333-3333-333333333333',
-      fullName: 'Lê Tình Nguyện',
-      email: 'volunteer@relief.vn',
-      phoneNumber: '0903000003',
-      avatarUrl: 'https://api.dicebear.com/7.x/initials/svg?seed=Volunteer&backgroundColor=276749&fontColor=fff',
-      isActive: true,
-      roleId: 'aaaa0000-0000-0000-0000-000000000003',
-      role: 'volunteer',
+    email:    'requester@relief.vn',
+    password: 'Pass@123',
+    result: {
+      userId:       '44444444-4444-4444-4444-444444444444',
+      fullName:     'Phạm Yêu Cầu',
+      email:        'requester@relief.vn',
+      role:         'Requester',
+      accessToken:  'mock.requester.access.token',
+      refreshToken: 'mock.requester.refresh.token',
+      expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     },
   },
   {
-    identifier: 'requester@relief.vn',
-    password: '123456',
-    user: {
-      id: '44444444-4444-4444-4444-444444444444',
-      fullName: 'Phạm Yêu Cầu',
-      email: 'requester@relief.vn',
-      phoneNumber: '0904000004',
-      avatarUrl: null,
-      isActive: true,
-      roleId: 'aaaa0000-0000-0000-0000-000000000004',
-      role: 'requester',
+    email:    'warehouse@relief.vn',
+    password: 'Pass@123',
+    result: {
+      userId:       '55555555-5555-5555-5555-555555555555',
+      fullName:     'Nguyễn Quản Kho',
+      email:        'warehouse@relief.vn',
+      role:         'WarehouseManager',
+      accessToken:  'mock.warehouse.access.token',
+      refreshToken: 'mock.warehouse.refresh.token',
+      expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
     },
   },
 ]
 
-/** Delay giả lập network latency (ms) */
-const MOCK_DELAY = 600
-
+const MOCK_DELAY = 500
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms))
 
 // ── Mock API functions ───────────────────────────────────────
 
 /**
- * Mock login – tìm user theo identifier + password
- * Trả về đúng format AuthResponse: { accessToken, refreshToken, user }
+ * Mock login — tìm credential theo email + password.
+ * Trả LoginResult khớp format BE thực tế.
  */
 export async function mockLoginUser(
-  identifier: string,
+  email: string,
   password: string,
-): Promise<AuthResponse> {
+): Promise<LoginResult> {
   await delay(MOCK_DELAY)
 
   const found = MOCK_CREDENTIALS.find(
-    (c) =>
-      (c.identifier === identifier || c.user.phoneNumber === identifier) &&
-      c.password === password,
+    (c) => c.email === email && c.password === password,
   )
 
   if (!found) {
-    throw new Error('Email/SĐT hoặc mật khẩu không đúng')
+    throw new Error('Email hoặc mật khẩu không đúng.')
   }
 
-  // Tạo fake JWT (base64) chứa role và id để debug
-  const fakePayload = btoa(
-    JSON.stringify({ sub: found.user.id, role: found.user.role, exp: Date.now() + 86_400_000 }),
-  )
-  const fakeAccessToken  = `mock.${fakePayload}.access`
-  const fakeRefreshToken = `mock.${fakePayload}.refresh`
-
+  // Làm mới expiresAt mỗi lần "login"
   return {
-    accessToken:  fakeAccessToken,
-    refreshToken: fakeRefreshToken,
-    user: found.user,
+    ...found.result,
+    expiresAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   }
 }
 
 /**
- * Mock register – luôn thành công, trả về user mặc định requester
+ * Mock register — luôn thành công, trả về user Requester mới.
  */
-export async function mockRegisterUser(): Promise<AuthResponse> {
+export async function mockRegisterUser(): Promise<LoginResult> {
   await delay(MOCK_DELAY)
-  const newUser: AuthUser = {
-    id: `mock-${Date.now()}-xxxx-xxxx-xxxxxxxxxxxx`,
-    fullName: 'Người Dùng Mới',
-    email: 'new@relief.vn',
-    phoneNumber: undefined,
-    avatarUrl: null,
-    isActive: true,
-    roleId: 'aaaa0000-0000-0000-0000-000000000004',
-    role: 'requester',
+  return {
+    userId:       `mock-${Date.now()}-xxxx-xxxx-xxxx-xxxxxxxxxxxx`,
+    fullName:     'Người Dùng Mới',
+    email:        'new@relief.vn',
+    role:         'Requester',
+    accessToken:  'mock.new.access.token',
+    refreshToken: 'mock.new.refresh.token',
+    expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),
   }
-  const fakePayload      = btoa(JSON.stringify({ sub: newUser.id, role: newUser.role }))
-  const fakeAccessToken  = `mock.${fakePayload}.access`
-  const fakeRefreshToken = `mock.${fakePayload}.refresh`
-
-  return { accessToken: fakeAccessToken, refreshToken: fakeRefreshToken, user: newUser }
 }
 
-// ── Test account summary (dùng trong LoginView hint) ─────────
+// ── Test account list (dùng trong LoginView hint panel) ──────
 export const MOCK_ACCOUNTS = MOCK_CREDENTIALS.map((c) => ({
-  role: c.user.role as UserRole,
-  email: c.identifier,
+  role:     c.result.role as UserRole,
+  email:    c.email,
   password: c.password,
-  name: c.user.fullName,
+  name:     c.result.fullName,
 }))
+
+// ── Không cần export AuthUser riêng — dùng toAuthUser() trong auth.api.ts
