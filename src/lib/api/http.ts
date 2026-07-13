@@ -1,10 +1,14 @@
 // ============================================================
 //  Axios instance – single HTTP client cho toàn bộ app
-//  BE: https://disasterrelief-api.runasp.net
-//  ⚠️ Cold start trên free tier có thể chậm, timeout 30s
+//  Interceptors: gắn Bearer token + BÓC ApiResponse envelope
+//
+//  BE bọc MỌI response trong envelope (API Reference mục 3):
+//  { statusCode, isSuccess, errorMessages, result }
+//  → Bóc tại đây 1 lần duy nhất, các file *.api.ts nhận thẳng
+//    data thật trong `result`, không phải tự bóc.
 // ============================================================
 
-import axios, { type AxiosError, type AxiosInstance } from 'axios'
+import axios, { type AxiosError } from 'axios'
 import { API_BASE_URL } from '@/config/env'
 import { tokenStorage } from './token-storage'
 
@@ -20,12 +24,29 @@ export class ApiError extends Error {
   }
 }
 
+// ── ApiResponse envelope của BE ─────────────────────────────
+interface ApiEnvelope<T = unknown> {
+  statusCode: number
+  isSuccess: boolean
+  errorMessages: string[] | null
+  result: T
+}
+
+function isEnvelope(x: unknown): x is ApiEnvelope {
+  return (
+    typeof x === 'object' &&
+    x !== null &&
+    'isSuccess' in x &&
+    'result' in x
+  )
+}
+
 // ── Axios instance ───────────────────────────────────────────
-export const http: AxiosInstance = axios.create({
+export const http = axios.create({
   baseURL: API_BASE_URL,
   headers: { 'Content-Type': 'application/json' },
-  // 30s để xử lý cold start của Render free tier
-  // (request đầu tiên sau thời gian dài không gọi có thể mất 10-20s)
+  // 30s: hosting free có cold start, request đầu tiên có thể rất chậm
+  // (API Reference mục 8)
   timeout: 30_000,
 })
 
@@ -38,53 +59,69 @@ http.interceptors.request.use((config) => {
   return config
 })
 
-// ── Response interceptor: chuẩn hoá lỗi → ApiError ─────────
-/**
- * BE trả lỗi theo 2 dạng:
- *  1. Có body ApiResponse: { statusCode, isSuccess, errorMessages[], result: null }
- *     → khi lỗi phát sinh BÊN TRONG Handler (validation, business logic)
- *  2. Body rỗng (không có JSON):
- *     → khi bị chặn tầng [Authorize]/Policy (401/403 trước khi vào Controller)
- * FE phải kiểm tra response.status trước khi parse JSON.
- */
-type BeApiResponse = {
-  statusCode?: number
+// ── Response interceptor ────────────────────────────────────
+// BE có thể trả message qua nhiều field khác nhau
+type BeErrorBody = {
+  // Envelope chuẩn
   isSuccess?: boolean
-  errorMessages?: string[]
-  result?: null
+  errorMessages?: string[] | null
+  // Các format cũ / .NET mặc định (giữ lại phòng hờ)
+  message?: string
+  error?: string
+  title?: string
+  errors?: Record<string, string[]>
 }
 
 http.interceptors.response.use(
-  (response) => response,
-  (error: AxiosError<BeApiResponse>) => {
+  (response) => {
+    // Bóc envelope: response.data = envelope.result
+    if (isEnvelope(response.data)) {
+      const envelope = response.data
+
+      // HTTP 200 nhưng isSuccess=false → vẫn coi là lỗi
+      if (envelope.isSuccess === false) {
+        const msg = envelope.errorMessages?.[0] ?? 'Yêu cầu thất bại'
+        return Promise.reject(
+          new ApiError(envelope.statusCode || response.status, msg, envelope),
+        )
+      }
+
+      response.data = envelope.result
+    }
+    return response
+  },
+  (error: AxiosError<BeErrorBody>) => {
     const status = error.response?.status ?? 0
     const body = error.response?.data
 
+    // Ưu tiên: errorMessages (envelope) > message > error > title
+    // > validation errors > network error
+    // Lưu ý: 401/403 chặn ở tầng Policy có thể KHÔNG có body (mục 3)
     let message: string
-
-    // Ưu tiên errorMessages[] từ ApiResponse wrapper (định dạng thực tế của BE)
     if (body?.errorMessages && body.errorMessages.length > 0) {
       message = body.errorMessages.join(' | ')
+    } else if (body?.message) {
+      message = body.message
+    } else if (body?.error) {
+      message = body.error
+    } else if (body?.title) {
+      message = body.title
+    } else if (body?.errors) {
+      // .NET validation errors: { "Email": ["Email is invalid"] }
+      const firstField = Object.values(body.errors)[0]
+      message = Array.isArray(firstField) ? firstField[0] : 'Dữ liệu không hợp lệ'
     } else if (status === 401) {
-      message = 'Phiên đăng nhập hết hạn. Vui lòng đăng nhập lại.'
+      message = 'Phiên đăng nhập hết hạn hoặc chưa đăng nhập'
     } else if (status === 403) {
-      message = 'Bạn không có quyền thực hiện thao tác này.'
-    } else if (status === 404) {
-      message = 'Không tìm thấy tài nguyên yêu cầu.'
-    } else if (status === 409) {
-      message = 'Dữ liệu xung đột. Vui lòng tải lại và thử lại.'
-    } else if (status === 0 || !error.response) {
-      // Network error hoặc timeout
-      message = 'Không thể kết nối đến máy chủ. Vui lòng kiểm tra kết nối mạng.'
+      message = 'Bạn không có quyền thực hiện thao tác này'
     } else {
-      message = error.message ?? 'Đã có lỗi xảy ra.'
+      message = error.message ?? 'Không thể kết nối đến máy chủ'
     }
 
-    // 401 → xoá token và redirect về login
-    // (body có thể rỗng — chỉ check status code)
+    // 401 → xoá token và redirect về trang login
     if (status === 401) {
       tokenStorage.clearAll()
-      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+      if (window.location.pathname !== '/login') {
         window.location.href = '/login'
       }
     }

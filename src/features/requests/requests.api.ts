@@ -1,25 +1,39 @@
 // ============================================================
-//  Relief Requests API — /api/relief-requests (Contract mục 4)
+//  Relief Requests API — /api/relief-requests
+//  Chuẩn theo API Reference (kiểm chứng Production 2026-07-13)
 //  - USE_MOCK_AUTH=true  → dùng data mẫu trong localStorage
-//  - USE_MOCK_AUTH=false → gọi backend thật, lỗi mạng thì
-//    fallback localStorage (offline mode)
+//  - USE_MOCK_AUTH=false → gọi backend thật
+//      • Lỗi SERVER (400/401/403...) → ném ra cho form hiển thị
+//      • MẤT MẠNG thật sự (status=0) → mới fallback localStorage
 //
-//  Endpoints theo contract:
-//  - POST /relief-requests             → createReliefRequest
-//  - GET  /relief-requests             → getReliefRequests
+//  Endpoints:
+//  - POST /relief-requests             → createReliefRequest   (result: {id, message})
+//  - GET  /relief-requests             → getReliefRequests     (result: PagedResult)
 //  - GET  /relief-requests/{id}        → getReliefRequestById
 //  - PUT  /relief-requests/{id}/status → updateReliefRequestStatus
 // ============================================================
 
-import { http } from '@/lib/api/http'
+import { http, ApiError } from '@/lib/api/http'
 import { USE_MOCK_AUTH } from '@/config/env'
+import { unwrapItems, type PagedResult } from '@/lib/api/paging'
 import type {
   CreateReliefRequestPayload,
   ReliefRequestResponse,
   ReliefRequestStatus,
 } from './requests.types'
 
+/** Kết quả các action ghi (create / update status): result = { id, message } */
+export interface ReliefRequestActionResult {
+  id: string
+  message: string
+}
+
 const STORAGE_KEY = 'relief_requests_offline'
+
+/** Lỗi do server chủ động từ chối (validation, auth...) — khác với mất mạng */
+function isServerRejection(err: unknown): boolean {
+  return err instanceof ApiError && err.status > 0
+}
 
 // ── Helpers cho localStorage fallback ──────────────────────
 function readOfflineRequests(): ReliefRequestResponse[] {
@@ -91,41 +105,62 @@ function buildOfflineResponse(payload: CreateReliefRequestPayload): ReliefReques
 }
 
 // ── Create ──────────────────────────────────────────────────
-/** POST /api/relief-requests — Requester tạo yêu cầu cứu trợ */
+/**
+ * POST /api/relief-requests — Requester tạo yêu cầu (role Requester ONLY,
+ * Admin gọi sẽ bị 403). result thật của BE: { id, message }.
+ *
+ * Lỗi server (400 validation, 401, 403...) → THROW để form hiện errorMessages.
+ * Chỉ khi mất mạng thật (status=0) mới lưu tạm offline.
+ */
 export async function createReliefRequest(
   payload: CreateReliefRequestPayload,
-): Promise<ReliefRequestResponse> {
+): Promise<ReliefRequestActionResult> {
   if (USE_MOCK_AUTH) {
     const offlineItem = buildOfflineResponse(payload)
     const list = ensureOfflineRequests()
     list.unshift(offlineItem)
     writeOfflineRequests(list)
-    return offlineItem
+    return { id: offlineItem.id, message: 'Đã tạo yêu cầu (mock).' }
   }
 
   try {
-    const { data } = await http.post<ReliefRequestResponse>('/relief-requests', payload)
+    const { data } = await http.post<ReliefRequestActionResult>('/relief-requests', payload)
     return data
   } catch (err) {
-    console.warn('[requests.api] Gọi API thất bại, lưu tạm vào localStorage:', err)
+    // Server từ chối (400/401/403/...) → ném ra, KHÔNG giả vờ thành công
+    if (isServerRejection(err)) throw err
+
+    // Mất mạng thật sự → lưu tạm để không mất dữ liệu người dân đã nhập
+    console.warn('[requests.api] Mất kết nối, lưu tạm vào localStorage:', err)
     const offlineItem = buildOfflineResponse(payload)
     const list = readOfflineRequests()
     list.unshift(offlineItem)
     writeOfflineRequests(list)
-    return offlineItem
+    return { id: offlineItem.id, message: 'Mất kết nối — đã lưu tạm trên máy.' }
   }
 }
 
 // ── List ────────────────────────────────────────────────────
-/** GET /api/relief-requests — Danh sách yêu cầu */
-export async function getReliefRequests(): Promise<ReliefRequestResponse[]> {
+/**
+ * GET /api/relief-requests — Danh sách (PHÂN TRANG).
+ * result thật: { items, pageNumber, pageSize, totalCount, totalPages }.
+ * BE tự lọc: Requester chỉ thấy yêu cầu của mình, Admin thấy tất cả.
+ * Hàm trả thẳng mảng items để các view hiện tại không phải đổi.
+ */
+export async function getReliefRequests(
+  pageNumber = 1,
+  pageSize = 50,
+): Promise<ReliefRequestResponse[]> {
   if (USE_MOCK_AUTH) {
     return ensureOfflineRequests()
   }
 
   try {
-    const { data } = await http.get<ReliefRequestResponse[]>('/relief-requests')
-    return data
+    const { data } = await http.get<PagedResult<ReliefRequestResponse> | ReliefRequestResponse[]>(
+      '/relief-requests',
+      { params: { pageNumber, pageSize } },
+    )
+    return unwrapItems(data)
   } catch (err) {
     console.warn('[requests.api] Không lấy được từ server, dùng dữ liệu offline:', err)
     return readOfflineRequests()
@@ -133,7 +168,7 @@ export async function getReliefRequests(): Promise<ReliefRequestResponse[]> {
 }
 
 // ── Detail ──────────────────────────────────────────────────
-/** GET /api/relief-requests/{id} — Chi tiết 1 yêu cầu */
+/** GET /api/relief-requests/{id} — Chi tiết (chủ sở hữu hoặc Admin) */
 export async function getReliefRequestById(id: string): Promise<ReliefRequestResponse | null> {
   if (USE_MOCK_AUTH) {
     return ensureOfflineRequests().find((r) => r.id === id) ?? null
@@ -153,30 +188,29 @@ export async function getReliefRequestById(id: string): Promise<ReliefRequestRes
 
 // ── Update status ───────────────────────────────────────────
 /**
- * PUT /api/relief-requests/{id}/status — Cập nhật trạng thái
+ * PUT /api/relief-requests/{id}/status
+ * Quyền: chủ sở hữu chỉ được set 'Cancelled'; Admin được mọi bước.
  *
- * ⚠️ Contract chưa ghi rõ body — đang gửi { status: "Cancelled" } (string,
- * vì mục 7 note "API trả status dạng string, FE so sánh theo string").
- * Nếu BE nhận dạng số (Pending=1 ... Cancelled=6) thì đổi lại ở ĐÂY,
- * view không phải sửa.
+ * ⚠️ Body gửi { status: "Cancelled" } (string) — xác nhận schema chính xác
+ * trong docs/swagger.json (mở bằng editor.swagger.io). Nếu BE nhận số
+ * (Pending=1...Cancelled=6) thì đổi lại ở ĐÂY, view không phải sửa.
  *
- * Ở chế độ real: lỗi KHÔNG fallback offline — đổi trạng thái phải chắc
- * chắn server nhận, throw ra để view hiện thông báo.
+ * Ở chế độ real: lỗi KHÔNG fallback offline — throw để view hiện thông báo.
  */
 export async function updateReliefRequestStatus(
   id: string,
   status: ReliefRequestStatus,
-): Promise<ReliefRequestResponse> {
+): Promise<ReliefRequestActionResult> {
   if (USE_MOCK_AUTH) {
     const list = ensureOfflineRequests()
     const idx = list.findIndex((r) => r.id === id)
     if (idx === -1) throw new Error('Không tìm thấy yêu cầu')
     list[idx] = { ...list[idx], status }
     writeOfflineRequests(list)
-    return list[idx]
+    return { id, message: 'Đã cập nhật trạng thái (mock).' }
   }
 
-  const { data } = await http.put<ReliefRequestResponse>(
+  const { data } = await http.put<ReliefRequestActionResult>(
     `/relief-requests/${id}/status`,
     { status },
   )
@@ -184,6 +218,6 @@ export async function updateReliefRequestStatus(
 }
 
 /** Tiện ích: Requester hủy yêu cầu của mình */
-export function cancelReliefRequest(id: string): Promise<ReliefRequestResponse> {
+export function cancelReliefRequest(id: string): Promise<ReliefRequestActionResult> {
   return updateReliefRequestStatus(id, 'Cancelled')
 }

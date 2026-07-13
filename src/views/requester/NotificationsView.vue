@@ -18,16 +18,17 @@
           v-for="note in notifications"
           :key="note.id"
           :class="['notification-item', { unread: !note.isRead }]"
+          @click="handleRead(note)"
         >
-          <div class="note-icon" :class="`icon--${note.type}`">
-            <svg v-if="note.type === 'system'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
-            <svg v-else-if="note.type === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
+          <div class="note-icon" :class="`icon--${notificationUiKind(note.type)}`">
+            <svg v-if="notificationUiKind(note.type) === 'system'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            <svg v-else-if="notificationUiKind(note.type) === 'success'" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7"/></svg>
             <svg v-else viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
           </div>
 
           <div class="note-content">
             <h4>{{ note.title }}</h4>
-            <p>{{ note.message }}</p>
+            <p>{{ note.content }}</p>
             <span class="note-time">{{ formatDateTimeVI(note.createdAt) }}</span>
           </div>
 
@@ -46,8 +47,12 @@ import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   getNotifications,
   markAllNotificationsRead,
+  markNotificationRead,
 } from '@/features/notifications/notifications.api'
-import type { NotificationItem } from '@/features/notifications/notifications.types'
+import {
+  notificationUiKind,
+  type NotificationItem,
+} from '@/features/notifications/notifications.types'
 import { formatDateTimeVI } from '@/features/requests/requests.helpers'
 
 const notifications = ref<NotificationItem[]>([])
@@ -66,11 +71,17 @@ const handleMarkAllAsRead = async () => {
   isMarking.value = true
   try {
     await markAllNotificationsRead()
-    // Cập nhật UI ngay, không cần reload toàn bộ
     notifications.value = notifications.value.map((n) => ({ ...n, isRead: true }))
   } finally {
     isMarking.value = false
   }
+}
+
+// Click vào 1 thông báo chưa đọc → đánh dấu đã đọc
+const handleRead = async (note: NotificationItem) => {
+  if (note.isRead) return
+  note.isRead = true // cập nhật UI ngay
+  await markNotificationRead(note.id)
 }
 </script>
 
@@ -127,6 +138,7 @@ const handleMarkAllAsRead = async () => {
   gap: 16px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
+  cursor: pointer;
 }
 .notification-item.unread {
   background: #fff9f5;
