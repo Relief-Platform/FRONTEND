@@ -10,35 +10,33 @@
         <!-- Public link -->
         <router-link to="/home" class="nav-link">Trang chủ</router-link>
 
-        <!-- Requester + Coordinator + Admin -->
+        <!-- Requester + Admin -->
         <router-link
-          v-if="auth.hasRole('requester', 'coordinator', 'admin')"
+          v-if="auth.hasRole('Requester', 'Admin')"
           to="/requester"
           class="nav-link"
         >Yêu cầu hỗ trợ</router-link>
 
-        <!-- Volunteer + Coordinator + Admin -->
+        <!-- Volunteer + Admin -->
         <router-link
-          v-if="auth.hasRole('volunteer', 'coordinator', 'admin')"
+          v-if="auth.hasRole('Volunteer', 'Admin')"
           to="/volunteer"
           class="nav-link"
         >Tình nguyện</router-link>
 
-        <!-- Coordinator + Admin -->
+        <!-- Admin only -->
         <router-link
-          v-if="auth.hasRole('coordinator', 'admin')"
+          v-if="auth.hasRole('Admin')"
           to="/coordinator"
           class="nav-link"
         >Điều phối</router-link>
-
-        <!-- Admin only -->
         <router-link
-          v-if="auth.hasRole('admin')"
+          v-if="auth.hasRole('Admin')"
           to="/admin"
           class="nav-link nav-link--admin"
         >Admin</router-link>
         <router-link
-          v-if="auth.hasRole('admin')"
+          v-if="auth.hasRole('Admin')"
           to="/users"
           class="nav-link"
         >Người dùng</router-link>
@@ -80,7 +78,9 @@
 
     <!-- ── Page content ──────────────────────────────────────── -->
     <main class="app-layout__main">
-      <RouterView />
+      <slot>
+        <RouterView />
+      </slot>
     </main>
   </div>
 </template>

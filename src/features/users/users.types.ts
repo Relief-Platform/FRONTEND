@@ -3,31 +3,20 @@
 // ============================================================
 
 export interface User {
-  id: string | number
+  id: string
   fullName: string
   email: string
   phone?: string
-  role?: string
-  province?: string
-  district?: string
-  createdAt?: string
-}
-
-export interface CreateUserPayload {
-  fullName: string
-  email: string
-  phone: string
-  password: string
-  role?: string
-}
-
-export interface UpdateUserPayload extends Partial<CreateUserPayload> {
-  id: string | number
+  role: string
+  isActive: boolean
+  createdAt: string
+  updatedAt?: string
 }
 
 export interface PaginatedUsers {
   items: User[]
-  total: number
-  page: number
+  totalCount: number
+  pageNumber: number
   pageSize: number
+  totalPages: number
 }
