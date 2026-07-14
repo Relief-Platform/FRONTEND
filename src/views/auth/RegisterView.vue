@@ -1,11 +1,11 @@
 <template>
   <div class="register-wrapper">
-    <div class="header-logo">
+    <router-link to="/" class="header-logo">
       <h2 class="brand-name">
         <span class="text-navy">Relief</span><span class="text-orange">Connect</span>
       </h2>
       <p class="slogan">Kết nối trái tim - Vẹn tròn cứu trợ</p>
-    </div>
+    </router-link>
 
     <div class="register-card">
       <h2 class="form-title">ĐĂNG KÝ NGƯỜI DÙNG</h2>

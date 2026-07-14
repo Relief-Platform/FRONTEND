@@ -1,12 +1,12 @@
 <template>
   <div class="login-wrapper">
     <!-- Logo Header -->
-    <div class="header-logo">
+    <router-link to="/" class="header-logo">
       <h2 class="brand-name">
         <span class="text-navy">Relief</span><span class="text-orange">Connect</span>
       </h2>
       <p class="slogan">Kết nối trái tim - Vẹn tròn cứu trợ</p>
-    </div>
+    </router-link>
 
     <!-- Login Card -->
     <div class="login-card">
