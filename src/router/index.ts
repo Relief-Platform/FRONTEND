@@ -228,6 +228,26 @@ const routes: RouteRecordRaw[] = [
       title: 'Quản lý người dùng',
     },
   },
+  {
+    path: '/admin/relief-requests',
+    name: 'admin-relief-requests',
+    component: () => import('@/views/admin/ReliefRequestsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Quản lý yêu cầu cứu trợ',
+    },
+  },
+  {
+    path: '/admin/assignments',
+    name: 'admin-assignments',
+    component: () => import('@/views/admin/AssignmentsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Quản lý phân công tình nguyện viên',
+    },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  ERROR PAGES
