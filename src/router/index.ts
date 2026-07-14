@@ -228,7 +228,29 @@ const routes: RouteRecordRaw[] = [
       title: 'Quản lý người dùng',
     },
   },
-
+// ────────────────────────────────────────────────────────────
+  //  WAREHOUSE – WarehouseManager | Admin
+  // ────────────────────────────────────────────────────────────
+  {
+    path: '/warehouse',
+    name: 'warehouse-list',
+    component: () => import('@/views/warehouse/WarehousesView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['WarehouseManager', 'Admin'],
+      title: 'Quản lý kho',
+    },
+  },
+  {
+    path: '/warehouse/inventory',
+    name: 'warehouse-inventory',
+    component: () => import('@/views/warehouse/InventoryView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['WarehouseManager', 'Admin'],
+      title: 'Vật tư & tồn kho',
+    },
+  },
   // ────────────────────────────────────────────────────────────
   //  ERROR PAGES
   // ────────────────────────────────────────────────────────────
@@ -245,6 +267,7 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Trang không tồn tại' },
   },
 ]
+
 
 // ── Router instance ──────────────────────────────────────────
 const router = createRouter({
