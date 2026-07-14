@@ -1,7 +1,7 @@
 <template>
   <div class="admin-shell">
     <aside class="admin-sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <div class="sidebar-brand">
+      <router-link to="/" class="sidebar-brand">
         <div class="brand-logo">
           <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
             <circle cx="18" cy="18" r="18" fill="url(#adminGrad)"/>
@@ -21,7 +21,7 @@
             <span class="brand-sub">Admin Portal</span>
           </div>
         </Transition>
-      </div>
+      </router-link>
 
       <nav class="sidebar-nav">
         <router-link

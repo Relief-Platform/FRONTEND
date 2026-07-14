@@ -3,7 +3,7 @@
     <!-- ── Sidebar ─────────────────────────────────────────── -->
     <aside class="vol-sidebar" :class="{ collapsed: sidebarCollapsed }">
       <!-- Brand -->
-      <div class="sidebar-brand">
+      <router-link to="/" class="sidebar-brand">
         <div class="brand-logo">
           <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
             <circle cx="18" cy="18" r="18" fill="url(#reqBrandGrad)"/>
@@ -23,7 +23,7 @@
             <span class="brand-sub">Requester Portal</span>
           </div>
         </Transition>
-      </div>
+      </router-link>
 
       <!-- Nav items -->
       <nav class="sidebar-nav">
