@@ -77,6 +77,9 @@
     </nav>
 
     <!-- ── Page content ──────────────────────────────────────── -->
+    <!-- SLOT chứ không phải RouterView: AppLayout được dùng kiểu
+         <AppLayout>...nội dung trang...</AppLayout> bên trong các view.
+         RouterView ở đây chỉ render route CON (không có) → thân trang trống. -->
     <main class="app-layout__main">
       <slot>
         <RouterView />
@@ -90,13 +93,25 @@ import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/features/auth/auth.types'
+import type { UserRole } from '@/features/auth/auth.types'
 
 const router = useRouter()
 const auth   = useAuthStore()
 const showMenu = ref(false)
 
-const roleLabel = computed(() => auth.role ? ROLE_LABELS[auth.role] : '')
-const roleColor = computed(() => auth.role ? ROLE_COLORS[auth.role] : '#4a5568')
+// BE trả role viết hoa ("Requester") còn mock cũ viết thường ("requester")
+// → chuẩn hoá lowercase để check role chạy đúng cả 2
+const normalizedRole = computed(() => (auth.role ?? '').toLowerCase() as UserRole | '')
+
+const hasRole = (...roles: string[]): boolean =>
+  normalizedRole.value !== '' && roles.includes(normalizedRole.value)
+
+const roleLabel = computed(() =>
+  normalizedRole.value ? (ROLE_LABELS[normalizedRole.value as UserRole] ?? auth.role ?? '') : '',
+)
+const roleColor = computed(() =>
+  normalizedRole.value ? (ROLE_COLORS[normalizedRole.value as UserRole] ?? '#4a5568') : '#4a5568',
+)
 const initials  = computed(() =>
   auth.user?.fullName
     .split(' ')
@@ -113,15 +128,17 @@ async function handleLogout(): Promise<void> {
 }
 
 // ── Directive: click outside ────────────────────────────────
+type ClickOutsideEl = HTMLElement & { _clickOutside?: (e: Event) => void }
+
 const vClickOutside = {
-  mounted(el: HTMLElement, binding: { value: () => void }) {
+  mounted(el: ClickOutsideEl, binding: { value: () => void }) {
     el._clickOutside = (e: Event) => {
       if (!el.contains(e.target as Node)) binding.value()
     }
     document.addEventListener('click', el._clickOutside)
   },
-  unmounted(el: HTMLElement) {
-    document.removeEventListener('click', el._clickOutside)
+  unmounted(el: ClickOutsideEl) {
+    if (el._clickOutside) document.removeEventListener('click', el._clickOutside)
   },
 }
 </script>
