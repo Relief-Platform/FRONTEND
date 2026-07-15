@@ -3,7 +3,7 @@
 //  Hỗ trợ đầy đủ Mock Mode để phát triển và Real API
 // ============================================================
 
-import { http } from '@/lib/api/http'
+import { http, ApiError } from '@/lib/api/http'
 import type { VolunteerProfile, VolunteerProfilePayload, SkillItem } from './volunteers.types'
 
 const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
@@ -11,7 +11,7 @@ const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 // ── Mock Data ────────────────────────────────────────────────
 
 // Danh sách tất cả kỹ năng có sẵn trên hệ thống (dùng cho Mock & Chọn lựa ở UI)
-export const AVAILABLE_SKILLS: SkillItem[] = [
+export let AVAILABLE_SKILLS: SkillItem[] = [
   { id: 'sk-0001-8f4b-4a5f-9e8c-123456789abc', name: 'Sơ cứu y tế', description: 'Có chứng chỉ sơ cấp cứu, xử lý chấn thương cơ bản' },
   { id: 'sk-0002-8f4b-4a5f-9e8c-123456789abc', name: 'Lái xe cứu thương / xe tải', description: 'Bằng lái B2 trở lên, có kinh nghiệm lái đường đèo dốc' },
   { id: 'sk-0003-8f4b-4a5f-9e8c-123456789abc', name: 'Hậu cần và phân phát', description: 'Sắp xếp kho bãi, kiểm kê hàng hóa, điều phối phân quà' },
@@ -36,6 +36,36 @@ let mockProfile: VolunteerProfile | null = {
 
 const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms))
 
+function normalizeSkill(item: { id?: string; name?: string; description?: string | null }): SkillItem | null {
+  if (!item?.id || !item?.name) return null
+  return {
+    id: item.id,
+    name: item.name,
+    description: item.description || undefined,
+  }
+}
+
+export async function loadAvailableSkills(): Promise<SkillItem[]> {
+  if (USE_MOCK) {
+    return AVAILABLE_SKILLS
+  }
+
+  try {
+    const { data } = await http.get<Array<{ id: string; name: string; description?: string | null }>>('/skills')
+    const fetched = data
+      .map(normalizeSkill)
+      .filter((skill): skill is SkillItem => Boolean(skill))
+
+    if (fetched.length > 0) {
+      AVAILABLE_SKILLS = fetched
+    }
+  } catch {
+    // Fallback to existing hardcoded skills if the real endpoint is unavailable.
+  }
+
+  return AVAILABLE_SKILLS
+}
+
 // ── API Functions ───────────────────────────────────────────
 
 /**
@@ -51,8 +81,24 @@ export async function getVolunteerProfile(): Promise<VolunteerProfile> {
     return { ...mockProfile }
   }
 
-  const { data } = await http.get<VolunteerProfile>('/volunteers/me')
-  return data
+  try {
+    const { data } = await http.get<VolunteerProfile>('/volunteers/me')
+    return data
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) {
+      try {
+        const { data } = await http.get<VolunteerProfile>('/volunteers/profile')
+        return data
+      } catch (fallbackError) {
+        if (fallbackError instanceof ApiError && fallbackError.status === 404) {
+          throw new Error('Hồ sơ chưa được tạo')
+        }
+        throw fallbackError
+      }
+    }
+
+    throw error
+  }
 }
 
 /**
@@ -127,8 +173,12 @@ export async function registerSkills(skillIds: string[]): Promise<void> {
     return
   }
 
-  // Tùy theo BE nhận json body là array hay object, ta gửi cả array trực tiếp
-  await http.post('/volunteers/skills', { skillIds })
+  try {
+    await http.post('/volunteers/skills', skillIds)
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Không thể cập nhật kỹ năng'
+    throw new Error(message)
+  }
 }
 
 /**

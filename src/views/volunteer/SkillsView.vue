@@ -141,6 +141,7 @@ import {
   getVolunteerProfile,
   registerSkills,
   deleteSkill,
+  loadAvailableSkills,
   AVAILABLE_SKILLS
 } from '@/features/volunteers/volunteers.api'
 import type { VolunteerProfile, SkillItem } from '@/features/volunteers/volunteers.types'
@@ -151,6 +152,7 @@ const isLoading = ref(true)
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
 
 const triggerNotification = (type: 'success' | 'error', msg: string) => {
   if (type === 'success') {
@@ -184,13 +186,13 @@ const loadProfile = async () => {
 // Compute registered skills as SkillItem list
 const registeredSkills = computed<SkillItem[]>(() => {
   if (!profile.value) return []
-  return AVAILABLE_SKILLS.filter(s => profile.value!.skills.includes(s.name))
+  return skillOptions.value.filter(s => profile.value!.skills.includes(s.name))
 })
 
 // Compute remaining skills that can be registered
 const availableSkillsToRegister = computed<SkillItem[]>(() => {
-  if (!profile.value) return AVAILABLE_SKILLS
-  return AVAILABLE_SKILLS.filter(s => !profile.value!.skills.includes(s.name))
+  if (!profile.value) return skillOptions.value
+  return skillOptions.value.filter(s => !profile.value!.skills.includes(s.name))
 })
 
 const handleAddSkill = async (skillId: string) => {
@@ -228,8 +230,12 @@ const handleRemoveSkill = async (skillName: string) => {
   }
 }
 
+const loadSkills = async () => {
+  skillOptions.value = await loadAvailableSkills()
+}
+
 onMounted(() => {
-  void loadProfile()
+  void Promise.all([loadSkills(), loadProfile()])
 })
 </script>
 

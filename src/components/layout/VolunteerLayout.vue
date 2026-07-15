@@ -90,7 +90,7 @@
             </svg>
             <span class="notif-dot" />
           </button>
-          <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
+          <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu">
             <div class="topbar-avatar">{{ initials }}</div>
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">▾</span>
             <Transition name="fade">
@@ -197,18 +197,6 @@ async function handleLogout(): Promise<void> {
   router.push('/home')
 }
 
-// ── Directive: click outside ────────────────────────────────
-const vClickOutside = {
-  mounted(el: HTMLElement, binding: { value: () => void }) {
-    el._clickOutside = (e: Event) => {
-      if (!el.contains(e.target as Node)) binding.value()
-    }
-    document.addEventListener('click', el._clickOutside)
-  },
-  unmounted(el: HTMLElement) {
-    document.removeEventListener('click', el._clickOutside)
-  },
-}
 </script>
 
 <style scoped>

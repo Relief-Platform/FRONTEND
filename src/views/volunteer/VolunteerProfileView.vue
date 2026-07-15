@@ -281,9 +281,10 @@ import {
   updateVolunteerProfile,
   registerSkills,
   deleteSkill,
+  loadAvailableSkills,
   AVAILABLE_SKILLS
 } from '@/features/volunteers/volunteers.api'
-import type { VolunteerProfile } from '@/features/volunteers/volunteers.types'
+import type { VolunteerProfile, SkillItem } from '@/features/volunteers/volunteers.types'
 
 const authStore = useAuthStore()
 
@@ -297,6 +298,7 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 const selectedSkillToAdd = ref('')
+const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
 
 const form = reactive({
   address: '',
@@ -319,15 +321,15 @@ const initials = computed(() => {
 
 // Filter available skills that the user hasn't registered yet
 const registerableSkills = computed(() => {
-  if (!profile.value) return AVAILABLE_SKILLS
-  return AVAILABLE_SKILLS.filter(
+  if (!profile.value) return skillOptions.value
+  return skillOptions.value.filter(
     (skill) => !profile.value!.skills.includes(skill.name)
   )
 })
 
 const selectedSkillDescription = computed(() => {
   if (!selectedSkillToAdd.value) return ''
-  return AVAILABLE_SKILLS.find((s) => s.id === selectedSkillToAdd.value)?.description || ''
+  return skillOptions.value.find((s) => s.id === selectedSkillToAdd.value)?.description || ''
 })
 
 // Methods
@@ -422,7 +424,8 @@ const handleAddSkill = async () => {
     await loadProfile() // reload để lấy danh sách kỹ năng mới nhất
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể đăng ký thêm kỹ năng.')
+    const detail = error.message.includes('ApiError') ? error.message : error.message
+    triggerNotification('error', detail || 'Không thể đăng ký thêm kỹ năng.')
   } finally {
     isModifyingSkills.value = false
   }
@@ -449,8 +452,12 @@ const handleRemoveSkill = async (skillName: string) => {
   }
 }
 
+const loadSkills = async () => {
+  skillOptions.value = await loadAvailableSkills()
+}
+
 onMounted(() => {
-  void loadProfile()
+  void Promise.all([loadSkills(), loadProfile()])
 })
 </script>
 
