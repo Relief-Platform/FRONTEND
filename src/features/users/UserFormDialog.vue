@@ -1,29 +1,34 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="isEdit ? 'Chỉnh sửa người dùng' : 'Thêm người dùng'"
-    width="500px"
+    title="Đổi Vai Trò Người Dùng"
+    width="400px"
     @close="resetForm"
   >
-    <el-form :model="form" label-width="120px" label-position="top">
-      <el-form-item label="Họ và tên" required>
-        <el-input v-model="form.fullName" placeholder="Nguyễn Văn A" />
+    <el-form label-position="top">
+      <el-form-item label="Người dùng">
+        <el-input :value="editData?.fullName || ''" disabled />
       </el-form-item>
-      <el-form-item label="Email" required>
-        <el-input v-model="form.email" type="email" placeholder="example@email.com" />
+      
+      <el-form-item label="Vai trò mới" required>
+        <el-select v-model="selectedRole" placeholder="Chọn vai trò mới" style="width: 100%">
+          <el-option
+            v-for="role in roles"
+            :key="role.value"
+            :label="role.label"
+            :value="role.value"
+          />
+        </el-select>
       </el-form-item>
-      <el-form-item label="Số điện thoại">
-        <el-input v-model="form.phone" placeholder="0912345678" />
-      </el-form-item>
-      <el-form-item v-if="!isEdit" label="Mật khẩu" required>
-        <el-input v-model="form.password" type="password" placeholder="••••••••" show-password />
-      </el-form-item>
+      <p style="font-size: 12px; color: #718096; line-height: 1.4; margin-top: -10px;">
+        Lưu ý: User cần đăng xuất và đăng nhập lại để nhận quyền của vai trò mới.
+      </p>
     </el-form>
 
     <template #footer>
       <el-button @click="visible = false">Huỷ</el-button>
       <el-button type="primary" :loading="isLoading" @click="handleSubmit">
-        {{ isEdit ? 'Cập nhật' : 'Tạo mới' }}
+        Cập nhật Role
       </el-button>
     </template>
   </el-dialog>
@@ -32,8 +37,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
 import { ElMessage } from 'element-plus'
-import { createUser, updateUser } from './users.api'
-import type { User, CreateUserPayload } from './users.types'
+import { useUsersStore } from '@/stores/users'
+import type { User } from './users.types'
 
 // ── Props & Emits ────────────────────────────────────────────
 interface Props {
@@ -43,35 +48,32 @@ interface Props {
 const props = withDefaults(defineProps<Props>(), { editData: null })
 const emit = defineEmits<{
   'update:modelValue': [value: boolean]
-  saved: [user: User]
+  saved: []
 }>()
 
 // ── State ────────────────────────────────────────────────────
+const store = useUsersStore()
 const isLoading = ref(false)
 const visible = computed({
   get: () => props.modelValue,
   set: (v) => emit('update:modelValue', v),
 })
-const isEdit = computed(() => !!props.editData)
 
-const defaultForm = (): CreateUserPayload => ({
-  fullName: '',
-  email: '',
-  phone: '',
-  password: '',
-})
-const form = ref<CreateUserPayload>(defaultForm())
+const selectedRole = ref<string>('')
+
+const roles = [
+  { value: 'Admin', label: 'Quản trị viên (Admin)' },
+  { value: 'Volunteer', label: 'Tình nguyện viên (Volunteer)' },
+  { value: 'Requester', label: 'Người yêu cầu (Requester)' },
+  { value: 'WarehouseManager', label: 'Quản lý kho (WarehouseManager)' },
+  { value: 'Organization', label: 'Tổ chức (Organization)' },
+]
 
 watch(
   () => props.editData,
   (user) => {
     if (user) {
-      form.value = {
-        fullName: user.fullName,
-        email: user.email,
-        phone: user.phone ?? '',
-        password: '',
-      }
+      selectedRole.value = user.role
     }
   },
   { immediate: true },
@@ -79,20 +81,21 @@ watch(
 
 // ── Actions ──────────────────────────────────────────────────
 function resetForm(): void {
-  form.value = defaultForm()
+  selectedRole.value = props.editData?.role || ''
 }
 
 async function handleSubmit(): Promise<void> {
+  if (!props.editData || !selectedRole.value) return
+  if (props.editData.role === selectedRole.value) {
+    visible.value = false
+    return
+  }
+
   isLoading.value = true
   try {
-    let saved: User
-    if (isEdit.value && props.editData) {
-      saved = await updateUser({ id: props.editData.id, ...form.value })
-    } else {
-      saved = await createUser(form.value)
-    }
-    ElMessage.success(isEdit.value ? 'Cập nhật thành công!' : 'Tạo mới thành công!')
-    emit('saved', saved)
+    await store.changeRole(props.editData.id, selectedRole.value)
+    ElMessage.success('Đổi vai trò thành công!')
+    emit('saved')
     visible.value = false
   } catch (err) {
     ElMessage.error((err as Error).message || 'Có lỗi xảy ra')

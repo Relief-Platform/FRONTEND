@@ -1,11 +1,11 @@
 <template>
   <div class="register-wrapper">
-    <div class="header-logo">
+    <router-link to="/" class="header-logo">
       <h2 class="brand-name">
         <span class="text-navy">Relief</span><span class="text-orange">Connect</span>
       </h2>
       <p class="slogan">Kết nối trái tim - Vẹn tròn cứu trợ</p>
-    </div>
+    </router-link>
 
     <div class="register-card">
       <h2 class="form-title">ĐĂNG KÝ NGƯỜI DÙNG</h2>
@@ -16,10 +16,7 @@
       </div>
 
       <form @submit.prevent="handleRegister">
-        <!-- STEP 1 -->
         <div class="step-section">
-          <h3 class="step-title">Step 1:</h3>
-
           <div class="form-group">
             <label>Họ và tên</label>
             <input type="text" v-model="formData.fullName" placeholder="Nguyễn Văn A" required />
@@ -57,41 +54,11 @@
             <input type="password" v-model="formData.confirmPassword" placeholder="••••••••••" required />
             <span v-if="passwordMismatch" class="error-text">Mật khẩu xác nhận không khớp!</span>
           </div>
-        </div>
-
-
-        <div class="step-section">
-          <h3 class="step-title">Step 2:</h3>
-
-          <div class="form-group">
-            <label>Địa phương</label>
-            <select v-model="formData.province">
-              <option value="" disabled>Chọn Tỉnh / Thành Phố</option>
-              <option value="Hà Nội">Hà Nội</option>
-              <option value="TP. HCM">TP. HCM</option>
-              <option value="Đà Nẵng">Đà Nẵng</option>
-              <option value="Hải Phòng">Hải Phòng</option>
-              <option value="Cần Thơ">Cần Thơ</option>
-
-            </select>
-          </div>
-
-          <div class="form-group">
-            <label>Kỹ năng / Chuyên môn (tùy chọn)</label>
-            <select v-model="formData.skill">
-              <option value="" disabled>Chọn lĩnh vực</option>
-              <option value="Y tế">Y tế</option>
-              <option value="Vận chuyển">Vận chuyển</option>
-              <option value="Hậu cần">Hậu cần</option>
-              <option value="IT">IT</option>
-              <option value="Khác">Khác</option>
-            </select>
-          </div>
 
           <div class="form-group checkbox-group">
             <input type="checkbox" id="commitment" v-model="formData.isCommitted" required />
             <label for="commitment">
-              Tôi cam kết tham gia các hoạt động cứu trợ với tinh thần tự nguyện, minh bạch, công bằng. Tất cả thông tin trên là hoàn toàn chính xác.
+              Tôi đồng ý tạo tài khoản và có thể hoàn thiện hồ sơ sau khi đăng nhập.
             </label>
           </div>
         </div>
@@ -134,9 +101,6 @@ const formData = reactive({
   phoneNumber:     '',
   password:        '',
   confirmPassword: '',
-  // Các field UI-only (không gửi BE)
-  province:        '',
-  skill:           '',
   isCommitted:     false,
 })
 
