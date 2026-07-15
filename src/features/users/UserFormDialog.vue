@@ -65,7 +65,7 @@ const roles = [
   { value: 'Admin', label: 'Quản trị viên (Admin)' },
   { value: 'Volunteer', label: 'Tình nguyện viên (Volunteer)' },
   { value: 'Requester', label: 'Người yêu cầu (Requester)' },
-  { value: 'WarehouseManager', label: 'Quản lý kho (WarehouseManager)' },
+  { value: 'Coordinator', label: 'Quản lý kho (Coordinator)' },
   { value: 'Organization', label: 'Tổ chức (Organization)' },
 ]
 

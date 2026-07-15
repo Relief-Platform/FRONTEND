@@ -27,7 +27,7 @@
           <option value="Admin">Admin</option>
           <option value="Volunteer">Volunteer</option>
           <option value="Requester">Requester</option>
-          <option value="WarehouseManager">Warehouse Manager</option>
+          <option value="Coordinator">Coordinator</option>
           <option value="Organization">Organization</option>
         </select>
       </div>

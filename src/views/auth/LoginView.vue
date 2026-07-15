@@ -145,11 +145,11 @@ const handleLogin = async () => {
 
     // Redirect tới dashboard phù hợp với role (PascalCase từ BE)
     const roleRoutes: Record<string, string> = {
-      Admin:            '/admin',
-      Volunteer:        '/volunteer',
-      Requester:        '/requester',
-      WarehouseManager: '/admin',     // chưa có dashboard riêng → dùng admin tạm
-      Organization:     '/requester', // chưa có dashboard riêng → dùng requester tạm
+      Admin:        '/admin',
+      Volunteer:    '/volunteer',
+      Requester:    '/requester',
+      Coordinator:  '/warehouses',    // quản lý kho
+      Organization: '/requester',     // chưa có dashboard riêng → dùng requester tạm
     }
     const dest = authStore.role ? (roleRoutes[authStore.role] ?? '/home') : '/home'
     await router.push(dest)

@@ -206,6 +206,23 @@ const routes: RouteRecordRaw[] = [
   },
 
   // ────────────────────────────────────────────────────────────
+  //  WAREHOUSE – mọi role đã đăng nhập (GET); ghi bị BE tự chặn
+  //  theo role (Admin + Coordinator) qua 403
+  // ────────────────────────────────────────────────────────────
+  {
+    path: '/warehouses',
+    name: 'warehouses',
+    component: () => import('@/views/Warehouses/WarehousesView.vue'),
+    meta: { requiresAuth: true, title: 'Quản lý kho' },
+  },
+  {
+    path: '/inventory',
+    name: 'inventory',
+    component: () => import('@/views/inventory/InventoryView.vue'),
+    meta: { requiresAuth: true, title: 'Vật tư & tồn kho' },
+  },
+
+  // ────────────────────────────────────────────────────────────
   //  ADMIN – admin only
   // ────────────────────────────────────────────────────────────
   {
