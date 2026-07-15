@@ -1,16 +1,16 @@
 <template>
-  <div class="admin-shell">
-    <aside class="admin-sidebar" :class="{ collapsed: sidebarCollapsed }">
-      <router-link to="/" class="sidebar-brand">
+  <div class="wh-shell">
+    <aside class="wh-sidebar" :class="{ collapsed: sidebarCollapsed }">
+      <router-link to="/home" class="sidebar-brand">
         <div class="brand-logo">
           <svg width="28" height="28" viewBox="0 0 36 36" fill="none">
-            <circle cx="18" cy="18" r="18" fill="url(#adminGrad)"/>
+            <circle cx="18" cy="18" r="18" fill="url(#whGrad)"/>
             <path d="M18 8 L26 14 L26 22 L18 28 L10 22 L10 14 Z" fill="white" opacity="0.9"/>
-            <path d="M18 13 L22 16 L22 21 L18 24 L14 21 L14 16 Z" fill="url(#adminGrad)"/>
+            <path d="M18 13 L22 16 L22 21 L18 24 L14 21 L14 16 Z" fill="url(#whGrad)"/>
             <defs>
-              <linearGradient id="adminGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
-                <stop offset="0%" stop-color="#c53030"/>
-                <stop offset="100%" stop-color="#e53e3e"/>
+              <linearGradient id="whGrad" x1="0" y1="0" x2="36" y2="36" gradientUnits="userSpaceOnUse">
+                <stop offset="0%" stop-color="#1a4f8d"/>
+                <stop offset="100%" stop-color="#2b6cb0"/>
               </linearGradient>
             </defs>
           </svg>
@@ -18,7 +18,7 @@
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="brand-text">
             <span class="brand-name">ReliefConnect</span>
-            <span class="brand-sub">Admin Portal</span>
+            <span class="brand-sub">Quản lý kho</span>
           </div>
         </Transition>
       </router-link>
@@ -36,9 +36,6 @@
           <Transition name="fade-label">
             <span v-if="!sidebarCollapsed" class="sidebar-item__label">{{ item.label }}</span>
           </Transition>
-          <Transition name="fade-label">
-            <span v-if="!sidebarCollapsed && item.badge" class="sidebar-badge">{{ item.badge }}</span>
-          </Transition>
         </router-link>
       </nav>
 
@@ -53,14 +50,14 @@
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="sidebar-user-info">
             <span class="sidebar-user-name">{{ auth.user?.fullName }}</span>
-            <span class="sidebar-user-role">Quản trị viên</span>
+            <span class="sidebar-user-role">{{ roleLabel }}</span>
           </div>
         </Transition>
       </div>
     </aside>
 
-    <div class="admin-body">
-      <header class="admin-topbar">
+    <div class="wh-body">
+      <header class="wh-topbar">
         <div class="topbar-left">
           <button class="mobile-menu-btn" @click="sidebarCollapsed = !sidebarCollapsed">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
@@ -68,8 +65,7 @@
             </svg>
           </button>
           <div class="topbar-page-info">
-            <span class="topbar-greeting">{{ greeting }}, </span>
-            <span class="topbar-name">{{ auth.user?.fullName?.split(" ").at(-1) }}!</span>
+            <span class="topbar-name">{{ pageTitle }}</span>
           </div>
         </div>
         <div class="topbar-right">
@@ -92,8 +88,8 @@
           </div>
         </div>
       </header>
-      <main class="admin-content">
-        <div class="admin-content__inner">
+      <main class="wh-content">
+        <div class="wh-content__inner">
           <slot />
         </div>
       </main>
@@ -103,10 +99,12 @@
 
 <script setup lang="ts">
 import { ref, computed } from "vue"
-import { useRouter } from "vue-router"
+import { useRoute, useRouter } from "vue-router"
 import { useAuthStore } from "@/stores/auth"
+import { ROLE_LABELS } from "@/features/auth/auth.types"
 
 const router = useRouter()
+const route = useRoute()
 const auth = useAuthStore()
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
@@ -115,35 +113,20 @@ const initials = computed(() =>
   auth.user?.fullName.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase() ?? "?"
 )
 
-const greeting = computed(() => {
-  const h = new Date().getHours()
-  if (h < 12) return 'Chào buổi sáng'
-  if (h < 18) return 'Chào buổi chiều'
-  return 'Chào buổi tối'
-})
+const roleLabel = computed(() => (auth.user ? ROLE_LABELS[auth.user.role] : ''))
 
 const navItems = [
   {
-    name: "dashboard", routeName: "admin-dashboard", to: "/admin",    label: 'Dashboard',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+    name: "warehouses", routeName: "warehouses", to: "/warehouses", label: 'Quản lý kho',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   },
   {
-    name: "users", routeName: "users", to: "/users",    label: 'Quản lý người dùng',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  },
-  {
-    name: "requests", routeName: "admin-relief-requests", to: "/admin/relief-requests",    label: 'Quản lý Yêu cầu cứu trợ',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-  },
-  {
-    name: "coordinator", routeName: "admin-assignments", to: "/admin/assignments",    label: 'Điều phối',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  },
-  {
-    name: "volunteer-view", routeName: "volunteer-dashboard", to: "/volunteer",    label: 'Tình nguyện viên',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+    name: "inventory", routeName: "inventory", to: "/inventory", label: 'Vật tư & tồn kho',
+    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
   },
 ]
+
+const pageTitle = computed(() => (route.meta.title as string) ?? '')
 
 async function handleLogout() {
   showUserMenu.value = false
@@ -161,18 +144,19 @@ const vClickOutside = {
 </script>
 
 <style scoped>
-.admin-shell { display: flex; min-height: 100vh; background: #f0f4f8; }
-.admin-sidebar {
+.wh-shell { display: flex; min-height: 100vh; background: #f0f4f8; }
+.wh-sidebar {
   width: 260px; min-height: 100vh;
-  background: linear-gradient(175deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  background: linear-gradient(175deg, #0f2744 0%, #123766 60%, #1a4f8d 100%);
   display: flex; flex-direction: column;
   position: fixed; top: 0; left: 0; z-index: 200;
   transition: width 0.28s cubic-bezier(0.4, 0, 0.2, 1); overflow: hidden;
 }
-.admin-sidebar.collapsed { width: 72px; }
+.wh-sidebar.collapsed { width: 72px; }
 .sidebar-brand {
   display: flex; align-items: center; gap: 12px;
   padding: 22px 20px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); flex-shrink: 0;
+  text-decoration: none;
 }
 .brand-logo { width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .brand-text { overflow: hidden; }
@@ -185,11 +169,10 @@ const vClickOutside = {
   transition: all 0.18s ease; position: relative; white-space: nowrap; overflow: hidden;
 }
 .sidebar-item:hover { background: rgba(255,255,255,0.10); color: #fff; }
-.sidebar-item.active { background: rgba(229,62,62,0.22); color: #fc8181; }
-.sidebar-item.active .sidebar-item__icon { color: #fc8181; }
+.sidebar-item.active { background: rgba(255,255,255,0.16); color: #fff; }
+.sidebar-item.active .sidebar-item__icon { color: #7cc4ff; }
 .sidebar-item__icon { flex-shrink: 0; display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; }
 .sidebar-item__label { overflow: hidden; text-overflow: ellipsis; }
-.sidebar-badge { margin-left: auto; background: #c53030; color: #fff; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
 .sidebar-collapse-btn {
   display: flex; align-items: center; justify-content: center;
   width: 32px; height: 32px; border-radius: 8px; background: rgba(255,255,255,0.08);
@@ -198,13 +181,13 @@ const vClickOutside = {
 }
 .sidebar-collapse-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
 .sidebar-user { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-top: 1px solid rgba(255,255,255,0.08); flex-shrink: 0; overflow: hidden; }
-.sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
+.sidebar-avatar { width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #1a4f8d, #2b6cb0); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
 .sidebar-user-info { overflow: hidden; }
 .sidebar-user-name { display: block; font-size: 12.5px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sidebar-user-role { display: block; font-size: 10.5px; color: #fc8181; font-weight: 500; white-space: nowrap; }
-.admin-body { flex: 1; margin-left: 260px; transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; min-height: 100vh; }
-.admin-sidebar.collapsed ~ .admin-body { margin-left: 72px; }
-.admin-topbar {
+.sidebar-user-role { display: block; font-size: 10.5px; color: #7cc4ff; font-weight: 500; white-space: nowrap; }
+.wh-body { flex: 1; margin-left: 260px; transition: margin-left 0.28s cubic-bezier(0.4, 0, 0.2, 1); display: flex; flex-direction: column; min-height: 100vh; }
+.wh-sidebar.collapsed ~ .wh-body { margin-left: 72px; }
+.wh-topbar {
   height: 64px; background: rgba(255,255,255,0.96); backdrop-filter: blur(10px);
   border-bottom: 1px solid #e9ecef; display: flex; align-items: center; justify-content: space-between;
   padding: 0 28px; position: sticky; top: 0; z-index: 100; box-shadow: 0 1px 8px rgba(0,0,0,0.05);
@@ -213,12 +196,11 @@ const vClickOutside = {
 .mobile-menu-btn { display: none; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 8px; background: #f8fafc; border: 1px solid #e9ecef; cursor: pointer; color: #4a5568; transition: all 0.15s ease; }
 .mobile-menu-btn:hover { background: #f0f4f8; }
 .topbar-page-info { font-size: 15px; }
-.topbar-greeting { color: #718096; font-weight: 400; }
 .topbar-name { color: #1a3b5c; font-weight: 700; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
 .topbar-user-menu { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid #e9ecef; background: #f8fafc; position: relative; user-select: none; transition: all 0.15s ease; }
 .topbar-user-menu:hover { background: #f0f4f8; }
-.topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
+.topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #1a4f8d, #2b6cb0); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
 .topbar-chevron { font-size: 12px; color: #a0aec0; transition: transform 0.15s ease; }
 .topbar-chevron.rotated { transform: rotate(180deg); }
 .topbar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.12); border: 1px solid #e9ecef; min-width: 200px; overflow: hidden; z-index: 300; }
@@ -227,17 +209,17 @@ const vClickOutside = {
 .dropdown-item--danger { color: #c53030; }
 .dropdown-item--danger:hover { background: rgba(197,48,48,0.06); }
 .dropdown-divider { border-top: 1px solid #e9ecef; }
-.admin-content { flex: 1; padding: 28px 32px; background: linear-gradient(180deg, #f8fafc 0%, #f0f4f8 100%); }
-.admin-content__inner { max-width: 1400px; margin: 0 auto; width: 100%; }
+.wh-content { flex: 1; padding: 28px 32px; background: linear-gradient(180deg, #f8fafc 0%, #f0f4f8 100%); }
+.wh-content__inner { max-width: 1400px; margin: 0 auto; width: 100%; }
 .fade-label-enter-active, .fade-label-leave-active { transition: opacity 0.18s ease; }
 .fade-label-enter-from, .fade-label-leave-to { opacity: 0; }
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s, transform 0.15s; }
 .fade-enter-from, .fade-leave-to { opacity: 0; transform: translateY(-6px); }
 @media (max-width: 900px) {
-  .admin-sidebar { position: fixed; transform: translateX(0); z-index: 300; }
-  .admin-sidebar.collapsed { transform: translateX(-100%); width: 260px; }
-  .admin-body { margin-left: 0 !important; }
+  .wh-sidebar { position: fixed; transform: translateX(0); z-index: 300; }
+  .wh-sidebar.collapsed { transform: translateX(-100%); width: 260px; }
+  .wh-body { margin-left: 0 !important; }
   .mobile-menu-btn { display: flex; }
-  .admin-content { padding: 20px 16px; }
+  .wh-content { padding: 20px 16px; }
 }
 </style>

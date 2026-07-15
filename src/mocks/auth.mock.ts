@@ -61,7 +61,7 @@ export const MOCK_CREDENTIALS: MockCredential[] = [
       userId:       '55555555-5555-5555-5555-555555555555',
       fullName:     'Nguyễn Quản Kho',
       email:        'warehouse@relief.vn',
-      role:         'WarehouseManager',
+      role:         'Coordinator',
       accessToken:  'mock.warehouse.access.token',
       refreshToken: 'mock.warehouse.refresh.token',
       expiresAt:    new Date(Date.now() + 60 * 60 * 1000).toISOString(),

@@ -5,41 +5,45 @@
 // ============================================================
 
 // ── Roles ─────────────────────────────────────────────────────
-// BE trả PascalCase: "Admin" | "Volunteer" | "Requester" | "WarehouseManager" | "Organization"
+// BE trả PascalCase: "Admin" | "Volunteer" | "Requester" | "Coordinator" | "Organization"
+// [2026-07-13] BE đổi tên role "WarehouseManager" → "Coordinator" (migration
+// 20260713075737_RenameWarehouseManagerToCoordinator). Permission không đổi,
+// role này vẫn là quản lý kho vật tư — không liên quan tới trang /coordinator
+// (Điều phối viên phân công TNV, chỉ dành cho Admin).
 export type UserRole =
   | 'Admin'
   | 'Volunteer'
   | 'Requester'
-  | 'WarehouseManager'
+  | 'Coordinator'
   | 'Organization'
 
 /** Tên hiển thị tiếng Việt */
 export const ROLE_LABELS: Record<UserRole, string> = {
-  Admin:            'Quản trị viên',
-  Volunteer:        'Tình nguyện viên',
-  Requester:        'Người yêu cầu hỗ trợ',
-  WarehouseManager: 'Quản lý kho',
-  Organization:     'Tổ chức',
+  Admin:       'Quản trị viên',
+  Volunteer:   'Tình nguyện viên',
+  Requester:   'Người yêu cầu hỗ trợ',
+  Coordinator: 'Quản lý kho',
+  Organization: 'Tổ chức',
 }
 
 /** Màu badge cho từng role */
 export const ROLE_COLORS: Record<UserRole, string> = {
-  Admin:            '#c53030',  // đỏ
-  Volunteer:        '#276749',  // xanh lá
-  Requester:        '#975a16',  // cam
-  WarehouseManager: '#2b6cb0',  // xanh dương
-  Organization:     '#6b46c1',  // tím
+  Admin:       '#c53030',  // đỏ
+  Volunteer:   '#276749',  // xanh lá
+  Requester:   '#975a16',  // cam
+  Coordinator: '#2b6cb0',  // xanh dương
+  Organization: '#6b46c1', // tím
 }
 
 /**
  * Thứ tự ưu tiên – role có số cao hơn có quyền hơn.
  */
 export const ROLE_PRIORITY: Record<UserRole, number> = {
-  Admin:            5,
-  WarehouseManager: 4,
-  Organization:     3,
-  Volunteer:        2,
-  Requester:        1,
+  Admin:       5,
+  Coordinator: 4,
+  Organization: 3,
+  Volunteer:   2,
+  Requester:   1,
 }
 
 // ── Wrapper chung mọi API response ───────────────────────────
