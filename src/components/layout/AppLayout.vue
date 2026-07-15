@@ -31,6 +31,13 @@
           class="nav-link"
         >Điều phối</router-link>
 
+        <!-- WarehouseManager + Admin -->
+        <router-link
+          v-if="hasRole('warehousemanager', 'admin')"
+          to="/warehouse"
+          class="nav-link"
+        >Kho vật tư</router-link>
+
         <!-- Admin only -->
         <router-link
           v-if="hasRole('admin')"

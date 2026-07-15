@@ -110,7 +110,8 @@ const dashboardRoute = computed(() => {
     case 'coordinator': return '/coordinator'
     case 'volunteer':   return '/volunteer'
     case 'requester':   return '/requester'
-    // WarehouseManager / Organization: chưa có khu riêng trên FE → tạm về home
+    case 'warehousemanager': return '/warehouse'
+    // Organization: chưa có khu riêng trên FE → tạm về home
     default:            return '/home'
   }
 })
