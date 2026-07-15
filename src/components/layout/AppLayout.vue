@@ -24,6 +24,13 @@
           class="nav-link"
         >Tình nguyện</router-link>
 
+        <!-- Admin + Coordinator (quản lý kho) -->
+        <router-link
+          v-if="auth.hasRole('Admin', 'Coordinator')"
+          to="/warehouses"
+          class="nav-link"
+        >Kho</router-link>
+
         <!-- Admin only -->
         <router-link
           v-if="auth.hasRole('Admin')"

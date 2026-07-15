@@ -40,7 +40,7 @@ export const useAuthStore = defineStore('auth', () => {
 
   /**
    * Kiểm tra user có quyền >= minRole theo hierarchy không.
-   * VD: isAtLeast('Volunteer') → true nếu là Volunteer, WarehouseManager hoặc Admin
+   * VD: isAtLeast('Volunteer') → true nếu là Volunteer, Coordinator hoặc Admin
    */
   function isAtLeast(minRole: UserRole): boolean {
     if (!user.value) return false
@@ -50,7 +50,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isAdmin            = computed(() => hasRole('Admin'))
   const isVolunteer        = computed(() => hasRole('Volunteer'))
   const isRequester        = computed(() => hasRole('Requester'))
-  const isWarehouseManager = computed(() => hasRole('WarehouseManager'))
+  const isCoordinator      = computed(() => hasRole('Coordinator'))
   const isOrganization     = computed(() => hasRole('Organization'))
 
   // ── Actions ────────────────────────────────────────────────
@@ -126,7 +126,7 @@ export const useAuthStore = defineStore('auth', () => {
     accessToken, user,
     // computed
     isLoggedIn, role,
-    isAdmin, isVolunteer, isRequester, isWarehouseManager, isOrganization,
+    isAdmin, isVolunteer, isRequester, isCoordinator, isOrganization,
     // methods
     hasRole, isAtLeast, login, logout, fetchMe, updateUser,
   }

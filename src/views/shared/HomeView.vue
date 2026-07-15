@@ -107,10 +107,12 @@ const normalizedRole = computed(() => (auth.role ?? '').toLowerCase())
 const dashboardRoute = computed(() => {
   switch (normalizedRole.value) {
     case 'admin':       return '/admin'
-    case 'coordinator': return '/coordinator'
+    // role "Coordinator" = quản lý kho, KHÔNG phải trang /coordinator
+    // (đó là "Điều phối viên" phân công TNV, chỉ dành cho Admin)
+    case 'coordinator': return '/warehouses'
     case 'volunteer':   return '/volunteer'
     case 'requester':   return '/requester'
-    // WarehouseManager / Organization: chưa có khu riêng trên FE → tạm về home
+    // Organization: chưa có khu riêng trên FE → tạm về home
     default:            return '/home'
   }
 })
