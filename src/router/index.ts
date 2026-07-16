@@ -98,6 +98,16 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/requester/become-volunteer',
+    name: 'become-volunteer',
+    component: () => import('@/views/requester/VolunteerRegisterView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Requester', 'Admin'],
+      title: 'Đăng ký Tình nguyện viên',
+    },
+  },
+  {
   path: '/requester/my-requests',
   name: 'my-requests',
   component: () => import('@/views/requester/MyRequestsView.vue'),

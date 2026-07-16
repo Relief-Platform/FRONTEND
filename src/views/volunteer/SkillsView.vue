@@ -78,12 +78,14 @@
                 </div>
                 <h4 class="skill-title">{{ skill.name }}</h4>
               </div>
-              <p class="skill-description">{{ skill.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}</p>
+              <p class="skill-description">
+                {{ skillOptions.find(s => s.id === skill.id)?.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}
+              </p>
               <div class="skill-card__actions">
                 <span class="status-badge approved">Đang hoạt động</span>
                 <button
                   class="btn-delete-skill"
-                  @click="handleRemoveSkill(skill.name)"
+                  @click="handleRemoveSkill(skill.id, skill.name)"
                   :disabled="isSubmitting"
                 >
                   Hủy đăng ký
@@ -144,7 +146,7 @@ import {
   loadAvailableSkills,
   AVAILABLE_SKILLS
 } from '@/features/volunteers/volunteers.api'
-import type { VolunteerProfile, SkillItem } from '@/features/volunteers/volunteers.types'
+import type { VolunteerProfile, SkillItem, VolunteerSkill } from '@/features/volunteers/volunteers.types'
 
 const profile = ref<VolunteerProfile | null>(null)
 const hasProfile = ref(true)
@@ -183,16 +185,17 @@ const loadProfile = async () => {
   }
 }
 
-// Compute registered skills as SkillItem list
-const registeredSkills = computed<SkillItem[]>(() => {
+// Kỹ năng đã đăng ký: lấy từ profile.skills (VolunteerSkill[] có id+name)
+const registeredSkills = computed<VolunteerSkill[]>(() => {
   if (!profile.value) return []
-  return skillOptions.value.filter(s => profile.value!.skills.includes(s.name))
+  return profile.value.skills
 })
 
-// Compute remaining skills that can be registered
+// Kỹ năng chưa đăng ký: lọc từ danh sách hệ thống theo id
 const availableSkillsToRegister = computed<SkillItem[]>(() => {
   if (!profile.value) return skillOptions.value
-  return skillOptions.value.filter(s => !profile.value!.skills.includes(s.name))
+  const registeredIds = new Set(profile.value.skills.map(s => s.id))
+  return skillOptions.value.filter(s => !registeredIds.has(s.id))
 })
 
 const handleAddSkill = async (skillId: string) => {
@@ -209,17 +212,14 @@ const handleAddSkill = async (skillId: string) => {
   }
 }
 
-const handleRemoveSkill = async (skillName: string) => {
-  const targetSkill = AVAILABLE_SKILLS.find(s => s.name === skillName)
-  const idToDelete = targetSkill ? targetSkill.id : skillName
-
+const handleRemoveSkill = async (skillId: string, skillName: string) => {
   if (!confirm(`Bạn có chắc muốn hủy đăng ký kỹ năng "${skillName}" không?`)) {
     return
   }
 
   isSubmitting.value = true
   try {
-    await deleteSkill(idToDelete)
+    await deleteSkill(skillId)
     triggerNotification('success', `Đã hủy đăng ký kỹ năng "${skillName}" thành công!`)
     await loadProfile()
   } catch (err: unknown) {
