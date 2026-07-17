@@ -182,6 +182,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import VolunteerRegisterForm from '@/components/volunteer/VolunteerRegisterForm.vue'
 import {
@@ -192,6 +193,7 @@ import {
 import type { VolunteerProfile, VolunteerProfilePayload } from '@/features/volunteers/volunteers.types'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 // ── State ──────────────────────────────────────────────────────
 const profile       = ref<VolunteerProfile | null>(null)
@@ -207,6 +209,10 @@ const profileStatus = computed(() => profile.value?.status ?? null)
 onMounted(async () => {
   try {
     profile.value = await getVolunteerProfile()
+    if (profile.value?.status === 'Approved') {
+      await authStore.fetchMe() // Đồng bộ thông tin user mới nhất để đổi role thành Volunteer ở local
+      await router.replace('/volunteer')
+    }
   } catch {
     // 404 → chưa có hồ sơ → hiển thị form đăng ký
     profile.value = null
@@ -220,9 +226,22 @@ async function handleCreate(payload: VolunteerProfilePayload): Promise<void> {
   isSaving.value   = true
   errorMessage.value = ''
   try {
-    await createVolunteerProfile(payload)
-    // Reload để lấy trạng thái Pending vừa tạo
-    profile.value = await getVolunteerProfile()
+    const result = await createVolunteerProfile(payload)
+    // Cập nhật state local ngay lập tức tránh việc gọi API quá nhanh bị lag/trễ DB
+    profile.value = {
+      id:              result.id,
+      userId:          authStore.user?.userId || '',
+      fullName:        authStore.user?.fullName || '',
+      email:           authStore.user?.email || '',
+      phoneNumber:     '',
+      address:         payload.address,
+      latitude:        payload.latitude,
+      longitude:       payload.longitude,
+      experienceYears: payload.experienceYears,
+      bio:             payload.bio || '',
+      status:          'Pending',
+      skills:          []
+    }
   } catch (err) {
     errorMessage.value = (err as Error).message || 'Đăng ký thất bại. Vui lòng thử lại.'
   } finally {
@@ -236,7 +255,14 @@ async function handleUpdate(payload: VolunteerProfilePayload): Promise<void> {
   errorMessage.value = ''
   try {
     await updateVolunteerProfile(payload)
-    profile.value = await getVolunteerProfile()
+    // Cập nhật state local ngay lập tức
+    if (profile.value) {
+      profile.value = {
+        ...profile.value,
+        ...payload,
+        status: 'Pending'
+      }
+    }
     showReapplyForm.value = false
   } catch (err) {
     errorMessage.value = (err as Error).message || 'Cập nhật thất bại. Vui lòng thử lại.'

@@ -91,3 +91,23 @@ export interface VolunteerProfilePayload {
 export interface AddSkillsPayload {
   skillIds: string[]
 }
+
+// ── Admin Volunteer Summary ──────────────────────────────
+export interface AdminVolunteerSummary {
+  id:              string   // GUID — volunteer profile ID
+  userId:          string   // GUID — user account ID
+  fullName:        string
+  email:           string
+  phoneNumber:     string
+  status:          VolunteerStatus  // "Pending" | "Approved" | "Rejected"
+  experienceYears: number
+}
+
+export interface ApproveVolunteerResponse {
+  message: string
+}
+
+export interface RejectVolunteerResponse {
+  message: string
+}
+

@@ -275,6 +275,16 @@ const routes: RouteRecordRaw[] = [
       title: 'Quản lý phân công tình nguyện viên',
     },
   },
+  {
+    path: '/admin/volunteers',
+    name: 'admin-volunteers',
+    component: () => import('@/views/admin/VolunteersView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Quản lý tình nguyện viên',
+    },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  ERROR PAGES
