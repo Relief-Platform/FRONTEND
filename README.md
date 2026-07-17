@@ -88,3 +88,157 @@ src/
 4. Thêm Pinia store vào `src/stores/<tên>.ts`
 5. Thêm view vào `src/views/<Tên>View.vue`
 6. Đăng ký route trong `src/router/index.ts`
+
+---
+
+## Flow Đăng nhập (Login)
+
+### Sơ đồ tổng quát
+
+```
+[User] → /login (guestOnly)
+   │
+   ├─ Đã đăng nhập? → Redirect /home (Router Guard)
+   │
+   └─ Chưa đăng nhập → Hiển thị LoginView.vue
+         │
+         ├─ Nhập email + password → submit form
+         │
+         ├─ authStore.login(email, password)
+         │     │
+         │     └─ auth.api.ts: POST /api/auth/login
+         │           │
+         │           ├─ [Mock mode] → mockLoginUser() (trả data giả)
+         │           └─ [Real mode] → axios → http.ts interceptor bóc envelope
+         │                 → trả LoginResult { userId, fullName, email, role,
+         │                                     accessToken, refreshToken, expiresAt }
+         │
+         ├─ Lưu vào localStorage:
+         │     ├─ auth_access_token  (JWT, hết hạn sau 60 phút)
+         │     ├─ auth_refresh_token (hết hạn sau 7 ngày)
+         │     └─ auth_user          (AuthUser object, persist qua F5)
+         │
+         └─ Redirect theo role:
+               ├─ Admin        → /admin
+               ├─ Volunteer    → /volunteer
+               ├─ Requester    → /requester
+               ├─ Coordinator  → /warehouses
+               └─ Organization → /requester (tạm thời)
+```
+
+### Các bước chi tiết
+
+| Bước | File | Mô tả |
+|------|------|--------|
+| 1. Render form | `views/auth/LoginView.vue` | Input email + password, nút toggle show/hide password |
+| 2. Submit | `LoginView.vue` → `handleLogin()` | Validate input không rỗng |
+| 3. Gọi store | `stores/auth.ts` → `login()` | Delegate xuống auth.api |
+| 4. Gọi API | `features/auth/auth.api.ts` → `loginUser()` | `POST /api/auth/login` với `{ email, password }` |
+| 5. Xử lý response | `lib/api/http.ts` interceptor | Bóc envelope `ApiResponse<LoginResult>` → trả `LoginResult` |
+| 6. Lưu token | `lib/api/token-storage.ts` | `localStorage`: `auth_access_token`, `auth_refresh_token` |
+| 7. Lưu user | `stores/auth.ts` | `localStorage`: `auth_user` (AuthUser object) |
+| 8. Redirect | `LoginView.vue` | `router.push()` theo role map |
+
+### Xử lý lỗi
+
+- **Lỗi validation** (input rỗng): thông báo ngay tại client
+- **Lỗi API** (sai mật khẩu, không tồn tại): `errorMessages[]` từ BE → hiển thị `error-banner`
+- **401 Unauthorized**: http interceptor tự xóa token + redirect `/login`
+
+### Mock Mode
+
+Khi `VITE_USE_MOCK_AUTH=true` trong `.env.local`, hiển thị panel tài khoản test:
+- Click vào role → tự điền email/password và đăng nhập ngay
+- Danh sách mock accounts định nghĩa trong `src/mocks/auth.mock.ts`
+
+---
+
+## Flow Đăng ký (Register)
+
+### Sơ đồ tổng quát
+
+```
+[User] → /register (guestOnly)
+   │
+   ├─ Đã đăng nhập? → Redirect /home (Router Guard)
+   │
+   └─ Chưa đăng nhập → Hiển thị RegisterView.vue
+         │
+         ├─ Nhập: Họ tên, Email, Số điện thoại, Mật khẩu, Xác nhận mật khẩu
+         │
+         ├─ Client validate: password === confirmPassword
+         │
+         ├─ Submit → handleRegister()
+         │     │
+         │     └─ auth.api.ts: POST /api/auth/register
+         │           Body: { fullName, email, phoneNumber, password, confirmPassword }
+         │           │
+         │           ├─ [Mock mode] → mockRegisterUser()
+         │           └─ [Real mode] → trả LoginResult (auto-login sau register)
+         │
+         ├─ BE tạo tài khoản với role mặc định: "Requester"
+         │
+         ├─ Lưu vào localStorage (giống login):
+         │     ├─ auth_access_token
+         │     ├─ auth_refresh_token
+         │     └─ auth_user
+         │
+         └─ Redirect → /requester (role mặc định Requester)
+```
+
+### Các bước chi tiết
+
+| Bước | File | Mô tả |
+|------|------|--------|
+| 1. Render form | `views/auth/RegisterView.vue` | Các field: fullName, email, phoneNumber, password, confirmPassword + checkbox đồng ý |
+| 2. Validate client | `RegisterView.vue` → `passwordMismatch` computed | So sánh password vs confirmPassword real-time |
+| 3. Submit | `RegisterView.vue` → `handleRegister()` | Dừng nếu passwordMismatch |
+| 4. Gọi API | `features/auth/auth.api.ts` → `registerUser()` | `POST /api/auth/register` |
+| 5. Xử lý response | `http.ts` interceptor | Bóc envelope → trả `LoginResult` (register = auto-login) |
+| 6. Lưu token + user | `token-storage.ts` + `auth_user` localStorage | Giống flow login |
+| 7. Redirect | `RegisterView.vue` | `router.push('/requester')` (role mặc định) |
+
+### Xử lý lỗi
+
+- **Mật khẩu không khớp**: validate ngay client, không gọi API
+- **Email đã tồn tại / validation BE**: `errorMessages[]` → hiển thị `error-banner`
+- **phoneNumber bắt buộc**: BE validate "The PhoneNumber field is required" (đã kiểm chứng)
+
+---
+
+## Token & Session Management
+
+| Key localStorage | Giá trị | Thời hạn |
+|-----------------|---------|----------|
+| `auth_access_token` | JWT Bearer token | 60 phút |
+| `auth_refresh_token` | Refresh token | 7 ngày |
+| `auth_user` | AuthUser JSON (userId, fullName, email, role, expiresAt) | Persist qua F5 |
+
+### Khởi động lại app (F5)
+
+1. `stores/auth.ts` đọc `auth_access_token` + `auth_user` từ localStorage khi khởi tạo
+2. Router Guard kiểm tra `tokenStorage.exists()` để quyết định redirect
+3. `fetchMe()` gọi `GET /api/auth/me` để sync thông tin user mới nhất từ BE
+
+### Đăng xuất
+
+1. Gửi `POST /api/auth/logout` với `refreshToken` → BE blacklist token
+2. Xóa toàn bộ localStorage: `auth_access_token`, `auth_refresh_token`, `auth_user`
+3. `http.ts`: khi nhận 401 → tự động xóa token + redirect `/login`
+
+---
+
+## Role-based Access Control (RBAC)
+
+| Role | Giá trị BE | Quyền mặc định sau login |
+|------|-----------|--------------------------|
+| `Admin` | `"Admin"` | `/admin` |
+| `Volunteer` | `"Volunteer"` | `/volunteer` |
+| `Requester` | `"Requester"` | `/requester` (role mặc định khi đăng ký) |
+| `Coordinator` | `"Coordinator"` | `/warehouses` (quản lý kho) |
+| `Organization` | `"Organization"` | `/requester` (tạm thời) |
+
+Router Guard (`router/index.ts`) kiểm tra 3 điều kiện theo thứ tự:
+1. `guestOnly` + đã login → redirect `/home`
+2. `requiresAuth` + chưa login → redirect `/login?redirect=<path>`
+3. `roles[]` + role không khớp → redirect `/unauthorized`

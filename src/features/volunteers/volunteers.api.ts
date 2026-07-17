@@ -1,149 +1,183 @@
 // ============================================================
 //  Volunteers API — /api/volunteers
-//  Hỗ trợ đầy đủ Mock Mode để phát triển và Real API
+//  Tất cả real response đều bọc trong ApiResponse<T> → cần unwrap
 // ============================================================
 
 import { http } from '@/lib/api/http'
-import type { VolunteerProfile, VolunteerProfilePayload, SkillItem } from './volunteers.types'
+import type { ApiResponse } from '@/features/auth/auth.types'
+import type {
+  VolunteerProfile,
+  VolunteerProfilePayload,
+  SkillItem,
+  CreateVolunteerProfileResponse,
+  UpdateVolunteerProfileResponse,
+  AddVolunteerSkillsResponse,
+  RemoveVolunteerSkillResponse,
+  AddSkillsPayload,
+  AdminVolunteerSummary,
+  ApproveVolunteerResponse,
+  RejectVolunteerResponse,
+} from './volunteers.types'
 
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
+// ── Helper: unwrap ApiResponse<T> (tolerant) ─────────────────
+function unwrap<T>(data: ApiResponse<T> | T): T {
+  if (
+    data !== null &&
+    typeof data === 'object' &&
+    'isSuccess' in (data as object) &&
+    'result' in (data as object)
+  ) {
+    const r = data as ApiResponse<T>
+    if (!r.isSuccess || r.result === null || r.result === undefined) {
+      const msg =
+        r.errorMessages && r.errorMessages.length > 0
+          ? r.errorMessages.join(' | ')
+          : 'Đã có lỗi xảy ra'
+      throw new Error(msg)
+    }
+    return r.result
+  }
+  return data as T
+}
 
-// ── Mock Data ────────────────────────────────────────────────
-
-// Danh sách tất cả kỹ năng có sẵn trên hệ thống (dùng cho Mock & Chọn lựa ở UI)
-export const AVAILABLE_SKILLS: SkillItem[] = [
-  { id: 'sk-0001-8f4b-4a5f-9e8c-123456789abc', name: 'Sơ cứu y tế', description: 'Có chứng chỉ sơ cấp cứu, xử lý chấn thương cơ bản' },
+// ── Cache skills lấy từ /api/skills (public endpoint, không cần auth) ─────────────────
+export let AVAILABLE_SKILLS: SkillItem[] = [
+  { id: 'sk-0001-8f4b-4a5f-9e8c-123456789abc', name: 'Sơ cứu y tế',               description: 'Có chứng chỉ sơ cấp cứu, xử lý chấn thương cơ bản' },
   { id: 'sk-0002-8f4b-4a5f-9e8c-123456789abc', name: 'Lái xe cứu thương / xe tải', description: 'Bằng lái B2 trở lên, có kinh nghiệm lái đường đèo dốc' },
-  { id: 'sk-0003-8f4b-4a5f-9e8c-123456789abc', name: 'Hậu cần và phân phát', description: 'Sắp xếp kho bãi, kiểm kê hàng hóa, điều phối phân quà' },
-  { id: 'sk-0004-8f4b-4a5f-9e8c-123456789abc', name: 'Tìm kiếm & Cứu hộ', description: 'Đã qua đào tạo cứu hộ thiên tai, bơi lội tốt, sức khỏe tốt' },
-  { id: 'sk-0005-8f4b-4a5f-9e8c-123456789abc', name: 'Hỗ trợ tâm lý / truyền thông', description: 'Động viên tinh thần người dân bị nạn, viết bài cập nhật thông tin' }
+  { id: 'sk-0003-8f4b-4a5f-9e8c-123456789abc', name: 'Hậu cần và phân phát',       description: 'Sắp xếp kho bãi, kiểm kê hàng hóa, điều phối phân quà' },
+  { id: 'sk-0004-8f4b-4a5f-9e8c-123456789abc', name: 'Tìm kiếm & Cứu hộ',         description: 'Đã qua đào tạo cứu hộ thiên tai, bơi lội tốt, sức khỏe tốt' },
+  { id: 'sk-0005-8f4b-4a5f-9e8c-123456789abc', name: 'Hỗ trợ tâm lý / truyền thông', description: 'Động viên tinh thần người dân bị nạn, viết bài cập nhật thông tin' },
 ]
 
-let mockProfile: VolunteerProfile | null = {
-  id: 'vol-3fa85f64-5717-4562-b3fc-2c963f66afa6',
-  userId: '33333333-3333-3333-3333-333333333333', // khớp với volunteer@relief.vn
-  fullName: 'Lê Tình Nguyện',
-  email: 'volunteer@relief.vn',
-  phoneNumber: '0903000003',
-  address: 'Bãi biển Cửa Ông, Quảng Ninh',
-  latitude: 21.0285,
-  longitude: 105.8542,
-  experienceYears: 2,
-  bio: 'Tôi đam mê thiện nguyện và mong muốn đóng góp cho cộng đồng.',
-  isApproved: true,
-  skills: ['Sơ cứu y tế', 'Hậu cần và phân phát']
-}
-
-const delay = (ms = 500) => new Promise(resolve => setTimeout(resolve, ms))
-
-// ── API Functions ───────────────────────────────────────────
+// ── Public: GET /api/skills (không cần auth) ─────────────────
 
 /**
- * Lấy hồ sơ tình nguyện viên của user đang đăng nhập
- * GET /api/volunteers/me
+ * Lấy danh sách toàn bộ kỹ năng hệ thống.
+ * Endpoint public — không cần token.
+ * GET /api/skills
+ */
+export async function loadAvailableSkills(): Promise<SkillItem[]> {
+  try {
+    const { data } = await http.get<ApiResponse<SkillItem[]>>('/skills')
+    const fetched = unwrap(data)
+    if (fetched.length > 0) {
+      AVAILABLE_SKILLS = fetched
+    }
+    return [...AVAILABLE_SKILLS]
+  } catch {
+    // Fallback về danh sách local nếu endpoint không phản hồi
+    return [...AVAILABLE_SKILLS]
+  }
+}
+
+// ── GET /api/volunteers/me ────────────────────────────────────
+
+/**
+ * Lấy hồ sơ tình nguyện viên của user đang đăng nhập.
+ * 🔒 Auth: RequesterOrVolunteer
+ * Error 404: hồ sơ chưa được tạo
  */
 export async function getVolunteerProfile(): Promise<VolunteerProfile> {
-  if (USE_MOCK) {
-    await delay()
-    if (!mockProfile) {
-      throw new Error('Hồ sơ chưa được tạo')
-    }
-    return { ...mockProfile }
-  }
-
-  const { data } = await http.get<VolunteerProfile>('/volunteers/me')
-  return data
+  const { data } = await http.get<ApiResponse<VolunteerProfile>>('/volunteers/me')
+  return unwrap(data)
 }
 
-/**
- * Tạo hồ sơ tình nguyện viên mới
- * POST /api/volunteers/profile
- */
-export async function createVolunteerProfile(payload: VolunteerProfilePayload): Promise<VolunteerProfile> {
-  if (USE_MOCK) {
-    await delay()
-    const resolvedSkills = payload.skillIds.map(id => AVAILABLE_SKILLS.find(s => s.id === id)?.name || id)
-    mockProfile = {
-      id: 'vol-new-guid-3456',
-      userId: '33333333-3333-3333-3333-333333333333',
-      fullName: 'Lê Tình Nguyện',
-      email: 'volunteer@relief.vn',
-      phoneNumber: '0903000003',
-      address: payload.address,
-      latitude: payload.latitude,
-      longitude: payload.longitude,
-      experienceYears: payload.experienceYears,
-      bio: payload.bio,
-      isApproved: true,
-      skills: resolvedSkills
-    }
-    return { ...mockProfile }
-  }
+// ── POST /api/volunteers/profile ─────────────────────────────
 
-  const { data } = await http.post<VolunteerProfile>('/volunteers/profile', payload)
-  return data
+/**
+ * Tạo hồ sơ tình nguyện viên mới.
+ * 🔒 Auth: RequesterOrVolunteer
+ * Body: { address, latitude, longitude, experienceYears, bio? }
+ * Response: 201 Created — { id, message }
+ * Error 400: hồ sơ đã tồn tại
+ */
+export async function createVolunteerProfile(
+  payload: VolunteerProfilePayload,
+): Promise<CreateVolunteerProfileResponse> {
+  const { data } = await http.post<ApiResponse<CreateVolunteerProfileResponse>>(
+    '/volunteers/profile',
+    payload,
+  )
+  return unwrap(data)
 }
 
-/**
- * Cập nhật hồ sơ tình nguyện viên
- * PUT /api/volunteers/profile
- */
-export async function updateVolunteerProfile(payload: VolunteerProfilePayload): Promise<VolunteerProfile> {
-  if (USE_MOCK) {
-    await delay()
-    if (!mockProfile) {
-      throw new Error('Hồ sơ không tồn tại')
-    }
-    const resolvedSkills = payload.skillIds.map(id => AVAILABLE_SKILLS.find(s => s.id === id)?.name || id)
-    mockProfile = {
-      ...mockProfile,
-      address: payload.address,
-      latitude: payload.latitude,
-      longitude: payload.longitude,
-      experienceYears: payload.experienceYears,
-      bio: payload.bio,
-      skills: resolvedSkills
-    }
-    return { ...mockProfile }
-  }
+// ── PUT /api/volunteers/profile ──────────────────────────────
 
-  const { data } = await http.put<VolunteerProfile>('/volunteers/profile', payload)
-  return data
+/**
+ * Cập nhật hồ sơ tình nguyện viên.
+ * 🔒 Auth: RequesterOrVolunteer (chỉ chủ sở hữu)
+ * Body: { address, latitude, longitude, experienceYears, bio? }
+ * Response: { id, message }
+ * Error 404: hồ sơ không tồn tại | 403: không phải chủ sở hữu
+ */
+export async function updateVolunteerProfile(
+  payload: VolunteerProfilePayload,
+): Promise<UpdateVolunteerProfileResponse> {
+  const { data } = await http.put<ApiResponse<UpdateVolunteerProfileResponse>>(
+    '/volunteers/profile',
+    payload,
+  )
+  return unwrap(data)
 }
 
-/**
- * Đăng ký thêm các kỹ năng mới
- * POST /api/volunteers/skills
- */
-export async function registerSkills(skillIds: string[]): Promise<void> {
-  if (USE_MOCK) {
-    await delay()
-    if (mockProfile) {
-      const newNames = skillIds.map(id => AVAILABLE_SKILLS.find(s => s.id === id)?.name || id)
-      const current = new Set(mockProfile.skills)
-      newNames.forEach(name => current.add(name))
-      mockProfile.skills = Array.from(current)
-    }
-    return
-  }
+// ── POST /api/volunteers/skills ──────────────────────────────
 
-  // Tùy theo BE nhận json body là array hay object, ta gửi cả array trực tiếp
-  await http.post('/volunteers/skills', { skillIds })
+/**
+ * Đăng ký thêm kỹ năng vào hồ sơ.
+ * 🔒 Auth: RequesterOrVolunteer
+ * Body: { skillIds: Guid[] }
+ * Response: { addedCount, message }
+ * Error 400: kỹ năng không hợp lệ hoặc đã có hết | 404: hồ sơ không tồn tại
+ */
+export async function registerSkills(
+  skillIds: string[],
+): Promise<AddVolunteerSkillsResponse> {
+  const payload: AddSkillsPayload = { skillIds }
+  const { data } = await http.post<ApiResponse<AddVolunteerSkillsResponse>>(
+    '/volunteers/skills',
+    payload,
+  )
+  return unwrap(data)
 }
 
-/**
- * Xóa một kỹ năng đã đăng ký
- * DELETE /api/volunteers/skills/{skillId}
- */
-export async function deleteSkill(skillId: string): Promise<void> {
-  if (USE_MOCK) {
-    await delay()
-    if (mockProfile) {
-      const skillName = AVAILABLE_SKILLS.find(s => s.id === skillId)?.name || skillId
-      mockProfile.skills = mockProfile.skills.filter(name => name !== skillName)
-    }
-    return
-  }
+// ── DELETE /api/volunteers/skills/{skillId} ──────────────────
 
-  await http.delete(`/volunteers/skills/${skillId}`)
+/**
+ * Xóa một kỹ năng khỏi hồ sơ.
+ * 🔒 Auth: RequesterOrVolunteer
+ * {skillId} là GUID của VolunteerSkill (id trong skills[])
+ * Response: { message }
+ * Error 404: hồ sơ không tồn tại | kỹ năng không tìm thấy
+ */
+export async function deleteSkill(
+  skillId: string,
+): Promise<RemoveVolunteerSkillResponse> {
+  const { data } = await http.delete<ApiResponse<RemoveVolunteerSkillResponse>>(
+    `/volunteers/skills/${skillId}`,
+  )
+  return unwrap(data)
+}
+
+// ── ADMIN: GET /api/admin/volunteers ─────────────────────────
+export async function getAdminVolunteers(): Promise<AdminVolunteerSummary[]> {
+  const { data } = await http.get<ApiResponse<AdminVolunteerSummary[]>>('/admin/volunteers')
+  return unwrap(data)
+}
+
+// ── ADMIN: GET /api/admin/volunteers/{id} ─────────────────────
+export async function getAdminVolunteerById(id: string): Promise<VolunteerProfile> {
+  const { data } = await http.get<ApiResponse<VolunteerProfile>>(`/admin/volunteers/${id}`)
+  return unwrap(data)
+}
+
+// ── ADMIN: PUT /api/admin/volunteers/{id}/approve ─────────────
+export async function approveVolunteer(id: string): Promise<ApproveVolunteerResponse> {
+  const { data } = await http.put<ApiResponse<ApproveVolunteerResponse>>(`/admin/volunteers/${id}/approve`)
+  return unwrap(data)
+}
+
+// ── ADMIN: PUT /api/admin/volunteers/{id}/reject ──────────────
+export async function rejectVolunteer(id: string): Promise<RejectVolunteerResponse> {
+  const { data } = await http.put<ApiResponse<RejectVolunteerResponse>>(`/admin/volunteers/${id}/reject`)
+  return unwrap(data)
 }

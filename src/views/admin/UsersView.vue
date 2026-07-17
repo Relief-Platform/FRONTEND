@@ -59,7 +59,7 @@
               <td class="text-muted">{{ (store.page - 1) * store.pageSize + idx + 1 }}</td>
               <td class="font-semibold">{{ user.fullName }}</td>
               <td>{{ user.email }}</td>
-              <td>{{ user.phone ?? '—' }}</td>
+              <td>{{ user.phoneNumber ?? '—' }}</td>
               <td>
                 <span class="status-badge" :class="user.isActive ? 'status--active' : 'status--inactive'">
                   {{ user.isActive ? 'Hoạt động' : 'Đã khoá' }}
@@ -77,9 +77,9 @@
 
         <!-- Pagination -->
         <div v-if="store.total > store.pageSize" class="users-pagination">
-          <button class="page-btn" :disabled="!pagination.hasPrev.value" @click="changePage(-1)">‹ Trước</button>
-          <span class="page-info">Trang {{ store.page }} / {{ pagination.totalPages.value }}</span>
-          <button class="page-btn" :disabled="!pagination.hasNext.value" @click="changePage(1)">Tiếp ›</button>
+          <button class="page-btn" :disabled="!hasPrev" @click="changePage(-1)">‹ Trước</button>
+          <span class="page-info">Trang {{ store.page }} / {{ totalPages }}</span>
+          <button class="page-btn" :disabled="!hasNext" @click="changePage(1)">Tiếp ›</button>
         </div>
       </BaseCard>
     </div>
@@ -90,7 +90,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, computed } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -99,34 +100,64 @@ import BaseSpinner from '@/components/ui/BaseSpinner.vue'
 import UserFormDialog from '@/features/users/UserFormDialog.vue'
 import { useUsersStore } from '@/stores/users'
 import { useDebouncedSearch } from '@/composables/useDebouncedRef'
-import { usePagination } from '@/composables/usePagination'
 import { useConfirm } from '@/composables/useConfirm'
 import type { User } from '@/features/users/users.types'
 
+const route = useRoute()
+const router = useRouter()
 const store = useUsersStore()
 const { query, debouncedQuery } = useDebouncedSearch(300)
-const pagination = usePagination()
 const { confirm } = useConfirm()
+
+const totalPages = computed(() => Math.ceil(store.total / store.pageSize) || 1)
+const hasPrev = computed(() => store.page > 1)
+const hasNext = computed(() => store.page < totalPages.value)
 
 const showDialog = ref(false)
 const editTarget = ref<User | null>(null)
 const selectedRole = ref('')
 
-onMounted(() => store.fetchUsers())
+function updateQueryParams() {
+  router.replace({
+    query: {
+      ...route.query,
+      role: selectedRole.value || undefined,
+      page: store.page > 1 ? store.page.toString() : undefined,
+      q: query.value || undefined,
+    }
+  })
+}
+
+onMounted(() => {
+  if (route.query.role) {
+    selectedRole.value = route.query.role as string
+    store.currentRoleFilter = selectedRole.value || undefined
+  }
+  if (route.query.page) {
+    store.page = parseInt(route.query.page as string, 10) || 1
+  }
+  if (route.query.q) {
+    query.value = route.query.q as string
+  }
+  store.fetchUsers()
+})
 
 watch(debouncedQuery, () => {
   store.page = 1
+  updateQueryParams()
   store.fetchUsers() // Note: FE search API not implemented in Backend, but we trigger fetch anyway
 })
 
 function onRoleChange() {
   store.currentRoleFilter = selectedRole.value || undefined
   store.page = 1
+  updateQueryParams()
   store.fetchUsers()
 }
 
 function changePage(delta: number): void {
   store.page += delta
+  updateQueryParams()
   store.fetchUsers()
 }
 
