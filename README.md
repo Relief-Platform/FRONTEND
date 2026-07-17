@@ -242,3 +242,28 @@ Router Guard (`router/index.ts`) kiểm tra 3 điều kiện theo thứ tự:
 1. `guestOnly` + đã login → redirect `/home`
 2. `requiresAuth` + chưa login → redirect `/login?redirect=<path>`
 3. `roles[]` + role không khớp → redirect `/unauthorized`
+
+---
+
+## Cập nhật tính năng & Sửa lỗi mới (Sprint hiện tại)
+
+### 1. Phân luồng đăng ký Tình nguyện viên (Volunteer Registration Flow)
+* **Tự động chuyển hướng**: Khi người dùng vào trang đăng ký tình nguyện viên, nếu hồ sơ đã được duyệt (`Approved`), hệ thống tự động đồng bộ vai trò mới và chuyển hướng thẳng sang Volunteer Dashboard (`/volunteer`).
+* **Trạng thái chờ duyệt (Pending)**: Giao diện sẽ ẩn Form đăng ký và thay thế bằng thông báo chờ Admin phê duyệt.
+* **Trạng thái bị từ chối (Rejected)**: Giao diện sẽ hiển thị thông báo lý do bị từ chối và cho phép người dùng nhấn nút đăng ký lại (Form mở ra trở lại).
+* **Tránh trùng lặp hồ sơ**: Tự động lưu trữ thông tin tạm thời ngay tại Frontend khi gửi form để chuyển đổi trạng thái giao diện tức thì, tránh độ trễ ghi-đọc của cơ sở dữ liệu trên cloud gây lỗi gửi trùng lặp `400 Bad Request`.
+
+### 2. Quản lý Tình nguyện viên dành cho Admin
+* **Màn hình quản lý**: Thêm màn hình `src/views/admin/VolunteersView.vue` cho phép Admin xem danh sách hồ sơ đăng ký tình nguyện viên (ở trạng thái `Pending` và `Approved`).
+* **Xem chi tiết hồ sơ**: Tích hợp hộp thoại chi tiết (`el-dialog`) hiển thị đầy đủ thông tin: Địa chỉ, Tọa độ bản đồ (Lat/Lng), Năm kinh nghiệm, Giới thiệu bản thân và Danh sách các kỹ năng đã đăng ký.
+* **Thao tác duyệt/từ chối**: Hỗ trợ nút Phê duyệt (`Approve`) hoặc Từ chối (`Reject`) trực tiếp tại bảng danh sách hoặc trong hộp thoại chi tiết.
+
+### 3. Tối ưu hóa trang Quản lý người dùng (`/users`)
+* **Sửa lỗi phân trang**: Loại bỏ composable `usePagination` hoạt động độc lập không đồng bộ, thay thế bằng các thuộc tính computed liên kết trực tiếp với Pinia store (`store.total`, `store.page`, `store.pageSize`), sửa triệt để lỗi nút "Trước"/"Tiếp" bị vô hiệu hóa.
+* **Tìm kiếm tiếng Việt không dấu (Accent-insensitive)**: Tích hợp bộ lọc chuẩn hóa tiếng Việt giúp Admin tìm kiếm người dùng case-insensitive và accent-insensitive (ví dụ: gõ `"dat"` vẫn tìm được `"đạt09"`).
+* **Tự động đồng bộ URL (F5 preservation)**: Đồng bộ hai chiều bộ lọc vai trò, số trang và từ khóa tìm kiếm lên tham số URL (Query params). Khi nhấn F5 để tải lại trang, toàn bộ bộ lọc và trang hiện tại sẽ được tự động khôi phục.
+* **Tự động mở rộng vùng tìm kiếm**: Khi có từ khóa tìm kiếm, Frontend tự động nâng tạm thời `pageSize` lên tối đa `100` bản ghi để tối ưu hóa phạm vi quét dữ liệu cục bộ trong giới hạn tải của Backend.
+
+### 4. Đồng bộ hóa Dashboard hệ thống (`/admin`)
+* **Sửa lỗi hiển thị count**: Cập nhật lại cơ chế tính tổng số lượng thống kê (Người dùng, Yêu cầu cứu trợ, Tình nguyện viên) bằng cách cộng dồn các bản ghi được trả về theo dạng phân loại từ API `/api/dashboard/summary`.
+* **Tổng số kho hàng**: Tích hợp thêm API gọi `getAllWarehouses()` để hiển thị chính xác tổng số kho hàng thực tế đang hoạt động trong hệ thống.
