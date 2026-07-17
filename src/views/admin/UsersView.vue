@@ -38,8 +38,8 @@
           <BaseSpinner size="lg" class="spinner-dark" />
         </div>
 
-        <div v-else-if="store.users.length === 0" class="users-empty">
-          <p>Chưa có người dùng nào.</p>
+        <div v-else-if="filteredUsers.length === 0" class="users-empty">
+          <p>{{ query.trim() ? 'Không tìm thấy người dùng phù hợp.' : 'Chưa có người dùng nào.' }}</p>
         </div>
 
         <table v-else class="users-table">
@@ -55,8 +55,8 @@
             </tr>
           </thead>
           <tbody>
-            <tr v-for="(user, idx) in store.users" :key="user.id">
-              <td class="text-muted">{{ (store.page - 1) * store.pageSize + idx + 1 }}</td>
+            <tr v-for="(user, idx) in filteredUsers" :key="user.id">
+              <td class="text-muted">{{ query.trim() ? idx + 1 : (store.page - 1) * store.pageSize + idx + 1 }}</td>
               <td class="font-semibold">{{ user.fullName }}</td>
               <td>{{ user.email }}</td>
               <td>{{ user.phoneNumber ?? '—' }}</td>
@@ -76,7 +76,7 @@
         </table>
 
         <!-- Pagination -->
-        <div v-if="store.total > store.pageSize" class="users-pagination">
+        <div v-if="!query.trim() && store.total > store.pageSize" class="users-pagination">
           <button class="page-btn" :disabled="!hasPrev" @click="changePage(-1)">‹ Trước</button>
           <span class="page-info">Trang {{ store.page }} / {{ totalPages }}</span>
           <button class="page-btn" :disabled="!hasNext" @click="changePage(1)">Tiếp ›</button>
@@ -117,6 +117,25 @@ const showDialog = ref(false)
 const editTarget = ref<User | null>(null)
 const selectedRole = ref('')
 
+function removeTones(str: string): string {
+  return str
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+}
+
+const filteredUsers = computed(() => {
+  const q = removeTones(query.value.trim().toLowerCase())
+  if (!q) return store.users
+  return store.users.filter(user => {
+    const fullName = removeTones(user.fullName.toLowerCase())
+    const email = removeTones(user.email.toLowerCase())
+    const phone = user.phoneNumber ? removeTones(user.phoneNumber.toLowerCase()) : ''
+    return fullName.includes(q) || email.includes(q) || phone.includes(q)
+  })
+})
+
 function updateQueryParams() {
   router.replace({
     query: {
@@ -138,14 +157,18 @@ onMounted(() => {
   }
   if (route.query.q) {
     query.value = route.query.q as string
+    store.pageSize = 100 // Tăng page size để tìm kiếm tối ưu hơn
+  } else {
+    store.pageSize = 10
   }
   store.fetchUsers()
 })
 
 watch(debouncedQuery, () => {
   store.page = 1
+  store.pageSize = query.value.trim() ? 100 : 10 // Tăng page size lên tối đa 100 khi search, phục hồi 10 khi xoá search
   updateQueryParams()
-  store.fetchUsers() // Note: FE search API not implemented in Backend, but we trigger fetch anyway
+  store.fetchUsers()
 })
 
 function onRoleChange() {
