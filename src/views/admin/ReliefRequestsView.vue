@@ -270,6 +270,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import {
   getReliefRequests,
@@ -310,6 +311,9 @@ const STATUS_TRANSITIONS: Partial<Record<ReliefRequestStatus, ReliefRequestStatu
   Assigned:   ['Cancelled'],
   InProgress: ['Completed', 'Cancelled'],
 }
+
+const route = useRoute()
+const router = useRouter()
 
 // ── State ────────────────────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -383,6 +387,7 @@ const displayedRows = computed(() => {
 })
 
 // ── Lifecycle ────────────────────────────────────────────────
+// Cho phép Coordinator Dashboard mở thẳng chi tiết 1 yêu cầu qua query (?id=...)
 onMounted(async () => {
   try {
     allRequests.value = await getReliefRequests(1, 200)
@@ -390,6 +395,13 @@ onMounted(async () => {
     console.error(e)
   } finally {
     isLoading.value = false
+  }
+
+  const targetId = route.query.id as string | undefined
+  if (targetId) {
+    openDetail(targetId)
+    const { id, ...rest } = route.query
+    router.replace({ query: rest })
   }
 })
 
