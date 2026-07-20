@@ -27,14 +27,14 @@ export interface ReliefRequestResponse extends CreateReliefRequestPayload {
   createdAt: string
 }
 
-// ── UI helper: nhóm status thành 3 nhóm màu theo yêu cầu design ──
-export type StatusGroup = 'processing' | 'received' | 'completed' | 'cancelled'
+// ── UI helper: nhóm status thành màu riêng rẽ ──
+export type StatusGroup = 'pending' | 'approved' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
 
 export const STATUS_GROUP_MAP: Record<ReliefRequestStatus, StatusGroup> = {
-  Pending:    'processing',
-  Approved:   'processing',
-  Assigned:   'received',
-  InProgress: 'received',
+  Pending:    'pending',
+  Approved:   'approved',
+  Assigned:   'assigned',
+  InProgress: 'in_progress',
   Completed:  'completed',
   Cancelled:  'cancelled',
 }
@@ -49,8 +49,6 @@ export const STATUS_LABEL_VI: Record<ReliefRequestStatus, string> = {
 }
 
 // ── Màu theo nhóm status (single source of truth cho MỌI view) ──
-//  Quy ước design: đang xử lý = VÀNG, đã tiếp nhận = XANH DƯƠNG,
-//  hoàn thành = XANH LÁ, hủy = XÁM
 export interface StatusColor {
   bg: string     // nền badge/tag (nhạt)
   color: string  // chữ badge/tag (đậm)
@@ -58,8 +56,10 @@ export interface StatusColor {
 }
 
 export const STATUS_GROUP_COLOR: Record<StatusGroup, StatusColor> = {
-  processing: { bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' }, // vàng
-  received:   { bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6' }, // xanh dương
-  completed:  { bg: '#dcfce7', color: '#15803d', dot: '#22c55e' }, // xanh lá
-  cancelled:  { bg: '#f1f5f9', color: '#64748b', dot: '#94a3b8' }, // xám
+  pending:     { bg: '#fef3c7', color: '#b45309', dot: '#f59e0b' }, // vàng
+  approved:    { bg: '#dcfce7', color: '#15803d', dot: '#22c55e' }, // xanh ngọc
+  assigned:    { bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6' }, // xanh dương
+  in_progress: { bg: '#ede9fe', color: '#6d28d9', dot: '#8b5cf6' }, // tím
+  completed:   { bg: '#d1fae5', color: '#065f46', dot: '#10b981' }, // xanh lá
+  cancelled:   { bg: '#f3f4f6', color: '#4b5563', dot: '#9ca3af' }, // xám
 }

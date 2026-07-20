@@ -82,7 +82,7 @@
                 <th class="th-center">Trạng thái</th>
                 <th>Ngày phân công</th>
                 <th>Ngày hoàn thành</th>
-                <th class="th-center">Xin huỷ?</th>
+                <th class="th-center">Xin huỷ</th>
                 <th class="th-center">Thao tác</th>
               </tr>
             </thead>
@@ -181,80 +181,103 @@
         <p v-if="pendingMsg" class="global-msg" :class="pendingMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ pendingMsg }}</p>
       </template>
 
-      <!-- ── Detail Drawer ──────────────────────────────── -->
-      <Transition name="drawer">
-        <div v-if="drawerOpen" class="drawer-overlay" @click.self="closeDrawer">
-          <div class="drawer">
-            <!-- Header -->
-            <div class="drawer-header">
-              <div>
-                <p class="drawer-subtitle">Chi tiết phân công</p>
-                <h2 class="drawer-title">{{ selected?.reliefRequestTitle }}</h2>
+      <!-- ── Detail Modal ──────────────────────────────── -->
+      <Transition name="modal">
+        <div v-if="drawerOpen" class="modal-overlay" @click.self="closeDrawer">
+          <div class="modal-box">
+
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <div class="modal-header__inner">
+                <p class="modal-subtitle">Chi tiết phân công</p>
+                <h2 class="modal-title">{{ selected?.reliefRequestTitle }}</h2>
               </div>
-              <button class="drawer-close" @click="closeDrawer">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button class="modal-close" @click="closeDrawer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
             <template v-if="selected">
-              <!-- Timeline status -->
-              <div class="timeline-section">
-                <div
-                  v-for="(step, i) in statusTimeline"
-                  :key="step.key"
-                  class="timeline-step"
-                  :class="{
-                    'tl--done':    isStepDone(step.key),
-                    'tl--current': isStepCurrent(step.key),
-                    'tl--future':  isStepFuture(step.key),
-                    'tl--last':    i === statusTimeline.length - 1,
-                  }"
-                >
-                  <div class="tl-dot">
-                    <svg v-if="isStepDone(step.key)" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    <span v-else-if="isStepCurrent(step.key)" class="tl-pulse" />
-                  </div>
-                  <div class="tl-content">
-                    <p class="tl-label">{{ step.label }}</p>
-                    <p class="tl-time">{{ stepTime(step.key) ?? (isStepFuture(step.key) ? 'Chưa đến' : '') }}</p>
-                  </div>
-                </div>
-              </div>
-
-              <!-- Info grid -->
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">Tình nguyện viên</span>
-                  <span class="info-val info-val--bold">{{ selected.volunteerFullName }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Trạng thái hiện tại</span>
+              <!-- Volunteer info strip -->
+              <div class="vol-strip">
+                <div class="vol-strip__avatar">{{ selected.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
+                <div class="vol-strip__info">
+                  <span class="vol-strip__name">{{ selected.volunteerFullName }}</span>
                   <span class="status-badge" :style="asnBadgeStyle(selected.status)">
                     <span class="status-dot" :style="asnDotStyle(selected.status)" />
                     {{ ASN_STATUS_LABEL[selected.status] }}
                   </span>
                 </div>
-                <div class="info-item" v-if="selected.note">
-                  <span class="info-label">Ghi chú</span>
-                  <span class="info-val">{{ selected.note }}</span>
+              </div>
+
+              <!-- Timeline -->
+              <div class="modal-timeline">
+                <div
+                  v-for="(step, i) in statusTimeline"
+                  :key="step.key"
+                  class="mtl-step"
+                  :class="{
+                    'mtl--done':    isStepDone(step.key),
+                    'mtl--current': isStepCurrent(step.key),
+                    'mtl--future':  isStepFuture(step.key),
+                    'mtl--last':    i === statusTimeline.length - 1,
+                  }"
+                >
+                  <div class="mtl-dot">
+                    <svg v-if="isStepDone(step.key)" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span v-else-if="isStepCurrent(step.key)" class="mtl-pulse" />
+                  </div>
+                  <div class="mtl-content">
+                    <p class="mtl-label">{{ step.label }}</p>
+                    <p class="mtl-time">{{ stepTime(step.key) ?? (isStepFuture(step.key) ? 'Chưa đến' : '') }}</p>
+                  </div>
                 </div>
-                <div class="info-item info-item--full" v-if="selected.cancellationRequested">
-                  <span class="info-label">Lý do xin huỷ</span>
-                  <span class="info-val reason-text">{{ selected.cancellationReason }}</span>
+              </div>
+
+              <!-- Info cards -->
+              <div class="modal-cards">
+                <!-- Card: Yêu cầu cứu trợ -->
+                <div class="info-card">
+                  <div class="info-card__header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    Yêu cầu cứu trợ
+                  </div>
+                  <p class="info-card__sublabel">Tiêu đề</p>
+                  <p class="info-card__val">{{ selected.reliefRequestTitle }}</p>
+                  <template v-if="selected.note">
+                    <p class="info-card__sublabel" style="margin-top:10px">Ghi chú</p>
+                    <p class="info-card__val info-card__val--note">{{ selected.note }}</p>
+                  </template>
+                  <template v-if="selected.cancellationRequested">
+                    <p class="info-card__sublabel" style="margin-top:10px">Lý do xin huỷ</p>
+                    <p class="info-card__val reason-text">{{ selected.cancellationReason }}</p>
+                  </template>
+                </div>
+
+                <!-- Card: Thời gian -->
+                <div class="info-card">
+                  <div class="info-card__header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Thời gian
+                  </div>
+                  <p class="info-card__sublabel">Phân công lúc</p>
+                  <div class="info-card__datebox">{{ fmtDate(selected.assignedAt) }}</div>
+                  <p class="info-card__sublabel" style="margin-top:10px">Hoàn thành lúc</p>
+                  <div class="info-card__datebox info-card__datebox--muted">{{ selected.completedAt ? fmtDate(selected.completedAt) : 'Chưa hoàn thành' }}</div>
                 </div>
               </div>
 
               <!-- Admin actions -->
-              <div class="section-block">
-                <p class="section-label">Thao tác Admin</p>
+              <div class="modal-admin">
+                <p class="modal-admin__label">Thao tác Admin</p>
 
-                <!-- Duyệt/từ chối đơn xin huỷ nếu có -->
+                <!-- Cancel request banner -->
                 <template v-if="selected.cancellationRequested && selected.status !== 'Cancelled'">
                   <div class="cancel-req-banner">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>Tình nguyện viên đã gửi đơn xin huỷ lúc <strong>{{ fmtDate(selected.cancellationRequestedAt!) }}</strong></span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <span>TNV đã gửi đơn xin huỷ lúc <strong>{{ fmtDate(selected.cancellationRequestedAt!) }}</strong></span>
                   </div>
-                  <div class="action-btns" style="margin-top: 12px;">
+                  <div class="action-btns" style="margin-top:10px">
                     <button class="btn-approve btn-lg" :disabled="isActioning" @click="handleApprove(selected)">
                       <svg v-if="isActioning && actionType === 'approve'" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
@@ -268,7 +291,7 @@
                   </div>
                 </template>
 
-                <!-- Force cancel (chỉ khi chưa completed/cancelled) -->
+                <!-- Force cancel -->
                 <template v-if="selected.status !== 'Completed' && selected.status !== 'Cancelled'">
                   <div class="force-cancel-block">
                     <p class="fc-title">Huỷ trực tiếp</p>
@@ -655,65 +678,170 @@ function fmtDate(iso: string): string {
 .msg--ok    { background: #dcfce7; color: #15803d; }
 .msg--error { background: #fee2e2; color: #991b1b; }
 
-/* ── Drawer ─────────────────────────────────────────────────── */
-.drawer-overlay { position: fixed; inset: 0; background: rgba(15,25,40,0.45); z-index: 500; display: flex; justify-content: flex-end; }
-.drawer { width: 540px; max-width: 95vw; height: 100vh; background: #fff; display: flex; flex-direction: column; overflow-y: auto; box-shadow: -8px 0 40px rgba(0,0,0,0.18); }
-.drawer-header { display: flex; align-items: flex-start; justify-content: space-between; padding: 24px 28px 20px; border-bottom: 1px solid #e9ecef; background: linear-gradient(135deg, #1a1a2e, #0f3460); position: sticky; top: 0; z-index: 10; }
-.drawer-subtitle { font-size: 11px; color: rgba(255,255,255,0.5); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.drawer-title    { font-size: 17px; font-weight: 800; color: #fff; line-height: 1.3; }
-.drawer-close { width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.1); border: none; color: rgba(255,255,255,0.7); cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: all 0.15s ease; }
-.drawer-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+/* ── Modal ───────────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10, 18, 35, 0.6);
+  backdrop-filter: blur(4px);
+  z-index: 500;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.modal-box {
+  width: 580px; max-width: 100%;
+  max-height: 90vh;
+  background: #fff;
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
+  animation: modalIn 0.28s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes modalIn {
+  from { opacity: 0; transform: scale(0.92) translateY(16px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Header */
+.modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 20px 24px 18px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
+  flex-shrink: 0;
+}
+.modal-subtitle { font-size: 10.5px; color: rgba(255,255,255,0.45); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+.modal-title    { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.35; max-width: 420px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.1); border: none;
+  color: rgba(255,255,255,0.65); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: 12px;
+  transition: all 0.15s ease;
+}
+.modal-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
+
+/* Volunteer strip */
+.vol-strip {
+  display: flex; align-items: center; gap: 12px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #1a1a2e, #16213e);
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  flex-shrink: 0;
+}
+.vol-strip__avatar {
+  width: 42px; height: 42px; border-radius: 50%;
+  background: linear-gradient(135deg, #c53030, #e53e3e);
+  color: #fff; font-size: 16px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,0.2); flex-shrink: 0;
+}
+.vol-strip__info { display: flex; flex-direction: column; gap: 5px; }
+.vol-strip__name { font-size: 14px; font-weight: 700; color: #fff; }
+
+/* Scrollable body */
+.modal-timeline, .modal-cards, .modal-admin { flex-shrink: 0; }
+.modal-box > template, .modal-box > * { overflow-y: auto; }
 
 /* Timeline */
-.timeline-section { padding: 20px 28px; border-bottom: 1px solid #f1f5f9; display: flex; gap: 0; }
-.timeline-step { display: flex; align-items: flex-start; gap: 10px; flex: 1; position: relative; }
-.timeline-step:not(.tl--last)::after { content: ''; position: absolute; top: 14px; left: 28px; right: 0; height: 2px; background: #e9ecef; z-index: 0; }
-.timeline-step.tl--done::after  { background: #10b981; }
-.tl-dot { width: 28px; height: 28px; border-radius: 50%; background: #e9ecef; display: flex; align-items: center; justify-content: center; flex-shrink: 0; z-index: 1; transition: all 0.2s ease; }
-.tl--done .tl-dot    { background: #10b981; color: #fff; }
-.tl--current .tl-dot { background: #3b82f6; box-shadow: 0 0 0 5px rgba(59,130,246,0.2); }
-.tl-pulse { width: 10px; height: 10px; border-radius: 50%; background: #fff; animation: pulse 1.2s infinite; }
-@keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.3); } }
-.tl-content { flex: 1; padding-top: 2px; }
-.tl-label { font-size: 11.5px; font-weight: 700; color: #64748b; }
-.tl--done .tl-label    { color: #065f46; }
-.tl--current .tl-label { color: #1d4ed8; }
-.tl-time  { font-size: 10.5px; color: #a0aec0; margin-top: 2px; }
+.modal-timeline {
+  display: flex; gap: 0;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e9ecef;
+}
+.mtl-step { display: flex; align-items: flex-start; gap: 8px; flex: 1; position: relative; }
+.mtl-step:not(.mtl--last)::after { content: ''; position: absolute; top: 13px; left: 26px; right: 0; height: 2px; background: #e2e8f0; z-index: 0; }
+.mtl-step.mtl--done::after { background: #10b981; }
+.mtl-dot {
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #e2e8f0; color: #94a3b8;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; z-index: 1; transition: all 0.2s ease;
+}
+.mtl--done .mtl-dot    { background: #10b981; color: #fff; }
+.mtl--current .mtl-dot { background: #3b82f6; color: #fff; box-shadow: 0 0 0 5px rgba(59,130,246,0.18); }
+.mtl-pulse { width: 9px; height: 9px; border-radius: 50%; background: #fff; animation: pulse 1.2s infinite; }
+@keyframes pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.35); } }
+.mtl-content { flex: 1; padding-top: 1px; }
+.mtl-label { font-size: 11px; font-weight: 700; color: #64748b; line-height: 1.3; }
+.mtl--done .mtl-label    { color: #065f46; }
+.mtl--current .mtl-label { color: #1d4ed8; }
+.mtl-time { font-size: 10px; color: #a0aec0; margin-top: 2px; }
 
-/* Info grid */
-.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 20px 28px; border-bottom: 1px solid #f1f5f9; }
-.info-item { padding: 10px 0; border-bottom: 1px solid #f8fafc; display: flex; flex-direction: column; gap: 5px; }
-.info-item--full { grid-column: 1 / -1; }
-.info-label { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.3px; }
-.info-val   { font-size: 13.5px; color: #2d3748; font-weight: 500; }
-.info-val--bold { font-weight: 700; color: #1a3b5c; }
-.reason-text { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 8px 12px; font-size: 13px; color: #92400e; font-style: italic; }
+/* Info cards */
+.modal-cards {
+  display: grid; grid-template-columns: 1fr 1fr;
+  gap: 14px; padding: 16px 24px;
+  border-bottom: 1px solid #f1f5f9;
+  overflow-y: auto;
+}
+.info-card {
+  background: #f8fafc;
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.info-card__header {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 800; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 12px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
+}
+.info-card__sublabel { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px; }
+.info-card__val { font-size: 13px; font-weight: 700; color: #1a3b5c; line-height: 1.4; }
+.info-card__val--note { font-weight: 500; color: #64748b; font-size: 12.5px; }
+.info-card__datebox {
+  background: #fff; border: 1px solid #e2e8f0;
+  border-radius: 8px; padding: 7px 11px;
+  font-size: 12.5px; font-weight: 600; color: #334155;
+}
+.info-card__datebox--muted { color: #94a3b8; font-style: italic; }
+.reason-text { background: #fffbeb; border: 1px solid #fde68a; border-radius: 8px; padding: 7px 10px; font-size: 12px; color: #92400e; font-style: italic; }
 
-/* Sections */
-.section-block { padding: 20px 28px; border-bottom: 1px solid #f1f5f9; }
-.section-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px; }
+/* Admin section */
+.modal-admin {
+  padding: 16px 24px 20px;
+  background: #fff;
+  overflow-y: auto;
+}
+.modal-admin__label {
+  font-size: 11px; font-weight: 800; color: #64748b;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 14px;
+}
 
-.cancel-req-banner { display: flex; align-items: center; gap: 10px; padding: 12px 14px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; font-size: 13px; color: #92400e; }
+.cancel-req-banner { display: flex; align-items: center; gap: 10px; padding: 11px 13px; background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; font-size: 12.5px; color: #92400e; }
 
-.force-cancel-block { margin-top: 18px; padding-top: 16px; border-top: 1px dashed #e9ecef; }
-.fc-title { font-size: 12px; font-weight: 700; color: #c53030; margin-bottom: 10px; }
+.force-cancel-block { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e9ecef; }
+.fc-title { font-size: 11.5px; font-weight: 700; color: #c53030; margin-bottom: 9px; }
 .fc-row { display: flex; gap: 8px; }
-.fc-input { flex: 1; padding: 9px 14px; border: 1.5px solid #e9ecef; border-radius: 9px; font-size: 13px; color: #2d3748; outline: none; transition: border-color 0.15s ease; }
+.fc-input { flex: 1; padding: 9px 13px; border: 1.5px solid #e9ecef; border-radius: 9px; font-size: 13px; color: #2d3748; outline: none; transition: border-color 0.15s ease; }
 .fc-input:focus { border-color: #c53030; }
 .fc-input:disabled { background: #f8fafc; color: #a0aec0; }
-.btn-force-cancel { display: inline-flex; align-items: center; gap: 5px; padding: 9px 16px; border-radius: 9px; background: #fee2e2; color: #991b1b; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
+.btn-force-cancel { display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 9px; background: #fee2e2; color: #991b1b; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
 .btn-force-cancel:hover:not(:disabled) { background: #c53030; color: #fff; }
 .btn-force-cancel:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .status-msg { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-top: 12px; }
 .spin-icon  { animation: spin 0.7s linear infinite; }
 
+/* Info grid (kept for compatibility) */
+.info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0; padding: 20px 28px; border-bottom: 1px solid #f1f5f9; }
+.info-item { padding: 10px 0; border-bottom: 1px solid #f8fafc; display: flex; flex-direction: column; gap: 5px; }
+.info-item--full { grid-column: 1 / -1; }
+.info-label { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.3px; }
+.info-val   { font-size: 13.5px; color: #2d3748; font-weight: 500; }
+.info-val--bold { font-weight: 700; color: #1a3b5c; }
+
 /* Transition */
-.drawer-enter-active, .drawer-leave-active { transition: opacity 0.25s ease; }
-.drawer-enter-from, .drawer-leave-to { opacity: 0; }
-.drawer-enter-active .drawer { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-enter-from .drawer { transform: translateX(100%); }
-.drawer-leave-to .drawer   { transform: translateX(100%); }
+.modal-enter-active, .modal-leave-active { transition: opacity 0.22s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-enter-active .modal-box { transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease; }
+.modal-enter-from .modal-box { transform: scale(0.9) translateY(20px); opacity: 0; }
+.modal-leave-to .modal-box   { transform: scale(0.95) translateY(10px); opacity: 0; }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {

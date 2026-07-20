@@ -27,8 +27,8 @@
 
         <select v-model="statusFilter" class="status-filter">
           <option value="">Tất cả trạng thái</option>
-          <option value="Pending">⏳ Chờ duyệt (Pending)</option>
-          <option value="Approved">✓ Đã duyệt (Approved)</option>
+          <option value="Pending">Chờ duyệt</option>
+          <option value="Approved">Đã duyệt</option>
         </select>
       </div>
 
@@ -63,7 +63,7 @@
               <td>{{ vol.experienceYears }} năm</td>
               <td>
                 <span class="status-badge" :class="`status--${vol.status.toLowerCase()}`">
-                  {{ vol.status === 'Pending' ? '⏳ Chờ duyệt' : '✓ Đã duyệt' }}
+                  {{ vol.status === 'Pending' ? 'Chờ duyệt' : 'Đã duyệt' }}
                 </span>
               </td>
               <td class="actions-cell">
@@ -101,69 +101,120 @@
         <p>Đang tải chi tiết hồ sơ...</p>
       </div>
       <div v-else-if="selectedVolunteer" class="details-container">
-        <!-- User summary -->
-        <div class="detail-section">
-          <div class="user-avatar-placeholder">
-            {{ selectedVolunteer.fullName.split(" ").slice(-1)[0][0] }}
+        <!-- Section: Profile Header Card -->
+        <div class="profile-header-card">
+          <div class="user-avatar-wrapper">
+            <div class="user-avatar-placeholder">
+              {{ selectedVolunteer.fullName.split(" ").slice(-1)[0][0] }}
+            </div>
+            <div class="status-indicator-dot" :class="`status--${selectedVolunteer.status.toLowerCase()}`"></div>
           </div>
           <div class="user-meta-info">
             <h3 class="detail-name">{{ selectedVolunteer.fullName }}</h3>
-            <p class="detail-email">{{ selectedVolunteer.email }}</p>
-            <p class="detail-phone">{{ selectedVolunteer.phoneNumber || 'Không có số điện thoại' }}</p>
+            <div class="status-badge-container">
+              <span class="status-badge-inline" :class="`status--${selectedVolunteer.status.toLowerCase()}`">
+                {{ selectedVolunteer.status === 'Pending' ? '⏳ Chờ duyệt hồ sơ' : '✓ Đã phê duyệt' }}
+              </span>
+            </div>
           </div>
         </div>
 
-        <div class="divider" />
+        <!-- Section: Profile Details -->
+        <div class="profile-details-grid">
+          <!-- Card 1: Thông tin cơ bản -->
+          <div class="info-card">
+            <h4 class="info-card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+              Thông tin cá nhân
+            </h4>
+            <div class="info-card-body">
+              <div class="info-row">
+                <span class="info-label">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                  Email
+                </span>
+                <span class="info-value font-semibold">{{ selectedVolunteer.email }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                  Số điện thoại
+                </span>
+                <span class="info-value">{{ selectedVolunteer.phoneNumber || '—' }}</span>
+              </div>
+              <div class="info-row">
+                <span class="info-label">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+                  Kinh nghiệm
+                </span>
+                <span class="info-value text-highlight font-semibold">{{ selectedVolunteer.experienceYears }} năm thực tế</span>
+              </div>
+            </div>
+          </div>
 
-        <!-- Profile details -->
-        <div class="detail-grid">
-          <div class="grid-item">
-            <span class="grid-label">Kinh nghiệm:</span>
-            <span class="grid-value font-semibold">{{ selectedVolunteer.experienceYears }} năm</span>
-          </div>
-          <div class="grid-item">
-            <span class="grid-label">Trạng thái:</span>
-            <span class="status-badge" :class="`status--${selectedVolunteer.status.toLowerCase()}`">
-              {{ selectedVolunteer.status === 'Pending' ? '⏳ Chờ duyệt' : '✓ Đã duyệt' }}
-            </span>
-          </div>
-          <div class="grid-item span-full">
-            <span class="grid-label">Địa chỉ:</span>
-            <span class="grid-value">{{ selectedVolunteer.address }}</span>
-          </div>
-          <div class="grid-item">
-            <span class="grid-label">Vĩ độ (Lat):</span>
-            <span class="grid-value text-muted">{{ selectedVolunteer.latitude }}</span>
-          </div>
-          <div class="grid-item">
-            <span class="grid-label">Kinh độ (Lng):</span>
-            <span class="grid-value text-muted">{{ selectedVolunteer.longitude }}</span>
+          <!-- Card 2: Địa điểm & Tọa độ -->
+          <div class="info-card">
+            <h4 class="info-card-title">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              Địa điểm làm việc
+            </h4>
+            <div class="info-card-body">
+              <div class="info-row">
+                <span class="info-label">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                  Địa chỉ đăng ký
+                </span>
+                <span class="info-value text-wrap">{{ selectedVolunteer.address || '—' }}</span>
+              </div>
+              <div class="info-row inline-coords">
+                <div>
+                  <span class="info-label">Vĩ độ (Lat)</span>
+                  <code class="coord-tag">{{ selectedVolunteer.latitude }}</code>
+                </div>
+                <div>
+                  <span class="info-label">Kinh độ (Lng)</span>
+                  <code class="coord-tag">{{ selectedVolunteer.longitude }}</code>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="divider" />
-
-        <!-- Bio -->
-        <div class="detail-block">
-          <span class="block-label">Giới thiệu bản thân:</span>
-          <p class="block-text">{{ selectedVolunteer.bio || 'Chưa cung cấp thông tin giới thiệu.' }}</p>
+        <!-- Section: Bio / Giới thiệu bản thân -->
+        <div class="info-card">
+          <h4 class="info-card-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
+            Giới thiệu bản thân
+          </h4>
+          <div class="bio-content">
+            <p v-if="selectedVolunteer.bio" class="bio-text">
+              “{{ selectedVolunteer.bio }}”
+            </p>
+            <p v-else class="bio-text text-muted italic">
+              Chưa cung cấp thông tin giới thiệu bản thân.
+            </p>
+          </div>
         </div>
 
-        <div class="divider" />
-
-        <!-- Skills -->
-        <div class="detail-block">
-          <span class="block-label">Kỹ năng đã đăng ký:</span>
-          <div v-if="selectedVolunteer.skills && selectedVolunteer.skills.length > 0" class="skills-tags">
-            <span
-              v-for="(skill, sIdx) in selectedVolunteer.skills"
-              :key="sIdx"
-              class="skill-tag"
-            >
-              {{ typeof skill === 'object' ? (skill as any).name : skill }}
-            </span>
+        <!-- Section: Kỹ năng đã đăng ký -->
+        <div class="info-card">
+          <h4 class="info-card-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            Kỹ năng chuyên môn
+          </h4>
+          <div class="skills-wrapper">
+            <div v-if="selectedVolunteer.skills && selectedVolunteer.skills.length > 0" class="skills-tags">
+              <span
+                v-for="(skill, sIdx) in selectedVolunteer.skills"
+                :key="sIdx"
+                class="skill-tag"
+              >
+                <span class="skill-dot"></span>
+                {{ typeof skill === 'object' ? (skill as any).name : skill }}
+              </span>
+            </div>
+            <p v-else class="text-muted text-sm italic">Tình nguyện viên chưa đăng ký kỹ năng chuyên môn nào.</p>
           </div>
-          <p v-else class="text-muted text-sm">Chưa đăng ký kỹ năng nào.</p>
         </div>
       </div>
 
@@ -423,40 +474,59 @@ async function handleReject(vol: AdminVolunteerSummary | VolunteerProfile): Prom
 }
 
 .action-btn {
-  padding: 6px 12px;
-  border-radius: var(--radius-sm);
-  font-size: 13px;
+  padding: 6px 14px;
+  border-radius: var(--radius-md);
+  font-size: 12.5px;
   font-weight: 600;
-  border: none;
+  border: 1px solid transparent;
   cursor: pointer;
-  transition: background-color var(--transition-fast);
+  transition: all var(--transition-fast);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.action-btn:active {
+  transform: translateY(0);
 }
 
 .action-btn--details {
-  background-color: rgba(26, 79, 141, 0.08);
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
   color: var(--color-blue);
 }
 
 .action-btn--details:hover {
-  background-color: rgba(26, 79, 141, 0.16);
+  background-color: #e2e8f0;
+  color: var(--color-blue-dark);
+  border-color: #cbd5e1;
 }
 
 .action-btn--approve {
-  background-color: rgba(22, 101, 52, 0.08);
-  color: #166534;
+  background-color: #ecfdf5;
+  border-color: #a7f3d0;
+  color: #065f46;
 }
 
 .action-btn--approve:hover {
-  background-color: rgba(22, 101, 52, 0.16);
+  background-color: #d1fae5;
+  border-color: #6ee7b7;
 }
 
 .action-btn--reject {
-  background-color: rgba(153, 27, 27, 0.08);
+  background-color: #fef2f2;
+  border-color: #fca5a5;
   color: #991b1b;
 }
 
 .action-btn--reject:hover {
-  background-color: rgba(153, 27, 27, 0.16);
+  background-color: #fee2e2;
+  border-color: #f87171;
 }
 
 /* Loading & Empty states */
@@ -476,129 +546,283 @@ async function handleReject(vol: AdminVolunteerSummary | VolunteerProfile): Prom
 .details-container {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 12px;
   color: #2d3748;
 }
 
-.detail-section {
+/* Profile header card */
+.profile-header-card {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
+  background: linear-gradient(135deg, #f8fafc 0%, #edf2f7 100%);
+  padding: 10px 16px;
+  border-radius: 10px;
+  border: 1px solid #e2e8f0;
+}
+
+.user-avatar-wrapper {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .user-avatar-placeholder {
-  width: 56px;
-  height: 56px;
+  width: 48px;
+  height: 48px;
   border-radius: 50%;
   background: linear-gradient(135deg, #1a4f8d, #3b82f6);
   color: white;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 22px;
-  font-weight: 700;
+  font-size: 20px;
+  font-weight: 800;
+  box-shadow: 0 3px 8px rgba(26, 79, 141, 0.15);
+}
+
+.status-indicator-dot {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+}
+.status-indicator-dot.status--pending {
+  background-color: #d97706;
+}
+.status-indicator-dot.status--approved {
+  background-color: #166534;
+}
+.status-indicator-dot.status--rejected {
+  background-color: #991b1b;
 }
 
 .user-meta-info {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: 4px;
 }
 
 .detail-name {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: 17px;
+  font-weight: 800;
   color: #1a3b5c;
   margin: 0;
 }
 
-.detail-email {
-  font-size: 13.5px;
-  color: var(--color-text-secondary);
-  margin: 0;
+.status-badge-container {
+  display: flex;
 }
 
-.detail-phone {
-  font-size: 13px;
-  color: #718096;
-  margin: 0;
+.status-badge-inline {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+}
+.status-badge-inline.status--pending {
+  background-color: #fef3c7;
+  color: #d97706;
+  border: 1px solid #fcd34d;
+}
+.status-badge-inline.status--approved {
+  background-color: #dcfce7;
+  color: #15803d;
+  border: 1px solid #bbf7d0;
+}
+.status-badge-inline.status--rejected {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  border: 1px solid #fca5a5;
 }
 
-.divider {
-  height: 1px;
-  background-color: #e2e8f0;
-  margin: 4px 0;
-}
-
-.detail-grid {
+/* Info cards section */
+.profile-details-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
 }
 
-.grid-item {
+@media (max-width: 600px) {
+  .profile-details-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.info-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.span-full {
-  grid-column: 1 / -1;
+.info-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(0,0,0,0.04);
 }
 
-.grid-label {
+.info-card-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   font-size: 12px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #edf2f7;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.info-card-title svg {
+  color: #3b82f6;
+  flex-shrink: 0;
+}
+
+.info-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-row.inline-coords {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 2px;
+}
+
+.info-row.inline-coords > div {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.info-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10.5px;
   font-weight: 600;
   color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.grid-value {
-  font-size: 14.5px;
+.info-label svg {
+  color: #a0aec0;
+  flex-shrink: 0;
 }
 
-.detail-block {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
+.info-value {
+  font-size: 13.5px;
+  color: #1a202c;
+  word-break: break-word;
 }
 
-.block-label {
-  font-size: 12.5px;
-  font-weight: 700;
-  color: #4a5568;
+.info-value.text-wrap {
+  line-height: 1.4;
 }
 
-.block-text {
-  font-size: 14px;
-  line-height: 1.6;
-  margin: 0;
+.info-value.text-highlight {
+  color: #2563eb;
+}
+
+.coord-tag {
+  background-color: #f1f5f9;
+  padding: 3px 6px;
+  border-radius: 5px;
+  font-family: monospace;
+  font-size: 11.5px;
+  color: #475569;
+  border: 1px solid #e2e8f0;
+  text-align: center;
+  display: inline-block;
+}
+
+/* Bio Content styling */
+.bio-content {
   background-color: #f8fafc;
-  border-radius: 8px;
-  padding: 10px 14px;
-  border: 1px solid #edf2f7;
+  border-left: 3px solid #3b82f6;
+  padding: 8px 12px;
+  border-radius: 0 6px 6px 0;
+}
+
+.bio-text {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #4a5568;
+  margin: 0;
+  font-style: italic;
+}
+
+.bio-text.italic {
+  font-style: italic;
+}
+
+/* Skills Wrapper */
+.skills-wrapper {
+  padding-top: 2px;
 }
 
 .skills-tags {
   display: flex;
   flex-wrap: wrap;
-  gap: 8px;
-  margin-top: 4px;
+  gap: 6px;
 }
 
 .skill-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   background-color: #eff6ff;
-  color: #1e40af;
-  border: 1.5px solid #bfdbfe;
-  font-size: 12px;
+  color: #1d4ed8;
+  border: 1px solid #bfdbfe;
+  font-size: 11.5px;
   font-weight: 600;
-  padding: 4px 10px;
+  padding: 3px 10px;
   border-radius: 99px;
+  transition: all 0.2s ease;
+}
+
+.skill-tag:hover {
+  background-color: #dbeafe;
+  transform: scale(1.03);
+}
+
+.skill-dot {
+  width: 5px;
+  height: 5px;
+  background-color: #3b82f6;
+  border-radius: 50%;
+  flex-shrink: 0;
 }
 
 .dialog-footer {
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
+  gap: 12px;
   margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid #edf2f7;
 }
 </style>
