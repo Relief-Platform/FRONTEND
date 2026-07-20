@@ -99,7 +99,7 @@
                     id="latitude"
                     type="number"
                     step="any"
-                    v-model.number="form.latitude"
+                    v-model="form.latitude"
                     :disabled="!isEditMode && !!profile"
                     placeholder="21.0285"
                     required
@@ -111,7 +111,7 @@
                     id="longitude"
                     type="number"
                     step="any"
-                    v-model.number="form.longitude"
+                    v-model="form.longitude"
                     :disabled="!isEditMode && !!profile"
                     placeholder="105.8542"
                     required
@@ -125,7 +125,7 @@
                     id="experienceYears"
                     type="number"
                     min="0"
-                    v-model.number="form.experienceYears"
+                    v-model="form.experienceYears"
                     :disabled="!isEditMode && !!profile"
                     placeholder="VD: 2"
                     required
@@ -300,9 +300,9 @@ const selectedSkillToAdd = ref('')
 
 const form = reactive({
   address: '',
-  latitude: 21.0285,
-  longitude: 105.8542,
-  experienceYears: 0,
+  latitude: '21.0285',
+  longitude: '105.8542',
+  experienceYears: '0',
   bio: '',
 })
 
@@ -349,9 +349,9 @@ const loadProfile = async () => {
     profile.value = data
     // Map data to form
     form.address = data.address
-    form.latitude = data.latitude
-    form.longitude = data.longitude
-    form.experienceYears = data.experienceYears
+    form.latitude = String(data.latitude)
+    form.longitude = String(data.longitude)
+    form.experienceYears = String(data.experienceYears)
     form.bio = data.bio || ''
   } catch (err: unknown) {
     const error = err as Error
@@ -374,9 +374,9 @@ const cancelEdit = () => {
   isEditMode.value = false
   if (profile.value) {
     form.address = profile.value.address
-    form.latitude = profile.value.latitude
-    form.longitude = profile.value.longitude
-    form.experienceYears = profile.value.experienceYears
+    form.latitude = String(profile.value.latitude)
+    form.longitude = String(profile.value.longitude)
+    form.experienceYears = String(profile.value.experienceYears)
     form.bio = profile.value.bio || ''
   }
 }
@@ -387,9 +387,9 @@ const saveProfile = async () => {
   try {
     const payload = {
       address: form.address,
-      latitude: form.latitude,
-      longitude: form.longitude,
-      experienceYears: form.experienceYears,
+      latitude: Number(form.latitude),
+      longitude: Number(form.longitude),
+      experienceYears: Number(form.experienceYears),
       bio: form.bio || null,
       skillIds: profile.value ? [] : [], // Với API tạo mới, skillIds ban đầu để rỗng, sẽ add sau
     }

@@ -110,9 +110,6 @@ const showMenu = ref(false)
 // → chuẩn hoá lowercase để check role chạy đúng cả 2
 const normalizedRole = computed(() => (auth.role ?? '').toLowerCase() as UserRole | '')
 
-const hasRole = (...roles: string[]): boolean =>
-  normalizedRole.value !== '' && roles.includes(normalizedRole.value)
-
 const roleLabel = computed(() =>
   normalizedRole.value ? (ROLE_LABELS[normalizedRole.value as UserRole] ?? auth.role ?? '') : '',
 )

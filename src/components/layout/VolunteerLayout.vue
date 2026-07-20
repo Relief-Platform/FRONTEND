@@ -198,15 +198,17 @@ async function handleLogout(): Promise<void> {
 }
 
 // ── Directive: click outside ────────────────────────────────
+type ClickOutsideEl = HTMLElement & { _clickOutside?: (e: Event) => void }
+
 const vClickOutside = {
-  mounted(el: HTMLElement, binding: { value: () => void }) {
+  mounted(el: ClickOutsideEl, binding: { value: () => void }) {
     el._clickOutside = (e: Event) => {
       if (!el.contains(e.target as Node)) binding.value()
     }
     document.addEventListener('click', el._clickOutside)
   },
-  unmounted(el: HTMLElement) {
-    document.removeEventListener('click', el._clickOutside)
+  unmounted(el: ClickOutsideEl) {
+    if (el._clickOutside) document.removeEventListener('click', el._clickOutside)
   },
 }
 </script>

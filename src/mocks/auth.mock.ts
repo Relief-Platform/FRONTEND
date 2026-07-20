@@ -4,7 +4,7 @@
 //  Seed account thật trên Production: admin@relief.vn / Admin@123
 // ============================================================
 
-import type { LoginResult, AuthUser, UserRole } from '@/features/auth/auth.types'
+import type { LoginResult, UserRole } from '@/features/auth/auth.types'
 
 // ── Mock credentials ─────────────────────────────────────────
 interface MockCredential {

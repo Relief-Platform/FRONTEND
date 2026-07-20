@@ -284,7 +284,6 @@ import {
   formatDateTimeVI,
 } from '@/features/requests/requests.helpers'
 import type { ReliefRequestResponse, ReliefRequestStatus } from '@/features/requests/requests.types'
-import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.types'
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
 
 // ── Const maps ───────────────────────────────────────────────

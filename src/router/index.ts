@@ -50,8 +50,20 @@ const routes: RouteRecordRaw[] = [
   {
     path: '/register',
     name: 'register',
-    component: () => import('@/views/auth/RegisterView.vue'),
+    component: () => import('@/views/auth/RegisterChoiceView.vue'),
     meta: { guestOnly: true, title: 'Đăng ký' },
+  },
+  {
+    path: '/register/sos',
+    name: 'register-sos',
+    component: () => import('@/views/auth/RegisterView.vue'),
+    meta: { guestOnly: true, title: 'Đăng ký nhận cứu trợ' },
+  },
+  {
+    path: '/register/volunteer',
+    name: 'register-volunteer',
+    component: () => import('@/views/auth/RegisterVolunteerView.vue'),
+    meta: { guestOnly: true, title: 'Đăng ký tình nguyện viên' },
   },
 
   // ────────────────────────────────────────────────────────────

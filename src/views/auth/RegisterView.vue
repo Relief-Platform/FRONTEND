@@ -1,6 +1,8 @@
 <template>
   <div class="register-wrapper">
-    <router-link to="/" class="header-logo">
+    <router-link to="/register" class="back-link">← Quay lại trang chủ</router-link>
+
+    <router-link to="/home" class="header-logo">
       <h2 class="brand-name">
         <span class="text-navy">Relief</span><span class="text-orange">Connect</span>
       </h2>
@@ -8,7 +10,9 @@
     </router-link>
 
     <div class="register-card">
-      <h2 class="form-title">ĐĂNG KÝ NGƯỜI DÙNG</h2>
+      <span class="sos-badge">SOS</span>
+      <h2 class="form-title">Đăng ký nhận cứu trợ</h2>
+      <p class="form-sub">Chỉ cần vài thông tin đơn giản, chúng tôi sẽ hỗ trợ bạn ngay.</p>
 
       <!-- Thông báo lỗi -->
       <div v-if="errorMessage" class="error-banner">
@@ -134,7 +138,7 @@ const handleRegister = async () => {
     tokenStorage.set(result.accessToken)
     tokenStorage.setRefresh(result.refreshToken)
     authStore.accessToken = result.accessToken
-    authStore.user        = toAuthUser(result)
+    authStore.user        = { ...toAuthUser(result), phoneNumber: formData.phoneNumber }
     localStorage.setItem('auth_user', JSON.stringify(authStore.user))
     // Mặc định Requester → redirect về /requester
     await router.push('/requester')
@@ -159,12 +163,28 @@ const handleRegister = async () => {
   font-family: Arial, sans-serif;
 }
 
+.back-link {
+  align-self: flex-start;
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  text-decoration: none;
+}
+
+.back-link:hover {
+  color: #1a4f8d;
+}
+
 .header-logo {
   text-align: center;
   margin-bottom: 25px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  text-decoration: none;
 }
 
 
@@ -209,12 +229,32 @@ const handleRegister = async () => {
   padding: 30px 40px;
 }
 
+.sos-badge {
+  display: block;
+  width: fit-content;
+  margin: 0 auto 12px;
+  background: #e02424;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
 .form-title {
   text-align: center;
   font-size: 20px;
-  color: #1a3b5c;
-  margin-bottom: 25px;
-  font-weight: 700;
+  color: #c53030;
+  margin-bottom: 6px;
+  font-weight: 800;
+}
+
+.form-sub {
+  text-align: center;
+  font-size: 13px;
+  color: #718096;
+  margin: 0 0 22px;
 }
 
 /* ===== Error Banner ===== */

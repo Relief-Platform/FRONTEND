@@ -123,18 +123,17 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
-const route = useRoute()
 const auth = useAuthStore()
 
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
 const hasUnreadNotifications = ref(true)
 
-const roleLabel = computed(() => (auth.role === 'requester' ? 'Người yêu cầu hỗ trợ' : auth.role ?? ''))
+const roleLabel = computed(() => (auth.role === 'Requester' ? 'Người yêu cầu hỗ trợ' : auth.role ?? ''))
 
 const initials = computed(() =>
   auth.user?.fullName
@@ -198,15 +197,17 @@ async function handleLogout(): Promise<void> {
 }
 
 // ── Directive: click outside ────────────────────────────────
+type ClickOutsideEl = HTMLElement & { _clickOutside?: (e: Event) => void }
+
 const vClickOutside = {
-  mounted(el: HTMLElement, binding: { value: () => void }) {
+  mounted(el: ClickOutsideEl, binding: { value: () => void }) {
     el._clickOutside = (e: Event) => {
       if (!el.contains(e.target as Node)) binding.value()
     }
     document.addEventListener('click', el._clickOutside)
   },
-  unmounted(el: HTMLElement) {
-    document.removeEventListener('click', el._clickOutside)
+  unmounted(el: ClickOutsideEl) {
+    if (el._clickOutside) document.removeEventListener('click', el._clickOutside)
   },
 }
 </script>

@@ -14,11 +14,11 @@
 
         <!-- CTA cho guest -->
         <div v-if="!auth.isLoggedIn" class="hero-cta">
-          <router-link to="/register" class="btn-emergency">
+          <router-link to="/register/sos" class="btn-emergency">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
             Yêu cầu cứu trợ khẩn cấp
           </router-link>
-          <router-link to="/register" class="btn-ghost">Trở thành tình nguyện viên</router-link>
+          <router-link to="/register/volunteer" class="btn-ghost">Trở thành tình nguyện viên</router-link>
         </div>
         <p v-if="!auth.isLoggedIn" class="hero-login-hint">
           Đã có tài khoản?
@@ -65,7 +65,7 @@
             <div class="feature-icon" :style="{ background: f.bg, color: f.color }" v-html="f.icon" />
             <h3 class="feature-title">{{ f.title }}</h3>
             <p class="feature-desc">{{ f.desc }}</p>
-            <router-link v-if="!auth.isLoggedIn" to="/register" class="feature-link" :style="{ color: f.color }">
+            <router-link v-if="!auth.isLoggedIn && f.to" :to="f.to" class="feature-link" :style="{ color: f.color }">
               {{ f.cta }} →
             </router-link>
           </div>
@@ -152,6 +152,7 @@ const roles = [
     title: 'Người cần hỗ trợ',
     desc: 'Gửi yêu cầu cứu trợ khẩn cấp về lương thực, nước sạch, thuốc men, nơi trú ẩn — theo dõi tiến độ theo thời gian thực.',
     cta: 'Gửi yêu cầu ngay',
+    to: '/register/sos',
     color: '#e11d48',
     bg: 'rgba(225,29,72,0.10)',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
@@ -160,6 +161,7 @@ const roles = [
     title: 'Tình nguyện viên',
     desc: 'Đăng ký kỹ năng và khu vực hoạt động, nhận nhiệm vụ phù hợp và ghi dấu từng đóng góp của bạn cho cộng đồng.',
     cta: 'Đăng ký tình nguyện',
+    to: '/register/volunteer',
     color: '#276749',
     bg: 'rgba(39,103,73,0.10)',
     icon: `<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
