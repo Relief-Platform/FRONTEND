@@ -210,3 +210,69 @@ img, svg { display: block; max-width: 100%; }
 /* ── Slide-up transition ────────────────────────────────────── */
 .slide-up-enter-active { transition: all var(--transition-normal); }
 .slide-up-enter-from   { opacity: 0; transform: translateY(12px); }
+
+/* ── Element Plus Button Overrides & Global Button Enhancements ──────────────── */
+.el-button {
+  font-family: var(--font-family) !important;
+  font-weight: 600 !important;
+  border-radius: var(--radius-md) !important; /* 8px */
+  transition: all var(--transition-fast) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  cursor: pointer !important;
+}
+
+.el-button:hover {
+  transform: translateY(-1px);
+}
+
+.el-button:active {
+  transform: translateY(0);
+}
+
+/* Primary buttons */
+.el-button--primary {
+  background-color: var(--color-blue) !important;
+  border-color: var(--color-blue) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(26, 79, 141, 0.18) !important;
+}
+
+.el-button--primary:hover,
+.el-button--primary:focus {
+  background-color: var(--color-blue-dark) !important;
+  border-color: var(--color-blue-dark) !important;
+  box-shadow: 0 4px 12px rgba(26, 79, 141, 0.28) !important;
+}
+
+/* Danger buttons */
+.el-button--danger {
+  background-color: var(--color-danger) !important;
+  border-color: var(--color-danger) !important;
+  color: #ffffff !important;
+  box-shadow: 0 2px 6px rgba(197, 48, 48, 0.18) !important;
+}
+
+.el-button--danger:hover,
+.el-button--danger:focus {
+  background-color: #a62828 !important;
+  border-color: #a62828 !important;
+  box-shadow: 0 4px 12px rgba(197, 48, 48, 0.28) !important;
+}
+
+/* Default / Neutral buttons */
+.el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning) {
+  background-color: #ffffff !important;
+  border: 1px solid var(--color-border) !important;
+  color: var(--color-text-secondary) !important;
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning):hover,
+.el-button:not(.el-button--primary):not(.el-button--danger):not(.el-button--success):not(.el-button--warning):focus {
+  background-color: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+  color: var(--color-text-primary) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05) !important;
+}
