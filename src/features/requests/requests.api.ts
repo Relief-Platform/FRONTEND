@@ -1,8 +1,6 @@
 // ============================================================
 //  Relief Requests API — /api/relief-requests
 //  Chuẩn theo API Reference (kiểm chứng Production 2026-07-13)
-//  - USE_MOCK_AUTH=true  → dùng data mẫu trong localStorage
-//  - USE_MOCK_AUTH=false → gọi backend thật
 //      • Lỗi SERVER (400/401/403...) → ném ra cho form hiển thị
 //      • MẤT MẠNG thật sự (status=0) → mới fallback localStorage
 //
@@ -14,7 +12,6 @@
 // ============================================================
 
 import { http, ApiError } from '@/lib/api/http'
-import { USE_MOCK_AUTH } from '@/config/env'
 import { unwrapItems, type PagedResult } from '@/lib/api/paging'
 import type {
   CreateReliefRequestPayload,
@@ -115,14 +112,6 @@ function buildOfflineResponse(payload: CreateReliefRequestPayload): ReliefReques
 export async function createReliefRequest(
   payload: CreateReliefRequestPayload,
 ): Promise<ReliefRequestActionResult> {
-  if (USE_MOCK_AUTH) {
-    const offlineItem = buildOfflineResponse(payload)
-    const list = ensureOfflineRequests()
-    list.unshift(offlineItem)
-    writeOfflineRequests(list)
-    return { id: offlineItem.id, message: 'Đã tạo yêu cầu (mock).' }
-  }
-
   try {
     const { data } = await http.post<ReliefRequestActionResult>('/relief-requests', payload)
     return data
@@ -151,10 +140,6 @@ export async function getReliefRequests(
   pageNumber = 1,
   pageSize = 50,
 ): Promise<ReliefRequestResponse[]> {
-  if (USE_MOCK_AUTH) {
-    return ensureOfflineRequests()
-  }
-
   try {
     const { data } = await http.get<PagedResult<ReliefRequestResponse> | ReliefRequestResponse[]>(
       '/relief-requests',
@@ -170,10 +155,6 @@ export async function getReliefRequests(
 // ── Detail ──────────────────────────────────────────────────
 /** GET /api/relief-requests/{id} — Chi tiết (chủ sở hữu hoặc Admin) */
 export async function getReliefRequestById(id: string): Promise<ReliefRequestResponse | null> {
-  if (USE_MOCK_AUTH) {
-    return ensureOfflineRequests().find((r) => r.id === id) ?? null
-  }
-
   if (id.startsWith('offline-')) {
     return readOfflineRequests().find((r) => r.id === id) ?? null
   }
@@ -201,15 +182,6 @@ export async function updateReliefRequestStatus(
   id: string,
   status: ReliefRequestStatus,
 ): Promise<ReliefRequestActionResult> {
-  if (USE_MOCK_AUTH) {
-    const list = ensureOfflineRequests()
-    const idx = list.findIndex((r) => r.id === id)
-    if (idx === -1) throw new Error('Không tìm thấy yêu cầu')
-    list[idx] = { ...list[idx], status }
-    writeOfflineRequests(list)
-    return { id, message: 'Đã cập nhật trạng thái (mock).' }
-  }
-
   const { data } = await http.put<ReliefRequestActionResult>(
     `/relief-requests/${id}/status`,
     { status },

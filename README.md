@@ -88,3 +88,182 @@ src/
 4. Thêm Pinia store vào `src/stores/<tên>.ts`
 5. Thêm view vào `src/views/<Tên>View.vue`
 6. Đăng ký route trong `src/router/index.ts`
+
+---
+
+## Flow Đăng nhập (Login)
+
+### Sơ đồ tổng quát
+
+```
+[User] → /login (guestOnly)
+   │
+   ├─ Đã đăng nhập? → Redirect /home (Router Guard)
+   │
+   └─ Chưa đăng nhập → Hiển thị LoginView.vue
+         │
+         ├─ Nhập email + password → submit form
+         │
+         ├─ authStore.login(email, password)
+         │     │
+         │     └─ auth.api.ts: POST /api/auth/login
+         │           │
+         │           ├─ [Mock mode] → mockLoginUser() (trả data giả)
+         │           └─ [Real mode] → axios → http.ts interceptor bóc envelope
+         │                 → trả LoginResult { userId, fullName, email, role,
+         │                                     accessToken, refreshToken, expiresAt }
+         │
+         ├─ Lưu vào localStorage:
+         │     ├─ auth_access_token  (JWT, hết hạn sau 60 phút)
+         │     ├─ auth_refresh_token (hết hạn sau 7 ngày)
+         │     └─ auth_user          (AuthUser object, persist qua F5)
+         │
+         └─ Redirect theo role:
+               ├─ Admin        → /admin
+               ├─ Volunteer    → /volunteer
+               ├─ Requester    → /requester
+               ├─ Coordinator  → /warehouses
+               └─ Organization → /requester (tạm thời)
+```
+
+### Các bước chi tiết
+
+| Bước | File | Mô tả |
+|------|------|--------|
+| 1. Render form | `views/auth/LoginView.vue` | Input email + password, nút toggle show/hide password |
+| 2. Submit | `LoginView.vue` → `handleLogin()` | Validate input không rỗng |
+| 3. Gọi store | `stores/auth.ts` → `login()` | Delegate xuống auth.api |
+| 4. Gọi API | `features/auth/auth.api.ts` → `loginUser()` | `POST /api/auth/login` với `{ email, password }` |
+| 5. Xử lý response | `lib/api/http.ts` interceptor | Bóc envelope `ApiResponse<LoginResult>` → trả `LoginResult` |
+| 6. Lưu token | `lib/api/token-storage.ts` | `localStorage`: `auth_access_token`, `auth_refresh_token` |
+| 7. Lưu user | `stores/auth.ts` | `localStorage`: `auth_user` (AuthUser object) |
+| 8. Redirect | `LoginView.vue` | `router.push()` theo role map |
+
+### Xử lý lỗi
+
+- **Lỗi validation** (input rỗng): thông báo ngay tại client
+- **Lỗi API** (sai mật khẩu, không tồn tại): `errorMessages[]` từ BE → hiển thị `error-banner`
+- **401 Unauthorized**: http interceptor tự xóa token + redirect `/login`
+
+### Mock Mode
+
+Khi `VITE_USE_MOCK_AUTH=true` trong `.env.local`, hiển thị panel tài khoản test:
+- Click vào role → tự điền email/password và đăng nhập ngay
+- Danh sách mock accounts định nghĩa trong `src/mocks/auth.mock.ts`
+
+---
+
+## Flow Đăng ký (Register)
+
+### Sơ đồ tổng quát
+
+```
+[User] → /register (guestOnly)
+   │
+   ├─ Đã đăng nhập? → Redirect /home (Router Guard)
+   │
+   └─ Chưa đăng nhập → Hiển thị RegisterView.vue
+         │
+         ├─ Nhập: Họ tên, Email, Số điện thoại, Mật khẩu, Xác nhận mật khẩu
+         │
+         ├─ Client validate: password === confirmPassword
+         │
+         ├─ Submit → handleRegister()
+         │     │
+         │     └─ auth.api.ts: POST /api/auth/register
+         │           Body: { fullName, email, phoneNumber, password, confirmPassword }
+         │           │
+         │           ├─ [Mock mode] → mockRegisterUser()
+         │           └─ [Real mode] → trả LoginResult (auto-login sau register)
+         │
+         ├─ BE tạo tài khoản với role mặc định: "Requester"
+         │
+         ├─ Lưu vào localStorage (giống login):
+         │     ├─ auth_access_token
+         │     ├─ auth_refresh_token
+         │     └─ auth_user
+         │
+         └─ Redirect → /requester (role mặc định Requester)
+```
+
+### Các bước chi tiết
+
+| Bước | File | Mô tả |
+|------|------|--------|
+| 1. Render form | `views/auth/RegisterView.vue` | Các field: fullName, email, phoneNumber, password, confirmPassword + checkbox đồng ý |
+| 2. Validate client | `RegisterView.vue` → `passwordMismatch` computed | So sánh password vs confirmPassword real-time |
+| 3. Submit | `RegisterView.vue` → `handleRegister()` | Dừng nếu passwordMismatch |
+| 4. Gọi API | `features/auth/auth.api.ts` → `registerUser()` | `POST /api/auth/register` |
+| 5. Xử lý response | `http.ts` interceptor | Bóc envelope → trả `LoginResult` (register = auto-login) |
+| 6. Lưu token + user | `token-storage.ts` + `auth_user` localStorage | Giống flow login |
+| 7. Redirect | `RegisterView.vue` | `router.push('/requester')` (role mặc định) |
+
+### Xử lý lỗi
+
+- **Mật khẩu không khớp**: validate ngay client, không gọi API
+- **Email đã tồn tại / validation BE**: `errorMessages[]` → hiển thị `error-banner`
+- **phoneNumber bắt buộc**: BE validate "The PhoneNumber field is required" (đã kiểm chứng)
+
+---
+
+## Token & Session Management
+
+| Key localStorage | Giá trị | Thời hạn |
+|-----------------|---------|----------|
+| `auth_access_token` | JWT Bearer token | 60 phút |
+| `auth_refresh_token` | Refresh token | 7 ngày |
+| `auth_user` | AuthUser JSON (userId, fullName, email, role, expiresAt) | Persist qua F5 |
+
+### Khởi động lại app (F5)
+
+1. `stores/auth.ts` đọc `auth_access_token` + `auth_user` từ localStorage khi khởi tạo
+2. Router Guard kiểm tra `tokenStorage.exists()` để quyết định redirect
+3. `fetchMe()` gọi `GET /api/auth/me` để sync thông tin user mới nhất từ BE
+
+### Đăng xuất
+
+1. Gửi `POST /api/auth/logout` với `refreshToken` → BE blacklist token
+2. Xóa toàn bộ localStorage: `auth_access_token`, `auth_refresh_token`, `auth_user`
+3. `http.ts`: khi nhận 401 → tự động xóa token + redirect `/login`
+
+---
+
+## Role-based Access Control (RBAC)
+
+| Role | Giá trị BE | Quyền mặc định sau login |
+|------|-----------|--------------------------|
+| `Admin` | `"Admin"` | `/admin` |
+| `Volunteer` | `"Volunteer"` | `/volunteer` |
+| `Requester` | `"Requester"` | `/requester` (role mặc định khi đăng ký) |
+| `Coordinator` | `"Coordinator"` | `/warehouses` (quản lý kho) |
+| `Organization` | `"Organization"` | `/requester` (tạm thời) |
+
+Router Guard (`router/index.ts`) kiểm tra 3 điều kiện theo thứ tự:
+1. `guestOnly` + đã login → redirect `/home`
+2. `requiresAuth` + chưa login → redirect `/login?redirect=<path>`
+3. `roles[]` + role không khớp → redirect `/unauthorized`
+
+---
+
+## Cập nhật tính năng & Sửa lỗi mới (Sprint hiện tại)
+
+### 1. Phân luồng đăng ký Tình nguyện viên (Volunteer Registration Flow)
+* **Tự động chuyển hướng**: Khi người dùng vào trang đăng ký tình nguyện viên, nếu hồ sơ đã được duyệt (`Approved`), hệ thống tự động đồng bộ vai trò mới và chuyển hướng thẳng sang Volunteer Dashboard (`/volunteer`).
+* **Trạng thái chờ duyệt (Pending)**: Giao diện sẽ ẩn Form đăng ký và thay thế bằng thông báo chờ Admin phê duyệt.
+* **Trạng thái bị từ chối (Rejected)**: Giao diện sẽ hiển thị thông báo lý do bị từ chối và cho phép người dùng nhấn nút đăng ký lại (Form mở ra trở lại).
+* **Tránh trùng lặp hồ sơ**: Tự động lưu trữ thông tin tạm thời ngay tại Frontend khi gửi form để chuyển đổi trạng thái giao diện tức thì, tránh độ trễ ghi-đọc của cơ sở dữ liệu trên cloud gây lỗi gửi trùng lặp `400 Bad Request`.
+
+### 2. Quản lý Tình nguyện viên dành cho Admin
+* **Màn hình quản lý**: Thêm màn hình `src/views/admin/VolunteersView.vue` cho phép Admin xem danh sách hồ sơ đăng ký tình nguyện viên (ở trạng thái `Pending` và `Approved`).
+* **Xem chi tiết hồ sơ**: Tích hợp hộp thoại chi tiết (`el-dialog`) hiển thị đầy đủ thông tin: Địa chỉ, Tọa độ bản đồ (Lat/Lng), Năm kinh nghiệm, Giới thiệu bản thân và Danh sách các kỹ năng đã đăng ký.
+* **Thao tác duyệt/từ chối**: Hỗ trợ nút Phê duyệt (`Approve`) hoặc Từ chối (`Reject`) trực tiếp tại bảng danh sách hoặc trong hộp thoại chi tiết.
+
+### 3. Tối ưu hóa trang Quản lý người dùng (`/users`)
+* **Sửa lỗi phân trang**: Loại bỏ composable `usePagination` hoạt động độc lập không đồng bộ, thay thế bằng các thuộc tính computed liên kết trực tiếp với Pinia store (`store.total`, `store.page`, `store.pageSize`), sửa triệt để lỗi nút "Trước"/"Tiếp" bị vô hiệu hóa.
+* **Tìm kiếm tiếng Việt không dấu (Accent-insensitive)**: Tích hợp bộ lọc chuẩn hóa tiếng Việt giúp Admin tìm kiếm người dùng case-insensitive và accent-insensitive (ví dụ: gõ `"dat"` vẫn tìm được `"đạt09"`).
+* **Tự động đồng bộ URL (F5 preservation)**: Đồng bộ hai chiều bộ lọc vai trò, số trang và từ khóa tìm kiếm lên tham số URL (Query params). Khi nhấn F5 để tải lại trang, toàn bộ bộ lọc và trang hiện tại sẽ được tự động khôi phục.
+* **Tự động mở rộng vùng tìm kiếm**: Khi có từ khóa tìm kiếm, Frontend tự động nâng tạm thời `pageSize` lên tối đa `100` bản ghi để tối ưu hóa phạm vi quét dữ liệu cục bộ trong giới hạn tải của Backend.
+
+### 4. Đồng bộ hóa Dashboard hệ thống (`/admin`)
+* **Sửa lỗi hiển thị count**: Cập nhật lại cơ chế tính tổng số lượng thống kê (Người dùng, Yêu cầu cứu trợ, Tình nguyện viên) bằng cách cộng dồn các bản ghi được trả về theo dạng phân loại từ API `/api/dashboard/summary`.
+* **Tổng số kho hàng**: Tích hợp thêm API gọi `getAllWarehouses()` để hiển thị chính xác tổng số kho hàng thực tế đang hoạt động trong hệ thống.

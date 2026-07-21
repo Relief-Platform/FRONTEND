@@ -78,6 +78,17 @@
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
             <Transition name="fade">
               <div v-if="showUserMenu" class="topbar-dropdown">
+                <router-link
+                  v-for="item in navItems"
+                  :key="item.name"
+                  :to="item.to"
+                  class="dropdown-item"
+                  @click="showUserMenu = false"
+                >
+                  <span class="dropdown-icon" v-html="item.icon" />
+                  {{ item.label }}
+                </router-link>
+                <div class="dropdown-divider" />
                 <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
                   Hồ sơ cá nhân
@@ -140,7 +151,7 @@ const navItems = [
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
   },
   {
-    name: "volunteer-view", routeName: "volunteer-dashboard", to: "/volunteer",    label: 'Tình nguyện viên',
+    name: "volunteers", routeName: "admin-volunteers", to: "/admin/volunteers",    label: 'Quản lý Tình nguyện viên',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
   },
   {
@@ -225,12 +236,14 @@ const vClickOutside = {
 .topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
 .topbar-chevron { font-size: 12px; color: #a0aec0; transition: transform 0.15s ease; }
 .topbar-chevron.rotated { transform: rotate(180deg); }
-.topbar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.12); border: 1px solid #e9ecef; min-width: 200px; overflow: hidden; z-index: 300; }
+.topbar-dropdown { position: absolute; top: calc(100% + 8px); right: 0; background: #fff; border-radius: 12px; box-shadow: 0 8px 28px rgba(0,0,0,0.12); border: 1px solid #e9ecef; min-width: 220px; overflow: hidden; z-index: 300; }
 .dropdown-item { display: flex; align-items: center; gap: 10px; padding: 11px 16px; font-size: 13.5px; font-weight: 500; color: #2d3748; text-decoration: none; width: 100%; background: none; border: none; cursor: pointer; transition: background 0.15s ease; text-align: left; }
 .dropdown-item:hover { background: #f8fafc; }
 .dropdown-item--danger { color: #c53030; }
 .dropdown-item--danger:hover { background: rgba(197,48,48,0.06); }
 .dropdown-divider { border-top: 1px solid #e9ecef; }
+.dropdown-icon { display: flex; align-items: center; justify-content: center; width: 16px; height: 16px; flex-shrink: 0; color: #4a5568; }
+.dropdown-icon :deep(svg) { width: 16px; height: 16px; }
 .admin-content { flex: 1; padding: 28px 32px; background: linear-gradient(180deg, #f8fafc 0%, #f0f4f8 100%); }
 .admin-content__inner { max-width: 1400px; margin: 0 auto; width: 100%; }
 .fade-label-enter-active, .fade-label-leave-active { transition: opacity 0.18s ease; }

@@ -1,8 +1,6 @@
 // ============================================================
 //  Auth API — /api/auth
 //  Base URL: https://disasterrelief-api.runasp.net
-//  Mock mode: VITE_USE_MOCK_AUTH=true (.env.local)
-//  Real mode: VITE_USE_MOCK_AUTH=false
 //
 //  LƯU Ý: http.ts đã tự bóc ApiResponse envelope trong interceptor.
 //  Hàm unwrap() dưới đây viết kiểu "tolerant": nhận cả 2 dạng
@@ -10,7 +8,6 @@
 // ============================================================
 
 import { http } from '@/lib/api/http'
-import { mockLoginUser, mockRegisterUser } from '@/mocks/auth.mock'
 import type {
   ApiResponse,
   LoginPayload,
@@ -23,9 +20,6 @@ import type {
   RefreshResult,
   MeResult,
 } from './auth.types'
-
-/** true → dùng mock data; false → gọi real backend */
-const USE_MOCK = import.meta.env.VITE_USE_MOCK_AUTH === 'true'
 
 // ── Helper: unwrap ApiResponse<T> (tolerant) ─────────────────
 /**
@@ -62,8 +56,6 @@ export async function loginUser(
   email: string,
   password: string,
 ): Promise<LoginResult> {
-  if (USE_MOCK) return mockLoginUser(email, password)
-
   const payload: LoginPayload = { email, password }
   const { data } = await http.post<ApiResponse<LoginResult> | LoginResult>('/auth/login', payload)
   return unwrap(data)
@@ -77,8 +69,6 @@ export async function loginUser(
 export async function registerUser(
   userData: RegisterPayload,
 ): Promise<LoginResult> {
-  if (USE_MOCK) return mockRegisterUser()
-
   const { data } = await http.post<ApiResponse<LoginResult> | LoginResult>('/auth/register', userData)
   return unwrap(data)
 }
@@ -105,7 +95,6 @@ export async function refreshAccessToken(
  * 🔒 Không cần đăng nhập (theo bảng endpoint trong API-Reference-FE.md).
  */
 export async function logoutUser(refreshToken: string): Promise<void> {
-  if (USE_MOCK) return
   const payload: LogoutPayload = { refreshToken }
   await http.post('/auth/logout', payload)
 }
