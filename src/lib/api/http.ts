@@ -8,7 +8,7 @@
 //    data thật trong `result`, không phải tự bóc.
 // ============================================================
 
-import axios, { type AxiosError } from 'axios'
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { API_BASE_URL } from '@/config/env'
 import { tokenStorage } from './token-storage'
 
@@ -39,6 +39,41 @@ function isEnvelope(x: unknown): x is ApiEnvelope {
     'isSuccess' in x &&
     'result' in x
   )
+}
+
+// ── Auto-refresh accessToken khi 401 ─────────────────────────
+// accessToken hết hạn sau 60 phút, refreshToken còn hạn 7 ngày.
+// Thay vì văng thẳng về /login, thử refresh 1 lần rồi gọi lại request gốc.
+interface RetryableConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean
+}
+
+let isRefreshing = false
+let pendingQueue: {
+  config: RetryableConfig
+  resolve: (value: unknown) => void
+  reject: (error: unknown) => void
+}[] = []
+
+function retryPendingRequests(newToken: string): void {
+  pendingQueue.forEach(({ config, resolve }) => {
+    config.headers = config.headers ?? {}
+    config.headers.Authorization = `Bearer ${newToken}`
+    resolve(http(config))
+  })
+  pendingQueue = []
+}
+
+function rejectPendingRequests(error: unknown): void {
+  pendingQueue.forEach(({ reject }) => reject(error))
+  pendingQueue = []
+}
+
+function forceLogoutRedirect(): void {
+  tokenStorage.clearAll()
+  if (window.location.pathname !== '/login') {
+    window.location.href = '/login'
+  }
 }
 
 // ── Axios instance ───────────────────────────────────────────
@@ -90,9 +125,58 @@ http.interceptors.response.use(
     }
     return response
   },
-  (error: AxiosError<BeErrorBody>) => {
+  async (error: AxiosError<BeErrorBody>) => {
     const status = error.response?.status ?? 0
     const body = error.response?.data
+    const originalRequest = error.config as RetryableConfig | undefined
+
+    // ── Thử refresh accessToken 1 lần trước khi chấp nhận thua ──
+    const isAuthEndpoint =
+      originalRequest?.url?.includes('/auth/login') ||
+      originalRequest?.url?.includes('/auth/register') ||
+      originalRequest?.url?.includes('/auth/refresh-token')
+
+    if (status === 401 && originalRequest && !originalRequest._retry && !isAuthEndpoint) {
+      const refreshToken = tokenStorage.getRefresh()
+
+      if (!refreshToken) {
+        forceLogoutRedirect()
+        return Promise.reject(
+          new ApiError(status, 'Phiên đăng nhập hết hạn hoặc chưa đăng nhập', body),
+        )
+      }
+
+      originalRequest._retry = true
+
+      // Request khác cũng đang chờ refresh xong → xếp hàng, không gọi refresh trùng
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          pendingQueue.push({ config: originalRequest, resolve, reject })
+        })
+      }
+
+      isRefreshing = true
+      try {
+        const { data } = await axios.post(`${API_BASE_URL}/auth/refresh-token`, { refreshToken })
+        const result = isEnvelope(data) ? data.result : data
+
+        tokenStorage.set(result.accessToken)
+        tokenStorage.setRefresh(result.refreshToken)
+        isRefreshing = false
+        retryPendingRequests(result.accessToken)
+
+        originalRequest.headers = originalRequest.headers ?? {}
+        originalRequest.headers.Authorization = `Bearer ${result.accessToken}`
+        return http(originalRequest)
+      } catch (refreshError) {
+        isRefreshing = false
+        rejectPendingRequests(refreshError)
+        forceLogoutRedirect()
+        return Promise.reject(
+          new ApiError(401, 'Phiên đăng nhập hết hạn, vui lòng đăng nhập lại', body),
+        )
+      }
+    }
 
     // Ưu tiên: errorMessages (envelope) > message > error > title
     // > validation errors > network error
@@ -118,12 +202,9 @@ http.interceptors.response.use(
       message = error.message ?? 'Không thể kết nối đến máy chủ'
     }
 
-    // 401 → xoá token và redirect về trang login
+    // 401 sau khi đã thử refresh (hoặc do chính auth endpoint) → về /login
     if (status === 401) {
-      tokenStorage.clearAll()
-      if (window.location.pathname !== '/login') {
-        window.location.href = '/login'
-      }
+      forceLogoutRedirect()
     }
 
     return Promise.reject(new ApiError(status, message, body))

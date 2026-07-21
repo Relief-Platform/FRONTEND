@@ -86,11 +86,15 @@ export interface RefreshTokenPayload {
   refreshToken: string
 }
 
-/** POST /api/auth/change-password */
+/**
+ * POST /api/auth/change-password
+ * BE nhận { oldPassword, newPassword, confirmPassword } — kiểm chứng trực tiếp
+ * ChangePasswordCommand.cs (không phải currentPassword/confirmNewPassword).
+ */
 export interface ChangePasswordPayload {
-  currentPassword: string
+  oldPassword: string
   newPassword: string
-  confirmNewPassword: string
+  confirmPassword: string
 }
 
 /** POST /api/auth/logout (thu hồi refresh token) */

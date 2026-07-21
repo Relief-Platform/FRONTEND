@@ -113,7 +113,7 @@ export async function getMe(): Promise<MeResult> {
 /**
  * Đổi mật khẩu tài khoản hiện tại.
  * 🔒 Yêu cầu Authorization: Bearer <accessToken>
- * Body: { currentPassword, newPassword, confirmNewPassword }
+ * Body: { oldPassword, newPassword, confirmPassword }
  *
  * Action không trả data: nếu http.ts đã bóc envelope thì data = null
  * (thành công) hoặc interceptor tự reject (thất bại) — không cần check gì.

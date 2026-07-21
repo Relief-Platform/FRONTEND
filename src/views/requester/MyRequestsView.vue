@@ -183,7 +183,6 @@ import {
 } from '@/features/requests/requests.api'
 import {
   STATUS_LABEL_VI,
-  STATUS_GROUP_MAP,
   STATUS_GROUP_COLOR,
   type CreateReliefRequestPayload,
   type ReliefRequestResponse,
@@ -193,6 +192,8 @@ import {
   badgeStyle,
   formatDateTimeVI,
   needsSummary,
+  matchesRequesterFilterGroup,
+  type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
 
 const route = useRoute()
@@ -231,24 +232,24 @@ onMounted(async () => {
 // ── Filter ────────────────────────────────────────────────
 // Tab active đổi màu theo đúng nhóm trạng thái:
 // đang xử lý = vàng, đã tiếp nhận = xanh dương, hoàn thành = xanh lá
-const filterTabs = [
+const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeStyle?: Record<string, string> }[] = [
   { label: 'Tất cả', value: 'all', activeStyle: undefined },
   {
     label: 'Đang xử lý',
     value: 'processing',
     activeStyle: {
-      background: STATUS_GROUP_COLOR.processing.bg,
-      borderColor: STATUS_GROUP_COLOR.processing.color,
-      color: STATUS_GROUP_COLOR.processing.color,
+      background: STATUS_GROUP_COLOR.pending.bg,
+      borderColor: STATUS_GROUP_COLOR.pending.color,
+      color: STATUS_GROUP_COLOR.pending.color,
     },
   },
   {
     label: 'Đã tiếp nhận',
     value: 'received',
     activeStyle: {
-      background: STATUS_GROUP_COLOR.received.bg,
-      borderColor: STATUS_GROUP_COLOR.received.color,
-      color: STATUS_GROUP_COLOR.received.color,
+      background: STATUS_GROUP_COLOR.assigned.bg,
+      borderColor: STATUS_GROUP_COLOR.assigned.color,
+      color: STATUS_GROUP_COLOR.assigned.color,
     },
   },
   {
@@ -261,11 +262,11 @@ const filterTabs = [
     },
   },
 ]
-const activeFilter = ref('all')
+const activeFilter = ref<'all' | RequesterFilterGroup>('all')
 
 const filteredRequests = computed(() => {
   if (activeFilter.value === 'all') return allRequests.value
-  return allRequests.value.filter((r) => STATUS_GROUP_MAP[r.status] === activeFilter.value)
+  return allRequests.value.filter((r) => matchesRequesterFilterGroup(r.status, activeFilter.value as RequesterFilterGroup))
 })
 
 // ── Modal: Tạo mới ────────────────────────────────────────

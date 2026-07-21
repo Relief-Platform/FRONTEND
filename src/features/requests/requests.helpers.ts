@@ -44,6 +44,25 @@ export function formatDateTimeVI(iso: string): string {
   )
 }
 
+// ── Nhóm hiển thị rút gọn cho Requester (3 tab lọc) ──────────
+// StatusGroup (requests.types.ts) giờ 1:1 theo từng status kỹ thuật của
+// BE — UI Requester cần nhóm gộp riêng để không dội 6 trạng thái lên
+// người dùng cuối, nên định nghĩa nhóm hiển thị này ở đây (dùng chung).
+export type RequesterFilterGroup = 'processing' | 'received' | 'completed'
+
+export const REQUESTER_FILTER_GROUPS: Record<RequesterFilterGroup, ReliefRequestStatus[]> = {
+  processing: ['Pending', 'Approved'],
+  received: ['Assigned', 'InProgress'],
+  completed: ['Completed'],
+}
+
+export function matchesRequesterFilterGroup(
+  status: ReliefRequestStatus,
+  group: RequesterFilterGroup,
+): boolean {
+  return REQUESTER_FILTER_GROUPS[group].includes(status)
+}
+
 /** Tóm tắt các nhu cầu đã tick: "Lương thực, Nước sạch" */
 export function needsSummary(r: ReliefRequestResponse): string {
   const list: string[] = []
