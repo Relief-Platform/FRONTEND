@@ -15,9 +15,9 @@
           <p class="page-sub">Cập nhật thông tin liên hệ, chuyên môn và quản lý kỹ năng cứu trợ của bạn.</p>
         </div>
 
-        <div v-if="profile" class="approval-status" :class="{ approved: profile.isApproved }">
+        <div v-if="profile" class="approval-status" :class="statusClass">
           <span class="status-dot" />
-          {{ profile.isApproved ? 'Đã được duyệt' : 'Đang chờ duyệt' }}
+          {{ statusLabel }}
         </div>
       </div>
 
@@ -195,15 +195,15 @@
 
               <div v-else class="skills-list">
                 <div
-                  v-for="skillName in profile.skills"
-                  :key="skillName"
+                  v-for="skill in profile.skills"
+                  :key="skill.id"
                   class="skill-badge-item"
                 >
-                  <span class="skill-name">{{ skillName }}</span>
+                  <span class="skill-name">{{ skill.name }}</span>
                   <button
                     class="remove-skill-btn"
                     title="Xóa kỹ năng này"
-                    @click="handleRemoveSkill(skillName)"
+                    @click="handleRemoveSkill(skill.id, skill.name)"
                     :disabled="isModifyingSkills"
                   >
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
@@ -299,6 +299,7 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 const selectedSkillToAdd = ref('')
+const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
 
 const form = reactive({
   address: '',
@@ -318,6 +319,20 @@ const initials = computed(() => {
     .join('')
     .toUpperCase() || '?'
 })
+
+// Status badge theo VolunteerStatus
+const statusLabel = computed(() => {
+  switch (profile.value?.status) {
+    case 'Approved': return 'Đã được duyệt'
+    case 'Rejected': return 'Bị từ chối'
+    default:         return 'Đang chờ duyệt'
+  }
+})
+
+const statusClass = computed(() => ({
+  approved: profile.value?.status === 'Approved',
+  rejected: profile.value?.status === 'Rejected',
+}))
 
 // Filter available skills that the user hasn't registered yet
 const registerableSkills = computed(() => {
@@ -395,24 +410,24 @@ const saveProfile = async () => {
   isSaving.value = true
   errorMessage.value = ''
   try {
-    const payload = {
-      address: form.address,
-      latitude: form.latitude,
-      longitude: form.longitude,
+    // Payload không có skillIds — kỹ năng quản lý qua endpoint riêng
+    const payload: VolunteerProfilePayload = {
+      address:         form.address,
+      latitude:        form.latitude,
+      longitude:       form.longitude,
       experienceYears: form.experienceYears,
-      bio: form.bio || null,
-      skillIds: profile.value ? [] : [], // Với API tạo mới, skillIds ban đầu để rỗng, sẽ add sau
+      bio:             form.bio || null,
     }
 
-    let updated: VolunteerProfile
     if (profile.value) {
-      updated = await updateVolunteerProfile(payload)
+      await updateVolunteerProfile(payload)
       triggerNotification('success', 'Đã cập nhật hồ sơ tình nguyện viên thành công!')
     } else {
-      updated = await createVolunteerProfile(payload)
-      triggerNotification('success', 'Đã tạo hồ sơ tình nguyện viên mới thành công!')
+      await createVolunteerProfile(payload)
+      triggerNotification('success', 'Đã tạo hồ sơ mới thành công! Vui lòng chờ Admin duyệt.')
     }
-    profile.value = updated
+    // Reload để lấy dữ liệu mới nhất từ BE
+    await loadProfile()
     isEditMode.value = false
   } catch (err: unknown) {
     const error = err as Error
@@ -432,7 +447,8 @@ const handleAddSkill = async () => {
     await loadProfile() // reload để lấy danh sách kỹ năng mới nhất
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể đăng ký thêm kỹ năng.')
+    const detail = error.message.includes('ApiError') ? error.message : error.message
+    triggerNotification('error', detail || 'Không thể đăng ký thêm kỹ năng.')
   } finally {
     isModifyingSkills.value = false
   }
@@ -448,7 +464,7 @@ const handleRemoveSkill = async (skillName: string) => {
 
   isModifyingSkills.value = true
   try {
-    await deleteSkill(idToDelete)
+    await deleteSkill(skillId)
     triggerNotification('success', `Đã xóa kỹ năng "${skillName}" thành công!`)
     await loadProfile()
   } catch (err: unknown) {
@@ -459,8 +475,12 @@ const handleRemoveSkill = async (skillName: string) => {
   }
 }
 
+const loadSkills = async () => {
+  skillOptions.value = await loadAvailableSkills()
+}
+
 onMounted(() => {
-  void loadProfile()
+  void Promise.all([loadSkills(), loadProfile()])
 })
 </script>
 
@@ -534,6 +554,16 @@ onMounted(() => {
 
 .approval-status.approved .status-dot {
   background: #059669;
+}
+
+.approval-status.rejected {
+  background: #fff1f2;
+  border-color: #fecdd3;
+  color: #e11d48;
+}
+
+.approval-status.rejected .status-dot {
+  background: #e11d48;
 }
 
 /* Notification Banners */

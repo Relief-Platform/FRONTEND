@@ -78,12 +78,14 @@
                 </div>
                 <h4 class="skill-title">{{ skill.name }}</h4>
               </div>
-              <p class="skill-description">{{ skill.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}</p>
+              <p class="skill-description">
+                {{ skillOptions.find(s => s.id === skill.id)?.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}
+              </p>
               <div class="skill-card__actions">
                 <span class="status-badge approved">Đang hoạt động</span>
                 <button
                   class="btn-delete-skill"
-                  @click="handleRemoveSkill(skill.name)"
+                  @click="handleRemoveSkill(skill.id, skill.name)"
                   :disabled="isSubmitting"
                 >
                   Hủy đăng ký
@@ -153,6 +155,7 @@ const isLoading = ref(true)
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
+const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
 
 const triggerNotification = (type: 'success' | 'error', msg: string) => {
   if (type === 'success') {
@@ -230,7 +233,7 @@ const handleRemoveSkill = async (skillName: string) => {
 
   isSubmitting.value = true
   try {
-    await deleteSkill(idToDelete)
+    await deleteSkill(skillId)
     triggerNotification('success', `Đã hủy đăng ký kỹ năng "${skillName}" thành công!`)
     await loadProfile()
   } catch (err: unknown) {
@@ -241,8 +244,12 @@ const handleRemoveSkill = async (skillName: string) => {
   }
 }
 
+const loadSkills = async () => {
+  skillOptions.value = await loadAvailableSkills()
+}
+
 onMounted(() => {
-  void loadProfile()
+  void Promise.all([loadSkills(), loadProfile()])
 })
 </script>
 

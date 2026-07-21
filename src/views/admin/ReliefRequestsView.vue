@@ -107,77 +107,85 @@
               </td>
               <td class="td-date">{{ formatDateTimeVI(req.createdAt) }}</td>
               <td class="th-center" @click.stop>
-                <button class="btn-view" @click="openDetail(req.id)">Chi tiết</button>
+                <button class="action-btn action-btn--details" @click="openDetail(req.id)">Chi tiết</button>
               </td>
             </tr>
           </tbody>
         </table>
       </div>
 
-      <!-- ── Detail Drawer ──────────────────────────────── -->
-      <Transition name="drawer">
-        <div v-if="drawerOpen" class="drawer-overlay" @click.self="closeDrawer">
-          <div class="drawer">
-            <div class="drawer-header">
-              <div>
-                <p class="drawer-subtitle">Chi tiết yêu cầu cứu trợ</p>
-                <h2 class="drawer-title">{{ detail?.title }}</h2>
+      <!-- ── Detail Modal ──────────────────────────────── -->
+      <Transition name="modal">
+        <div v-if="drawerOpen" class="modal-overlay" @click.self="closeDrawer">
+          <div class="modal-box">
+
+            <!-- Header -->
+            <div class="modal-header">
+              <div class="modal-header__inner">
+                <p class="modal-subtitle">Chi tiết yêu cầu cứu trợ</p>
+                <h2 class="modal-title">{{ detail?.title }}</h2>
               </div>
-              <button class="drawer-close" @click="closeDrawer">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <button class="modal-close" @click="closeDrawer">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
               </button>
             </div>
 
-            <div v-if="isDetailLoading" class="drawer-loading">
+            <!-- Loading -->
+            <div v-if="isDetailLoading" class="modal-loading">
               <div class="spinner" />
               Đang tải...
             </div>
 
-            <template v-else-if="detail">
-              <!-- Info grid -->
-              <div class="info-grid">
-                <div class="info-item">
-                  <span class="info-label">Trạng thái</span>
-                  <span class="status-badge" :style="badgeStyle(detail.status)">
-                    <span class="status-dot" :style="dotStyle(detail.status)" />
-                    {{ STATUS_LABEL_FULL[detail.status] }}
-                  </span>
+            <div v-else-if="detail" class="modal-body">
+              <!-- Row 1: Status + Emergency badges -->
+              <div class="modal-badge-row">
+                <span class="status-badge" :style="badgeStyle(detail.status)">
+                  <span class="status-dot" :style="dotStyle(detail.status)" />
+                  {{ STATUS_LABEL_FULL[detail.status] }}
+                </span>
+                <span class="emergency-badge" :class="`elv-${detail.emergencyLevel}`">
+                  {{ EMERGENCY_LABELS[detail.emergencyLevel] }}
+                </span>
+              </div>
+
+              <!-- Info cards grid -->
+              <div class="modal-cards">
+                <!-- Card: Thông tin liên hệ -->
+                <div class="info-card">
+                  <div class="info-card__header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                    Thông tin
+                  </div>
+                  <p class="info-card__sublabel">Số người bị ảnh hưởng</p>
+                  <p class="info-card__val">{{ detail.affectedPeople }} người</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">Số điện thoại</p>
+                  <p class="info-card__val">{{ detail.contactPhone }}</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">Tọa độ</p>
+                  <p class="info-card__val info-card__val--small">{{ detail.latitude.toFixed(5) }}, {{ detail.longitude.toFixed(5) }}</p>
                 </div>
-                <div class="info-item">
-                  <span class="info-label">Cấp độ khẩn cấp</span>
-                  <span class="emergency-badge" :class="`elv-${detail.emergencyLevel}`">
-                    {{ EMERGENCY_LABELS[detail.emergencyLevel] }}
-                  </span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Số người bị ảnh hưởng</span>
-                  <span class="info-val">{{ detail.affectedPeople }} người</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Số điện thoại liên hệ</span>
-                  <span class="info-val">{{ detail.contactPhone }}</span>
-                </div>
-                <div class="info-item info-item--full">
-                  <span class="info-label">Địa chỉ</span>
-                  <span class="info-val">{{ detail.address }}</span>
-                </div>
-                <div class="info-item info-item--full">
-                  <span class="info-label">Mô tả</span>
-                  <span class="info-val">{{ detail.description }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Ngày tạo</span>
-                  <span class="info-val">{{ formatDateTimeVI(detail.createdAt) }}</span>
-                </div>
-                <div class="info-item">
-                  <span class="info-label">Tọa độ</span>
-                  <span class="info-val">{{ detail.latitude.toFixed(5) }}, {{ detail.longitude.toFixed(5) }}</span>
+
+                <!-- Card: Địa điểm & Thời gian -->
+                <div class="info-card">
+                  <div class="info-card__header">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    Địa điểm & Thời gian
+                  </div>
+                  <p class="info-card__sublabel">Địa chỉ</p>
+                  <p class="info-card__val">{{ detail.address }}</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">Ngày tạo</p>
+                  <div class="info-card__datebox">{{ formatDateTimeVI(detail.createdAt) }}</div>
                 </div>
               </div>
 
-              <!-- Needs -->
-              <div class="section-block">
-                <p class="section-label">Nhu cầu cần hỗ trợ</p>
+              <!-- Mô tả -->
+              <div class="modal-section">
+                <p class="modal-section__label">Mô tả</p>
+                <p class="modal-section__text">{{ detail.description }}</p>
+              </div>
+
+              <!-- Nhu cầu -->
+              <div class="modal-section">
+                <p class="modal-section__label">Nhu cầu cần hỗ trợ</p>
                 <div class="needs-tags">
                   <span v-if="detail.needFood"     class="need-tag">🍚 Lương thực</span>
                   <span v-if="detail.needWater"    class="need-tag">💧 Nước sạch</span>
@@ -188,9 +196,9 @@
                 </div>
               </div>
 
-              <!-- Status change -->
-              <div class="section-block">
-                <p class="section-label">Đổi trạng thái</p>
+              <!-- Đổi trạng thái -->
+              <div class="modal-section">
+                <p class="modal-section__label">Đổi trạng thái</p>
                 <div class="status-flow">
                   <button
                     v-for="s in STATUS_TRANSITIONS[detail.status] ?? []"
@@ -201,38 +209,26 @@
                     @click="changeStatus(s)"
                   >
                     <svg v-if="isUpdating && pendingStatus === s" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
-                    → {{ STATUS_LABEL_FULL[s] }}
+                    {{ STATUS_LABEL_FULL[s] }}
                   </button>
-                  <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">
-                    Không có bước chuyển tiếp
-                  </span>
+                  <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">Không có bước chuyển tiếp</span>
                 </div>
                 <p v-if="statusMsg" class="status-msg" :class="statusMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ statusMsg }}</p>
               </div>
 
-              <!-- Suggested volunteers (only when Approved) -->
-              <div v-if="detail.status === 'Approved'" class="section-block">
+              <!-- Gợi ý TNV (chỉ khi Approved) -->
+              <div v-if="detail.status === 'Approved'" class="modal-section">
                 <div class="suggested-header">
-                  <p class="section-label">Tình nguyện viên gợi ý gần nhất</p>
+                  <p class="modal-section__label" style="margin-bottom:0">Tình nguyện viên gợi ý gần nhất</p>
                   <button class="btn-refresh" @click="loadSuggested" :disabled="isSuggestLoading">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" :class="{ 'spin-icon': isSuggestLoading }"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/><path d="M21 3v4h-4"/></svg>
                     Làm mới
                   </button>
                 </div>
-
-                <div v-if="isSuggestLoading" class="suggest-loading">
-                  <div class="spinner" />
-                  Đang tìm tình nguyện viên...
-                </div>
-                <div v-else-if="suggestedVolunteers.length === 0" class="suggest-empty">
-                  Không có tình nguyện viên phù hợp trong khu vực.
-                </div>
-                <div v-else class="volunteer-cards">
-                  <div
-                    v-for="vol in suggestedVolunteers"
-                    :key="vol.volunteerProfileId"
-                    class="vol-card"
-                  >
+                <div v-if="isSuggestLoading" class="suggest-loading"><div class="spinner" /> Đang tìm...</div>
+                <div v-else-if="suggestedVolunteers.length === 0" class="suggest-empty">Không có tình nguyện viên phù hợp trong khu vực.</div>
+                <div v-else class="volunteer-cards" style="margin-top:10px">
+                  <div v-for="vol in suggestedVolunteers" :key="vol.volunteerProfileId" class="vol-card">
                     <div class="vol-card__avatar">{{ vol.fullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
                     <div class="vol-card__info">
                       <p class="vol-card__name">{{ vol.fullName }}</p>
@@ -247,11 +243,7 @@
                         <span v-if="vol.skills.length > 2" class="vol-tag vol-tag--more">+{{ vol.skills.length - 2 }}</span>
                       </div>
                     </div>
-                    <button
-                      class="btn-assign"
-                      :disabled="isAssigning && assigningId === vol.volunteerProfileId"
-                      @click="assignVolunteer(vol)"
-                    >
+                    <button class="btn-assign" :disabled="isAssigning && assigningId === vol.volunteerProfileId" @click="assignVolunteer(vol)">
                       <svg v-if="isAssigning && assigningId === vol.volunteerProfileId" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       Phân công
@@ -260,7 +252,7 @@
                 </div>
                 <p v-if="assignMsg" class="status-msg" :class="assignMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ assignMsg }}</p>
               </div>
-            </template>
+            </div>
           </div>
         </div>
       </Transition>
@@ -698,19 +690,34 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
 .need-chip { font-size: 16px; }
 
 /* Buttons */
-.btn-view {
-  padding: 5px 14px;
-  border-radius: 7px;
-  border: 1.5px solid #c53030;
-  background: transparent;
-  color: #c53030;
-  font-size: 12px;
+.action-btn {
+  padding: 6px 14px;
+  border-radius: var(--radius-md, 8px);
+  font-size: 12.5px;
   font-weight: 600;
+  border: 1px solid transparent;
   cursor: pointer;
   transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   white-space: nowrap;
 }
-.btn-view:hover { background: #c53030; color: #fff; }
+.action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+}
+.action-btn:active { transform: translateY(0); }
+.action-btn--details {
+  background-color: #f1f5f9;
+  border-color: #e2e8f0;
+  color: #1d4ed8;
+}
+.action-btn--details:hover {
+  background-color: #e2e8f0;
+  border-color: #cbd5e1;
+  color: #1e40af;
+}
 
 /* Loading / Empty */
 .loading-state, .empty-state {
@@ -734,79 +741,75 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ── Drawer ──────────────────────────────────────────────── */
-.drawer-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(15,25,40,0.45);
+/* ── Modal ───────────────────────────────────────────────── */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(10,18,35,0.6);
+  backdrop-filter: blur(4px);
   z-index: 500;
-  display: flex;
-  justify-content: flex-end;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
 }
-.drawer {
-  width: 560px;
-  max-width: 95vw;
-  height: 100vh;
+.modal-box {
+  width: 620px; max-width: 100%;
+  max-height: 90vh;
   background: #fff;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto;
-  box-shadow: -8px 0 40px rgba(0,0,0,0.18);
+  border-radius: 20px;
+  overflow: hidden;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 80px rgba(0,0,0,0.28), 0 0 0 1px rgba(255,255,255,0.06);
 }
-.drawer-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  padding: 24px 28px 20px;
-  border-bottom: 1px solid #e9ecef;
-  background: linear-gradient(135deg, #1a1a2e, #0f3460);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-.drawer-subtitle { font-size: 11px; color: rgba(255,255,255,0.55); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
-.drawer-title    { font-size: 18px; font-weight: 800; color: #fff; line-height: 1.3; }
-.drawer-close {
-  width: 34px;
-  height: 34px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.1);
-  border: none;
-  color: rgba(255,255,255,0.7);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+
+/* Header */
+.modal-header {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  padding: 20px 24px 18px;
+  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 60%, #0f3460 100%);
   flex-shrink: 0;
+}
+.modal-subtitle { font-size: 10.5px; color: rgba(255,255,255,0.45); font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 5px; }
+.modal-title    { font-size: 16px; font-weight: 800; color: #fff; line-height: 1.35; max-width: 480px; }
+.modal-close {
+  width: 32px; height: 32px; border-radius: 8px;
+  background: rgba(255,255,255,0.1); border: none;
+  color: rgba(255,255,255,0.65); cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; margin-left: 12px;
   transition: all 0.15s ease;
 }
-.drawer-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
-.drawer-loading { padding: 60px 28px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #a0aec0; }
+.modal-close:hover { background: rgba(255,255,255,0.2); color: #fff; }
 
-/* Info grid */
-.info-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
-  padding: 20px 28px;
-  border-bottom: 1px solid #f1f5f9;
-}
-.info-item {
-  padding: 10px 0;
-  border-bottom: 1px solid #f8fafc;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-.info-item--full { grid-column: 1 / -1; }
-.info-label { font-size: 11px; font-weight: 700; color: #a0aec0; text-transform: uppercase; letter-spacing: 0.3px; }
-.info-val   { font-size: 13.5px; color: #2d3748; font-weight: 500; }
+/* Loading */
+.modal-loading { padding: 60px 24px; display: flex; flex-direction: column; align-items: center; gap: 12px; color: #a0aec0; }
 
-/* Sections */
-.section-block {
-  padding: 20px 28px;
-  border-bottom: 1px solid #f1f5f9;
+/* Scrollable body */
+.modal-body { overflow-y: auto; flex: 1; padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 16px; }
+
+/* Badge row */
+.modal-badge-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
+/* Info cards */
+.modal-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.info-card { background: #f8fafc; border: 1px solid #e9ecef; border-radius: 12px; padding: 14px 16px; }
+.info-card__header {
+  display: flex; align-items: center; gap: 7px;
+  font-size: 11px; font-weight: 800; color: #475569;
+  text-transform: uppercase; letter-spacing: 0.5px;
+  margin-bottom: 12px; padding-bottom: 10px;
+  border-bottom: 1px solid #e9ecef;
 }
+.info-card__sublabel { font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 4px; }
+.info-card__val { font-size: 13px; font-weight: 700; color: #1a3b5c; line-height: 1.4; }
+.info-card__val--small { font-size: 11.5px; font-weight: 500; color: #64748b; }
+.info-card__datebox { background: #fff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 7px 11px; font-size: 12.5px; font-weight: 600; color: #334155; }
+
+/* Modal sections */
+.modal-section { display: flex; flex-direction: column; gap: 8px; padding-top: 4px; border-top: 1px solid #f1f5f9; padding-top: 14px; }
+.modal-section__label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+.modal-section__text { font-size: 13.5px; color: #374151; line-height: 1.6; background: #f8fafc; border-radius: 10px; padding: 12px 14px; border: 1px solid #e9ecef; }
+
+/* kept for compatibility */
+.section-block { padding: 0; border-bottom: none; }
 .section-label { font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 12px; }
 
 /* Needs tags */
@@ -831,23 +834,28 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 10px;
-  border: none;
+  padding: 7px 16px;
+  border-radius: 8px;
+  border: 1px solid transparent;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
-.flow-btn--approved   { background: #dcfce7; color: #15803d; }
-.flow-btn--approved:hover   { background: #22c55e; color: #fff; }
-.flow-btn--cancelled  { background: #fee2e2; color: #991b1b; }
-.flow-btn--cancelled:hover  { background: #ef4444; color: #fff; }
-.flow-btn--inprogress { background: #ede9fe; color: #6d28d9; }
-.flow-btn--inprogress:hover { background: #8b5cf6; color: #fff; }
-.flow-btn--completed  { background: #d1fae5; color: #065f46; }
-.flow-btn--completed:hover  { background: #10b981; color: #fff; }
-.flow-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.flow-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+}
+.flow-btn:active { transform: translateY(0); }
+.flow-btn--approved   { background: #ecfdf5; border-color: #a7f3d0; color: #065f46; }
+.flow-btn--approved:hover   { background: #d1fae5; border-color: #6ee7b7; }
+.flow-btn--cancelled  { background: #fef2f2; border-color: #fca5a5; color: #991b1b; }
+.flow-btn--cancelled:hover  { background: #fee2e2; border-color: #f87171; }
+.flow-btn--inprogress { background: #f5f3ff; border-color: #c4b5fd; color: #6d28d9; }
+.flow-btn--inprogress:hover { background: #ede9fe; border-color: #a78bfa; }
+.flow-btn--completed  { background: #ecfdf5; border-color: #6ee7b7; color: #065f46; }
+.flow-btn--completed:hover  { background: #d1fae5; border-color: #34d399; }
+.flow-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
 .flow-none { font-size: 13px; color: #a0aec0; font-style: italic; }
 .status-msg { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-top: 8px; }
 .msg--ok    { background: #dcfce7; color: #15803d; }
@@ -862,16 +870,16 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   gap: 5px;
   padding: 5px 12px;
   border-radius: 8px;
-  border: 1.5px solid #e9ecef;
-  background: #fff;
+  border: 1px solid #e2e8f0;
+  background: #f1f5f9;
   font-size: 12px;
   font-weight: 600;
-  color: #4a5568;
+  color: #1d4ed8;
   cursor: pointer;
   transition: all 0.15s ease;
 }
-.btn-refresh:hover { background: #f8fafc; }
-.btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-refresh:hover { background: #e2e8f0; border-color: #cbd5e1; transform: translateY(-1px); }
+.btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 
 .suggest-loading, .suggest-empty {
   padding: 24px;
@@ -895,7 +903,7 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   border: 1px solid #e9ecef;
   transition: border-color 0.15s ease;
 }
-.vol-card:hover { border-color: #c53030; }
+.vol-card:hover { border-color: #93c5fd; }
 .vol-card__avatar {
   width: 40px;
   height: 40px;
@@ -929,28 +937,28 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   align-items: center;
   gap: 5px;
   padding: 7px 14px;
-  border-radius: 9px;
-  background: #c53030;
-  color: #fff;
-  border: none;
+  border-radius: 8px;
+  background-color: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  color: #065f46;
   font-size: 12.5px;
   font-weight: 700;
   cursor: pointer;
   flex-shrink: 0;
-  transition: all 0.18s ease;
+  transition: all 0.15s ease;
 }
-.btn-assign:hover   { background: #9b1c1c; }
+.btn-assign:hover:not(:disabled) { background-color: #d1fae5; border-color: #6ee7b7; transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,0.06); }
 .btn-assign:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Spin icon */
 .spin-icon { animation: spin 0.7s linear infinite; }
 
 /* Transition */
-.drawer-enter-active, .drawer-leave-active { transition: opacity 0.25s ease; }
-.drawer-enter-from, .drawer-leave-to { opacity: 0; }
-.drawer-enter-active .drawer, .drawer-leave-active .drawer { transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
-.drawer-enter-from .drawer { transform: translateX(100%); }
-.drawer-leave-to .drawer   { transform: translateX(100%); }
+.modal-enter-active, .modal-leave-active { transition: opacity 0.22s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.modal-enter-active .modal-box { transition: transform 0.28s cubic-bezier(0.34,1.56,0.64,1), opacity 0.22s ease; }
+.modal-enter-from .modal-box { transform: scale(0.9) translateY(20px); opacity: 0; }
+.modal-leave-to .modal-box   { transform: scale(0.95) translateY(10px); opacity: 0; }
 
 /* ── Responsive ──────────────────────────────────────────── */
 @media (max-width: 900px) {

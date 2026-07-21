@@ -98,6 +98,16 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/requester/become-volunteer',
+    name: 'become-volunteer',
+    component: () => import('@/views/requester/VolunteerRegisterView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Requester', 'Admin'],
+      title: 'Đăng ký Tình nguyện viên',
+    },
+  },
+  {
   path: '/requester/my-requests',
   name: 'my-requests',
   component: () => import('@/views/requester/MyRequestsView.vue'),
@@ -273,6 +283,16 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['Admin'],
       title: 'Quản lý phân công tình nguyện viên',
+    },
+  },
+  {
+    path: '/admin/volunteers',
+    name: 'admin-volunteers',
+    component: () => import('@/views/admin/VolunteersView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Quản lý tình nguyện viên',
     },
   },
 

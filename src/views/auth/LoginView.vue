@@ -74,24 +74,6 @@
         </span>
       </div>
 
-      <!-- ── Mock credentials (chỉ hiển thị khi MOCK mode) ── -->
-      <div v-if="isMockMode" class="mock-panel">
-        <button class="mock-toggle" @click="showMock = !showMock" type="button">
-          🧪 Tài khoản test {{ showMock ? '▴' : '▾' }}
-        </button>
-        <div v-if="showMock" class="mock-list">
-          <button
-            v-for="acc in mockAccounts"
-            :key="acc.role"
-            class="mock-item"
-            type="button"
-            @click="fillMock(acc)"
-          >
-            <span class="mock-role" :class="`mock-role--${acc.role}`">{{ acc.role }}</span>
-            <span class="mock-email">{{ acc.email }}</span>
-          </button>
-        </div>
-      </div>
     </div>
   </div>
 </template>
@@ -99,25 +81,10 @@
 <script setup lang="ts">
 import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
-import { MOCK_ACCOUNTS } from '@/mocks/auth.mock'
-import { USE_MOCK_AUTH } from '@/config/env'
 import { useAuthStore } from '@/stores/auth'
 
 const router    = useRouter()
 const authStore = useAuthStore()
-
-// ── Mock panel state ────────────────────────────────────────
-const isMockMode = ref(USE_MOCK_AUTH)
-const showMock   = ref(false)
-const mockAccounts = MOCK_ACCOUNTS
-
-/** Click vào tài khoản test → tự điền form + đăng nhập ngay */
-function fillMock(acc: { email: string; password: string }): void {
-  formData.usernameOrEmail = acc.email
-  formData.password = acc.password
-  showMock.value = false
-  void handleLogin()
-}
 
 const showPassword   = ref(false)
 const isLoading      = ref(false)

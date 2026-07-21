@@ -145,10 +145,12 @@ import AdminLayout from '@/components/layout/AdminLayout.vue'
 import RequestsOverTimeChart from '@/components/dashboard/RequestsOverTimeChart.vue'
 import DashboardMapPanel from '@/components/dashboard/DashboardMapPanel.vue'
 import { getDashboardSummary, getAuditLogs, type DashboardSummary, type AuditLog } from '@/features/dashboard/dashboard.api'
+import { getAllWarehouses } from '@/features/warehouses/warehouses.api'
 
 const summary = ref<DashboardSummary | null>(null)
 const auditLogs = ref<AuditLog[]>([])
 const isLoadingLogs = ref(true)
+const totalWarehouses = ref(0)
 
 const currentDate = computed(() => {
   return new Date().toLocaleDateString('vi-VN', {
@@ -168,6 +170,13 @@ onMounted(async () => {
   }
 
   try {
+    const warehousesList = await getAllWarehouses()
+    totalWarehouses.value = warehousesList.length
+  } catch (error) {
+    console.error('Failed to load warehouses', error)
+  }
+
+  try {
     isLoadingLogs.value = true
     const logs = await getAuditLogs(1, 5)
     auditLogs.value = logs.items || []
@@ -179,17 +188,24 @@ onMounted(async () => {
 })
 
 const statCards = computed(() => {
-  const sum = summary.value || {
-    totalUsers: 0,
-    totalReliefRequests: 0,
-    totalVolunteers: 0,
-    totalWarehouses: 0,
-  }
+  const sum = summary.value
+
+  const usersCount = sum && sum.usersByRole
+    ? Object.values(sum.usersByRole).reduce((a: any, b: any) => a + b, 0)
+    : 0
+
+  const requestsCount = sum && sum.reliefRequestsByStatus
+    ? Object.values(sum.reliefRequestsByStatus).reduce((a: any, b: any) => a + b, 0)
+    : 0
+
+  const volunteersCount = sum && sum.volunteersByStatus
+    ? Object.values(sum.volunteersByStatus).reduce((a: any, b: any) => a + b, 0)
+    : 0
 
   return [
     {
       label: 'Tổng người dùng',
-      value: sum.totalUsers,
+      value: usersCount,
       unit: 'người dùng',
       trend: 'Tất cả thời gian',
       trendUp: false,
@@ -200,7 +216,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Yêu cầu cứu trợ',
-      value: sum.totalReliefRequests,
+      value: requestsCount,
       unit: 'yêu cầu',
       trend: 'Tất cả thời gian',
       trendUp: false,
@@ -211,7 +227,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Tình nguyện viên',
-      value: sum.totalVolunteers,
+      value: volunteersCount,
       unit: 'tình nguyện viên',
       trend: 'Tất cả thời gian',
       trendUp: false,
@@ -222,7 +238,7 @@ const statCards = computed(() => {
     },
     {
       label: 'Kho hàng & Vật tư',
-      value: sum.totalWarehouses,
+      value: totalWarehouses.value,
       unit: 'kho hàng',
       trend: 'Tất cả thời gian',
       trendUp: false,
@@ -235,18 +251,29 @@ const statCards = computed(() => {
 })
 
 const overviewBars = computed(() => {
-  const sum = summary.value || {
-    totalUsers: 0,
-    totalReliefRequests: 0,
-    totalVolunteers: 0,
-    totalWarehouses: 0,
-  }
-  const max = Math.max(sum.totalUsers, sum.totalReliefRequests, sum.totalVolunteers, sum.totalWarehouses, 1)
+  const sum = summary.value
+
+  const usersCount = sum && sum.usersByRole
+    ? Object.values(sum.usersByRole).reduce((a: any, b: any) => a + b, 0)
+    : 0
+
+  const requestsCount = sum && sum.reliefRequestsByStatus
+    ? Object.values(sum.reliefRequestsByStatus).reduce((a: any, b: any) => a + b, 0)
+    : 0
+
+  const volunteersCount = sum && sum.volunteersByStatus
+    ? Object.values(sum.volunteersByStatus).reduce((a: any, b: any) => a + b, 0)
+    : 0
+
+  const warehousesCount = totalWarehouses.value
+
+  const max = Math.max(usersCount, requestsCount, volunteersCount, warehousesCount, 1)
+
   return [
-    { label: 'Người dùng', value: sum.totalUsers,          pct: Math.round((sum.totalUsers          / max) * 100), color: '#3182ce' },
-    { label: 'Yêu cầu',   value: sum.totalReliefRequests, pct: Math.round((sum.totalReliefRequests / max) * 100), color: '#e27d24' },
-    { label: 'TNV',       value: sum.totalVolunteers,      pct: Math.round((sum.totalVolunteers      / max) * 100), color: '#276749' },
-    { label: 'Kho',       value: sum.totalWarehouses,      pct: Math.round((sum.totalWarehouses      / max) * 100), color: '#6b46c1' },
+    { label: 'Người dùng', value: usersCount,      pct: Math.round((usersCount      / max) * 100), color: '#3182ce' },
+    { label: 'Yêu cầu',   value: requestsCount,  pct: Math.round((requestsCount  / max) * 100), color: '#e27d24' },
+    { label: 'TNV',       value: volunteersCount, pct: Math.round((volunteersCount / max) * 100), color: '#276749' },
+    { label: 'Kho',       value: warehousesCount, pct: Math.round((warehousesCount / max) * 100), color: '#6b46c1' },
   ]
 })
 
