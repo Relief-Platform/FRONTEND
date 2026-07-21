@@ -143,12 +143,13 @@ import {
   getVolunteerProfile,
   registerSkills,
   deleteSkill,
-  loadAvailableSkills,
-  AVAILABLE_SKILLS
 } from '@/features/volunteers/volunteers.api'
-import type { VolunteerProfile, SkillItem, VolunteerSkill } from '@/features/volunteers/volunteers.types'
+import { getSkills } from '@/features/skills/skills.api'
+import type { VolunteerProfile } from '@/features/volunteers/volunteers.types'
+import type { Skill } from '@/features/skills/skills.types'
 
 const profile = ref<VolunteerProfile | null>(null)
+const availableSkills = ref<Skill[]>([])
 const hasProfile = ref(true)
 const isLoading = ref(true)
 const isSubmitting = ref(false)
@@ -170,7 +171,10 @@ const loadProfile = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const data = await getVolunteerProfile()
+    const [data] = await Promise.all([
+      getVolunteerProfile(),
+      loadAvailableSkills(),
+    ])
     profile.value = data
     hasProfile.value = true
   } catch (err: unknown) {
@@ -185,17 +189,24 @@ const loadProfile = async () => {
   }
 }
 
-// Kỹ năng đã đăng ký: lấy từ profile.skills (VolunteerSkill[] có id+name)
-const registeredSkills = computed<VolunteerSkill[]>(() => {
+const loadAvailableSkills = async () => {
+  try {
+    availableSkills.value = await getSkills()
+  } catch (err: unknown) {
+    console.error('Failed to load skills catalog', err)
+  }
+}
+
+// Compute registered skills as Skill list
+const registeredSkills = computed<Skill[]>(() => {
   if (!profile.value) return []
-  return profile.value.skills
+  return availableSkills.value.filter(s => profile.value!.skills.includes(s.name))
 })
 
-// Kỹ năng chưa đăng ký: lọc từ danh sách hệ thống theo id
-const availableSkillsToRegister = computed<SkillItem[]>(() => {
-  if (!profile.value) return skillOptions.value
-  const registeredIds = new Set(profile.value.skills.map(s => s.id))
-  return skillOptions.value.filter(s => !registeredIds.has(s.id))
+// Compute remaining skills that can be registered
+const availableSkillsToRegister = computed<Skill[]>(() => {
+  if (!profile.value) return availableSkills.value
+  return availableSkills.value.filter(s => !profile.value!.skills.includes(s.name))
 })
 
 const handleAddSkill = async (skillId: string) => {
@@ -212,7 +223,10 @@ const handleAddSkill = async (skillId: string) => {
   }
 }
 
-const handleRemoveSkill = async (skillId: string, skillName: string) => {
+const handleRemoveSkill = async (skillName: string) => {
+  const targetSkill = availableSkills.value.find(s => s.name === skillName)
+  const idToDelete = targetSkill ? targetSkill.id : skillName
+
   if (!confirm(`Bạn có chắc muốn hủy đăng ký kỹ năng "${skillName}" không?`)) {
     return
   }

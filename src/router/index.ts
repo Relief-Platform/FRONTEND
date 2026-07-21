@@ -266,6 +266,16 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
+    path: '/admin/skills',
+    name: 'admin-skills',
+    component: () => import('@/views/admin/SkillsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Quản lý Kỹ năng',
+    },
+  },
+  {
     path: '/admin/assignments',
     name: 'admin-assignments',
     component: () => import('@/views/admin/AssignmentsView.vue'),

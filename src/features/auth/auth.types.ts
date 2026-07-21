@@ -120,11 +120,14 @@ export interface LoginResult {
  * Map từ LoginResult sau khi đăng nhập.
  */
 export interface AuthUser {
-  userId:    string    // GUID
-  fullName:  string
-  email:     string
-  role:      UserRole
-  expiresAt: string    // giữ lại để tự refresh trước khi hết hạn
+  userId:      string    // GUID
+  fullName:    string
+  email:       string
+  role:        UserRole
+  expiresAt:   string    // giữ lại để tự refresh trước khi hết hạn
+  // LoginResult/MeResult thật từ BE không trả phoneNumber (kiểm chứng 2026-07-13).
+  // Chỉ có giá trị ngay sau khi đăng ký (FE tự lưu lại từ form) — undefined nếu đăng nhập.
+  phoneNumber?: string
 }
 
 /**

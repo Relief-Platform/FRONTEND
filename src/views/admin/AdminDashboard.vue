@@ -46,6 +46,12 @@
         </div>
       </div>
 
+      <!-- ── Charts: xu hướng theo thời gian + bản đồ ──────── -->
+      <div class="dash-charts">
+        <RequestsOverTimeChart />
+        <DashboardMapPanel />
+      </div>
+
       <!-- ── Bottom section ──────────────────────────────── -->
       <div class="dash-bottom">
         <!-- Recent activity -->
@@ -136,6 +142,8 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
+import RequestsOverTimeChart from '@/components/dashboard/RequestsOverTimeChart.vue'
+import DashboardMapPanel from '@/components/dashboard/DashboardMapPanel.vue'
 import { getDashboardSummary, getAuditLogs, type DashboardSummary, type AuditLog } from '@/features/dashboard/dashboard.api'
 import { getAllWarehouses } from '@/features/warehouses/warehouses.api'
 
@@ -453,6 +461,18 @@ const quickActions = [
   background: var(--card-color);
   border-radius: 99px;
   transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ── Charts ─────────────────────────────────────────────── */
+.dash-charts {
+  display: grid;
+  grid-template-columns: 1.3fr 1fr;
+  gap: 18px;
+  margin-bottom: 18px;
+  align-items: start;
+}
+@media (max-width: 1100px) {
+  .dash-charts { grid-template-columns: 1fr; }
 }
 
 /* ── Bottom ─────────────────────────────────────────────── */
