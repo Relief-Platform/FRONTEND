@@ -151,6 +151,19 @@
               <strong>Nhu cầu:</strong>
               {{ needsSummary(selectedRequest) }}
             </div>
+
+            <p v-if="cancelError" class="error-text">{{ cancelError }}</p>
+
+            <div v-if="canCancel(selectedRequest)" class="modal-actions detail-actions">
+              <button
+                type="button"
+                class="btn-cancel-request"
+                :disabled="isCancelling"
+                @click="handleCancelRequest(selectedRequest)"
+              >
+                {{ isCancelling ? 'Đang hủy...' : 'Hủy yêu cầu' }}
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -166,6 +179,7 @@ import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   createReliefRequest,
   getReliefRequests,
+  cancelReliefRequest,
 } from '@/features/requests/requests.api'
 import {
   STATUS_LABEL_VI,
@@ -173,6 +187,7 @@ import {
   STATUS_GROUP_COLOR,
   type CreateReliefRequestPayload,
   type ReliefRequestResponse,
+  type ReliefRequestStatus,
 } from '@/features/requests/requests.types'
 import {
   badgeStyle,
@@ -317,9 +332,40 @@ const selectedRequest = ref<ReliefRequestResponse | null>(null)
 
 const openDetailModal = (item: ReliefRequestResponse) => {
   selectedRequest.value = item
+  cancelError.value = ''
   showDetailModal.value = true
 }
 const closeDetailModal = () => { showDetailModal.value = false }
+
+// ── Hủy yêu cầu ───────────────────────────────────────────
+// Theo state machine BE: chủ sở hữu chỉ hủy được khi request chưa
+// Completed/Cancelled (Pending/Approved/Assigned/InProgress đều hủy được).
+const CANCELABLE_STATUSES: ReliefRequestStatus[] = ['Pending', 'Approved', 'Assigned', 'InProgress']
+
+const canCancel = (item: ReliefRequestResponse | null): boolean => {
+  return !!item && CANCELABLE_STATUSES.includes(item.status)
+}
+
+const isCancelling = ref(false)
+const cancelError = ref('')
+
+const handleCancelRequest = async (item: ReliefRequestResponse) => {
+  if (!confirm(`Bạn có chắc chắn muốn hủy yêu cầu "${item.title}"? Hành động này không thể hoàn tác.`)) {
+    return
+  }
+
+  cancelError.value = ''
+  isCancelling.value = true
+  try {
+    await cancelReliefRequest(item.id)
+    closeDetailModal()
+    await loadRequests()
+  } catch (err) {
+    cancelError.value = (err as Error).message || 'Hủy yêu cầu thất bại. Vui lòng thử lại!'
+  } finally {
+    isCancelling.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -397,6 +443,21 @@ textarea { resize: vertical; }
 
 .detail-body { display: flex; flex-direction: column; gap: 4px; }
 .detail-row { font-size: 13.5px; color: #334155; padding: 6px 0; border-bottom: 1px solid #f8fafc; line-height: 1.5; }
+
+.detail-actions { margin-top: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9; justify-content: flex-start; }
+.btn-cancel-request {
+  background: transparent;
+  border: 1px solid #e11d48;
+  color: #e11d48;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.btn-cancel-request:hover:not(:disabled) { background: #fff1f2; }
+.btn-cancel-request:disabled { opacity: 0.6; cursor: not-allowed; }
 
 @media (max-width: 600px) {
   .page-header { flex-direction: column; gap: 14px; }
