@@ -163,15 +163,15 @@ import { useRouter } from 'vue-router'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import { getReliefRequests } from '@/features/requests/requests.api'
 import {
-  STATUS_GROUP_MAP,
   STATUS_LABEL_VI,
   type ReliefRequestResponse,
-  type StatusGroup,
 } from '@/features/requests/requests.types'
 import {
   dotStyle,
   tagStyle,
   formatDateTimeVI,
+  matchesRequesterFilterGroup,
+  type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
 
 const router = useRouter()
@@ -204,8 +204,8 @@ const recentRequests = computed(() =>
 )
 
 const totalRequests = computed(() => allRequests.value.length)
-const countByGroup = (group: StatusGroup) =>
-  allRequests.value.filter((r) => STATUS_GROUP_MAP[r.status] === group).length
+const countByGroup = (group: RequesterFilterGroup) =>
+  allRequests.value.filter((r) => matchesRequesterFilterGroup(r.status, group)).length
 
 const processingCount = computed(() => countByGroup('processing'))
 const receivedCount = computed(() => countByGroup('received'))

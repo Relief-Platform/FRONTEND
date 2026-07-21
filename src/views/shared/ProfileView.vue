@@ -31,16 +31,50 @@
           </div>
         </div>
       </BaseCard>
+
+      <BaseCard style="margin-top: var(--space-5);">
+        <h2 class="section-title">Đổi mật khẩu</h2>
+
+        <div v-if="changePasswordSuccess" class="banner banner--success">
+          {{ changePasswordSuccess }}
+        </div>
+        <div v-if="changePasswordError" class="banner banner--error">
+          {{ changePasswordError }}
+        </div>
+
+        <form @submit.prevent="handleChangePassword" class="password-form">
+          <div class="form-group">
+            <label for="old-password">Mật khẩu hiện tại</label>
+            <BaseInput id="old-password" v-model="passwordForm.oldPassword" type="password" required />
+          </div>
+          <div class="form-group">
+            <label for="new-password">Mật khẩu mới</label>
+            <BaseInput id="new-password" v-model="passwordForm.newPassword" type="password" required />
+            <p class="hint">Tối thiểu 8 ký tự.</p>
+          </div>
+          <div class="form-group">
+            <label for="confirm-password">Nhập lại mật khẩu mới</label>
+            <BaseInput id="confirm-password" v-model="passwordForm.confirmPassword" type="password" required />
+          </div>
+
+          <BaseButton type="submit" variant="primary" :loading="isChangingPassword">
+            Đổi mật khẩu
+          </BaseButton>
+        </form>
+      </BaseCard>
     </div>
   </AppLayout>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
 import { useAuthStore } from '@/stores/auth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/features/auth/auth.types'
+import { changePassword } from '@/features/auth/auth.api'
 
 const auth = useAuthStore()
 
@@ -61,6 +95,47 @@ const initials = computed(() =>
     .join('')
     .toUpperCase() ?? '?',
 )
+
+// ── Đổi mật khẩu ──────────────────────────────────────────────
+const passwordForm = reactive({
+  oldPassword: '',
+  newPassword: '',
+  confirmPassword: '',
+})
+const isChangingPassword = ref(false)
+const changePasswordError = ref('')
+const changePasswordSuccess = ref('')
+
+const handleChangePassword = async () => {
+  changePasswordError.value = ''
+  changePasswordSuccess.value = ''
+
+  if (passwordForm.newPassword.length < 8) {
+    changePasswordError.value = 'Mật khẩu mới phải có tối thiểu 8 ký tự.'
+    return
+  }
+  if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+    changePasswordError.value = 'Mật khẩu xác nhận không khớp.'
+    return
+  }
+
+  isChangingPassword.value = true
+  try {
+    await changePassword({
+      oldPassword: passwordForm.oldPassword,
+      newPassword: passwordForm.newPassword,
+      confirmPassword: passwordForm.confirmPassword,
+    })
+    changePasswordSuccess.value = 'Đổi mật khẩu thành công!'
+    passwordForm.oldPassword = ''
+    passwordForm.newPassword = ''
+    passwordForm.confirmPassword = ''
+  } catch (err) {
+    changePasswordError.value = (err as Error).message || 'Đổi mật khẩu thất bại. Vui lòng thử lại!'
+  } finally {
+    isChangingPassword.value = false
+  }
+}
 </script>
 
 <style scoped>
@@ -93,4 +168,20 @@ const initials = computed(() =>
 .info-row:last-child { border-bottom: none; }
 .info-label { font-size: 13px; color: var(--color-text-secondary); font-weight: 500; }
 .info-value  { font-size: 14px; color: var(--color-text-primary); font-weight: 600; }
+
+.section-title {
+  font-size: 16px; font-weight: 700; color: #1a3b5c;
+  margin: 0 0 var(--space-4);
+}
+.password-form { display: flex; flex-direction: column; gap: var(--space-4); max-width: 360px; }
+.form-group { display: flex; flex-direction: column; gap: 6px; }
+.form-group label { font-size: 13px; font-weight: 600; color: #2d3748; }
+.hint { font-size: 12px; color: #a0aec0; margin: 0; }
+
+.banner {
+  border-radius: 8px; padding: 10px 14px; font-size: 13px; font-weight: 600;
+  margin-bottom: var(--space-4);
+}
+.banner--success { background: #f0fdf4; border: 1px solid #bbf7d0; color: #166534; }
+.banner--error { background: #fef2f2; border: 1px solid #fca5a5; color: #991b1b; }
 </style>
