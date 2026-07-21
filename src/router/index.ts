@@ -53,6 +53,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/RegisterView.vue'),
     meta: { guestOnly: true, title: 'Đăng ký' },
   },
+  {
+    path: '/forgot-password',
+    name: 'forgot-password',
+    component: () => import('@/views/auth/ForgotPasswordView.vue'),
+    meta: { guestOnly: true, title: 'Quên mật khẩu' },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  REQUESTER – requester | coordinator | admin
