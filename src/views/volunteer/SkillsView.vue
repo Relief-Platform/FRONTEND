@@ -141,11 +141,13 @@ import {
   getVolunteerProfile,
   registerSkills,
   deleteSkill,
-  AVAILABLE_SKILLS
 } from '@/features/volunteers/volunteers.api'
-import type { VolunteerProfile, SkillItem } from '@/features/volunteers/volunteers.types'
+import { getSkills } from '@/features/skills/skills.api'
+import type { VolunteerProfile } from '@/features/volunteers/volunteers.types'
+import type { Skill } from '@/features/skills/skills.types'
 
 const profile = ref<VolunteerProfile | null>(null)
+const availableSkills = ref<Skill[]>([])
 const hasProfile = ref(true)
 const isLoading = ref(true)
 const isSubmitting = ref(false)
@@ -166,7 +168,10 @@ const loadProfile = async () => {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const data = await getVolunteerProfile()
+    const [data] = await Promise.all([
+      getVolunteerProfile(),
+      loadAvailableSkills(),
+    ])
     profile.value = data
     hasProfile.value = true
   } catch (err: unknown) {
@@ -181,16 +186,24 @@ const loadProfile = async () => {
   }
 }
 
-// Compute registered skills as SkillItem list
-const registeredSkills = computed<SkillItem[]>(() => {
+const loadAvailableSkills = async () => {
+  try {
+    availableSkills.value = await getSkills()
+  } catch (err: unknown) {
+    console.error('Failed to load skills catalog', err)
+  }
+}
+
+// Compute registered skills as Skill list
+const registeredSkills = computed<Skill[]>(() => {
   if (!profile.value) return []
-  return AVAILABLE_SKILLS.filter(s => profile.value!.skills.includes(s.name))
+  return availableSkills.value.filter(s => profile.value!.skills.includes(s.name))
 })
 
 // Compute remaining skills that can be registered
-const availableSkillsToRegister = computed<SkillItem[]>(() => {
-  if (!profile.value) return AVAILABLE_SKILLS
-  return AVAILABLE_SKILLS.filter(s => !profile.value!.skills.includes(s.name))
+const availableSkillsToRegister = computed<Skill[]>(() => {
+  if (!profile.value) return availableSkills.value
+  return availableSkills.value.filter(s => !profile.value!.skills.includes(s.name))
 })
 
 const handleAddSkill = async (skillId: string) => {
@@ -208,7 +221,7 @@ const handleAddSkill = async (skillId: string) => {
 }
 
 const handleRemoveSkill = async (skillName: string) => {
-  const targetSkill = AVAILABLE_SKILLS.find(s => s.name === skillName)
+  const targetSkill = availableSkills.value.find(s => s.name === skillName)
   const idToDelete = targetSkill ? targetSkill.id : skillName
 
   if (!confirm(`Bạn có chắc muốn hủy đăng ký kỹ năng "${skillName}" không?`)) {

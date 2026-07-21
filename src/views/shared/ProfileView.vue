@@ -5,13 +5,7 @@
 
       <BaseCard>
         <div class="profile-top">
-          <img
-            v-if="auth.user?.avatar"
-            :src="auth.user.avatar"
-            :alt="auth.user.fullName"
-            class="profile-avatar"
-          />
-          <div class="profile-initials" v-else>
+          <div class="profile-initials">
             {{ initials }}
           </div>
           <div>
@@ -29,7 +23,7 @@
           </div>
           <div class="info-row">
             <span class="info-label">Điện thoại</span>
-            <span class="info-value">{{ auth.user?.phone ?? '—' }}</span>
+            <span class="info-value">{{ auth.user?.phoneNumber ?? '—' }}</span>
           </div>
           <div class="info-row">
             <span class="info-label">Vai trò</span>
