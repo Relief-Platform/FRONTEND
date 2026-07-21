@@ -63,7 +63,7 @@
         </button>
 
         <div class="forgot-link-row">
-          <a href="#" class="forgot-link" @click.prevent="handleForgotPassword">Quên mật khẩu?</a>
+          <router-link to="/forgot-password" class="forgot-link">Quên mật khẩu?</router-link>
         </div>
       </form>
 
@@ -131,10 +131,10 @@ const handleLogin = async () => {
 }
 
 // ============================================================
-//  Quên mật khẩu — thêm logic/route sau
+//  Quên mật khẩu
 // ============================================================
 const handleForgotPassword = () => {
-  alert('Tính năng đang phát triển!')
+  router.push('/forgot-password')
 }
 </script>
 
