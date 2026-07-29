@@ -161,16 +161,16 @@ const handleResend = async () => {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center;
   min-height: 100vh;
-  background-color: #f0f2f5;
+  background: linear-gradient(rgba(15, 37, 64, 0.65), rgba(15, 37, 64, 0.8)), url('/BG.jpg') center/cover no-repeat fixed;
   padding: 40px 20px;
-  font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
 }
 
 /* ===== Logo / Header ===== */
 .header-logo {
   text-align: center;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -178,37 +178,43 @@ const handleResend = async () => {
 }
 
 .brand-name {
-  font-size: 32px;
-  margin: 0 0 4px 0;
-  font-weight: 800;
+  font-size: 36px;
+  margin: 0 0 6px 0;
+  font-weight: 900;
   letter-spacing: -0.5px;
   line-height: 1;
 }
 
 .text-navy {
-  color: #1a3b5c;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .text-orange {
-  color: #e27d24;
+  color: #fbbf24;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
 }
 
 .slogan {
-  font-size: 13px;
-  color: #4a5568;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.9);
   margin: 0;
-  font-weight: 500;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* ===== Card ===== */
 .forgot-card {
-  background-color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
   width: 100%;
   max-width: 460px;
-  border-radius: 12px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.35);
   padding: 36px 40px;
   box-sizing: border-box;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 /* ===== Title & Subtitle ===== */
