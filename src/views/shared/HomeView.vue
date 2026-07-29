@@ -71,21 +71,89 @@
           </div>
         </div>
       </section>
+
+      <!-- ══════════ VỀ CHÚNG TÔI (ABOUT US) ══════════ -->
+      <section class="section about-home-banner">
+        <div class="about-home-card">
+          <div class="about-home-text">
+            <span class="badge-tag">Về ReliefConnect</span>
+            <h2 class="about-home-title">Sứ mệnh kết nối trái tim – Vẹn tròn cứu trợ</h2>
+            <p class="about-home-desc">
+              ReliefConnect ra đời với sứ mệnh ứng dụng công nghệ để minh bạch hóa toàn bộ quy trình cứu trợ thiên tai. 
+              Chúng tôi kết nối trực tiếp nguồn lực từ các nhà hảo tâm, kho cứu trợ và tình nguyện viên tới tận tay người dân vùng lũ.
+            </p>
+            <router-link to="/about" class="btn-about-link">
+              Tìm hiểu thêm về chúng tôi →
+            </router-link>
+          </div>
+          <div class="about-home-stats">
+            <div class="home-stat-item">
+              <span class="num">10k+</span>
+              <span class="lbl">Hỗ trợ thành công</span>
+            </div>
+            <div class="home-stat-item">
+              <span class="num">5k+</span>
+              <span class="lbl">Tình nguyện viên</span>
+            </div>
+            <div class="home-stat-item">
+              <span class="num">100%</span>
+              <span class="lbl">Minh bạch thông tin</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══════════ HƯỚNG DẪN SỬ DỤNG WEB ══════════ -->
+      <section class="section">
+        <h2 class="section-title">Hướng dẫn sử dụng hệ thống</h2>
+        <p class="section-sub">Dễ dàng thao tác cho mọi đối tượng trên máy tính và điện thoại</p>
+
+        <div class="guide-cards-grid">
+          <div class="guide-quick-card">
+            <div class="guide-icon-box bg-rose">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+            </div>
+            <h4>Dành cho Người cần hỗ trợ</h4>
+            <p>Tạo yêu cầu nhanh chỉ với 2 phút. Nhập nhu cầu vật tư và vị trí để nhận hỗ trợ kịp thời.</p>
+            <router-link to="/guide" class="guide-card-link">Xem chi tiết →</router-link>
+          </div>
+
+          <div class="guide-quick-card">
+            <div class="guide-icon-box bg-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            </div>
+            <h4>Dành cho Tình nguyện viên</h4>
+            <p>Đăng ký kỹ năng, nhận thông báo nhiệm vụ cứu trợ gần nhất và cập nhật nhật ký đóng góp.</p>
+            <router-link to="/guide" class="guide-card-link">Xem chi tiết →</router-link>
+          </div>
+
+          <div class="guide-quick-card">
+            <div class="guide-icon-box bg-blue">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a4f8d" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+            </div>
+            <h4>Dành cho Điều phối & Kho</h4>
+            <p>Duyệt đơn, quản lý số lượng tồn kho vật tư và phân công tình nguyện viên chính xác.</p>
+            <router-link to="/guide" class="guide-card-link">Xem chi tiết →</router-link>
+          </div>
+        </div>
+      </section>
     </div>
 
-    <!-- ══════════ HOTLINE ══════════ -->
+    <!-- ══════════ HOTLINE & LIÊN HỆ ══════════ -->
     <div class="hotline-band">
       <div class="hotline-inner">
         <div>
-          <p class="hotline-label">Cần hỗ trợ gấp mà không thể truy cập hệ thống?</p>
-          <p class="hotline-sub">Tổng đài hoạt động 24/7, hoàn toàn miễn phí</p>
+          <p class="hotline-label">Cần hỗ trợ gấp hoặc muốn tư vấn chi tiết?</p>
+          <p class="hotline-sub">Tổng đài hoạt động 24/7, hoàn toàn miễn phí hoặc gửi tin nhắn cho chúng tôi</p>
         </div>
         <div class="hotline-contacts">
           <a href="tel:19001234" class="hotline-phone">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
             1900 1234
           </a>
-          <a href="mailto:hotro@reliefconnect.vn" class="hotline-email">hotro@reliefconnect.vn</a>
+          <router-link to="/contact" class="btn-contact-page">
+            Trang Liên hệ →
+          </router-link>
         </div>
       </div>
     </div>
@@ -309,13 +377,165 @@ const roles = [
 .hotline-email { font-size: 14px; font-weight: 600; color: #9f1239; text-decoration: none; }
 .hotline-email:hover { text-decoration: underline; }
 
+.btn-contact-page {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 22px;
+  background: #1a4f8d;
+  color: #fff;
+  border-radius: 99px;
+  font-size: 14.5px;
+  font-weight: 700;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-contact-page:hover {
+  background: #123766;
+  color: #fff;
+}
+
+/* ── About Home Banner ── */
+.about-home-banner {
+  margin: var(--space-8) 0;
+}
+.about-home-card {
+  background: linear-gradient(135deg, #1a3b5c 0%, #1a4f8d 100%);
+  border-radius: 20px;
+  padding: 40px;
+  color: #fff;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 36px;
+  align-items: center;
+  box-shadow: var(--shadow-lg);
+}
+.badge-tag {
+  display: inline-block;
+  padding: 4px 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 99px;
+  font-size: 12px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+.about-home-title {
+  font-size: 26px;
+  font-weight: 800;
+  margin-bottom: 12px;
+  line-height: 1.3;
+}
+.about-home-desc {
+  font-size: 14.5px;
+  color: rgba(255, 255, 255, 0.85);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
+.btn-about-link {
+  display: inline-block;
+  padding: 10px 22px;
+  background: #e27d24;
+  color: #fff;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 14px;
+  text-decoration: none;
+  transition: background 0.2s;
+}
+.btn-about-link:hover {
+  background: #c46a18;
+  color: #fff;
+}
+
+.about-home-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 24px;
+  border-radius: 14px;
+  backdrop-filter: blur(4px);
+}
+.home-stat-item {
+  display: flex;
+  flex-direction: column;
+}
+.home-stat-item .num {
+  font-size: 28px;
+  font-weight: 900;
+  color: #fbbf24;
+  line-height: 1;
+}
+.home-stat-item .lbl {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.75);
+  margin-top: 4px;
+}
+
+/* ── Guide Cards Grid ── */
+.guide-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 20px;
+}
+.guide-quick-card {
+  background: #fff;
+  border-radius: 14px;
+  padding: 24px;
+  box-shadow: var(--shadow-md);
+  border: 1px solid var(--color-border-soft);
+  display: flex;
+  flex-direction: column;
+  transition: transform 0.2s;
+}
+.guide-quick-card:hover {
+  transform: translateY(-4px);
+}
+.guide-icon-box {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+.bg-rose { background: #ffe4e6; }
+.bg-green { background: #f0fff4; }
+.bg-blue { background: #ebf8ff; }
+
+.guide-quick-card h4 {
+  font-size: 16.5px;
+  font-weight: 700;
+  color: #1a3b5c;
+  margin-bottom: 8px;
+}
+.guide-quick-card p {
+  font-size: 13.5px;
+  color: #718096;
+  line-height: 1.6;
+  flex: 1;
+  margin-bottom: 16px;
+}
+.guide-card-link {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: #1a4f8d;
+  text-decoration: none;
+}
+.guide-card-link:hover {
+  text-decoration: underline;
+}
+
 /* ── Responsive ── */
 @media (max-width: 900px) {
   .step-arrow { display: none; }
+  .about-home-card { grid-template-columns: 1fr; }
 }
 @media (max-width: 600px) {
   .hero-title { font-size: 40px; }
   .home-hero { padding: 56px 16px; }
   .hotline-inner { flex-direction: column; text-align: center; }
+  .about-home-card { padding: 24px; }
 }
 </style>
