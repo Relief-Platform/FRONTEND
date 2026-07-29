@@ -4,10 +4,10 @@
       <!-- ══════════ HERO ══════════ -->
       <section class="contact-hero">
         <div class="hero-container">
-          <span class="hero-badge">Hỗ trợ 24/7</span>
-          <h1 class="hero-title">Liên hệ với ReliefConnect</h1>
+          <span class="hero-badge">{{ $t('contact.hero_badge') }}</span>
+          <h1 class="hero-title">{{ $t('contact.hero_title') }}</h1>
           <p class="hero-subtitle">
-            Chúng tôi luôn sẵn sàng lắng nghe, giải đáp thắc mắc và hỗ trợ kết nối cứu trợ nhanh nhất có thể.
+            {{ $t('contact.hero_sub') }}
           </p>
         </div>
       </section>
@@ -16,16 +16,16 @@
         <div class="contact-grid">
           <!-- ══════════ THÔNG TIN LIÊN HỆ ══════════ -->
           <div class="info-sidebar">
-            <h2 class="sidebar-title">Kênh liên hệ khẩn cấp</h2>
-            <p class="sidebar-desc">Nếu bạn cần trợ giúp cứu trợ gấp hoặc báo cáo tình huống thiên tai khẩn cấp:</p>
+            <h2 class="sidebar-title">{{ $t('contact.emergency_title') }}</h2>
+            <p class="sidebar-desc">{{ $t('contact.emergency_desc') }}</p>
 
             <div class="contact-card bg-rose">
               <div class="card-icon">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
               </div>
               <div class="card-info">
-                <span class="info-label">Tổng đài Khẩn cấp 24/7</span>
-                <a href="tel:19001234" class="info-value text-rose">1900 1234 (Miễn phí)</a>
+                <span class="info-label">{{ $t('contact.hotline_247') }}</span>
+                <a href="tel:19001234" class="info-value text-rose">{{ $t('contact.free_call') }}</a>
               </div>
             </div>
 
@@ -34,7 +34,7 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
               </div>
               <div class="card-info">
-                <span class="info-label">Email hỗ trợ chung</span>
+                <span class="info-label">{{ $t('contact.email_support') }}</span>
                 <a href="mailto:hotro@reliefconnect.vn" class="info-value text-blue">hotro@reliefconnect.vn</a>
               </div>
             </div>
@@ -44,13 +44,13 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <div class="card-info">
-                <span class="info-label">Văn phòng Trung tâm điều phối</span>
-                <span class="info-text">Tầng 5, Tòa nhà Điều hành Cứu trợ Quốc gia, Q. Cầu Giấy, Hà Nội</span>
+                <span class="info-label">{{ $t('contact.office_address') }}</span>
+                <span class="info-text">{{ $t('contact.office_location') }}</span>
               </div>
             </div>
 
             <div class="social-links">
-              <span class="social-title">Theo dõi chúng tôi:</span>
+              <span class="social-title">{{ $t('contact.follow_us') }}</span>
               <div class="social-icons">
                 <a href="#" class="social-btn">Facebook</a>
                 <a href="#" class="social-btn">Zalo OA</a>
@@ -61,21 +61,21 @@
 
           <!-- ══════════ FORM GỬI TIN NHẮN ══════════ -->
           <div class="form-container">
-            <h2 class="form-title">Gửi tin nhắn cho chúng tôi</h2>
-            <p class="form-desc">Vui lòng điền thông tin bên dưới, Ban quản trị sẽ phản hồi trong thời gian sớm nhất.</p>
+            <h2 class="form-title">{{ $t('contact.form_title') }}</h2>
+            <p class="form-desc">{{ $t('contact.form_desc') }}</p>
 
             <div v-if="submitted" class="alert alert--success mb-4">
-              <strong>Cảm ơn bạn!</strong> Tin nhắn của bạn đã được gửi thành công. Chúng tôi sẽ liên hệ lại trong thời gian sớm nhất.
+              <strong>{{ $t('common.success') }}!</strong> {{ $t('contact.success_msg') }}
             </div>
 
             <form @submit.prevent="handleSubmit" class="contact-form">
               <div class="form-group">
-                <label class="form-label">Họ và tên <span class="req">*</span></label>
+                <label class="form-label">{{ $t('contact.full_name') }} <span class="req">*</span></label>
                 <input
                   v-model="form.fullName"
                   type="text"
                   class="form-input"
-                  placeholder="Nguyễn Văn A"
+                  placeholder="Nguyen Van A"
                   required
                 />
               </div>
@@ -93,7 +93,7 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">Số điện thoại</label>
+                  <label class="form-label">{{ $t('contact.phone') }}</label>
                   <input
                     v-model="form.phone"
                     type="tel"
@@ -104,9 +104,9 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">Chủ đề <span class="req">*</span></label>
+                <label class="form-label">{{ $t('contact.subject') }} <span class="req">*</span></label>
                 <select v-model="form.subject" class="form-select" required>
-                  <option value="" disabled>-- Chọn chủ đề --</option>
+                  <option value="" disabled>-- {{ $t('contact.subject') }} --</option>
                   <option value="hotro">Hỗ trợ sử dụng tài khoản</option>
                   <option value="tinhnguyen">Hỏi về Đăng ký Tình nguyện viên</option>
                   <option value="kho">Hợp tác Quyên góp / Quản lý Kho</option>
@@ -116,19 +116,19 @@
               </div>
 
               <div class="form-group">
-                <label class="form-label">Nội dung tin nhắn <span class="req">*</span></label>
+                <label class="form-label">{{ $t('contact.message') }} <span class="req">*</span></label>
                 <textarea
                   v-model="form.message"
                   class="form-textarea"
                   rows="5"
-                  placeholder="Nhập nội dung thắc mắc hoặc câu hỏi của bạn..."
+                  placeholder="..."
                   required
                 ></textarea>
               </div>
 
               <button type="submit" class="btn-submit" :disabled="loading">
-                <span v-if="loading">Đang gửi...</span>
-                <span v-else>Gửi tin nhắn ngay</span>
+                <span v-if="loading">{{ $t('contact.sending') }}</span>
+                <span v-else>{{ $t('contact.submit_btn') }} →</span>
               </button>
             </form>
           </div>

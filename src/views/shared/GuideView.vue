@@ -6,11 +6,11 @@
         <div class="hero-container">
           <div class="hero-badge">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-            Trung tâm trợ giúp & Cẩm nang ReliefConnect
+            {{ $t('guide.hero_badge') }}
           </div>
-          <h1 class="hero-title">Hướng Dẫn Sử Dụng Nền Tảng</h1>
+          <h1 class="hero-title">{{ $t('guide.hero_title') }}</h1>
           <p class="hero-subtitle">
-            Hướng dẫn từng bước trực quan cho Người cần hỗ trợ, Tình nguyện viên và Đội ngũ Điều phối cứu trợ.
+            {{ $t('guide.hero_sub') }}
           </p>
 
           <!-- Search Box -->
@@ -20,14 +20,14 @@
               v-model="searchQuery"
               type="text"
               class="hero-search-input"
-              placeholder="Nhập từ khóa tìm kiếm (ví dụ: tạo yêu cầu, tình nguyện viên, kho vật tư, hotline...)"
+              :placeholder="$t('guide.search_placeholder')"
             />
             <button v-if="searchQuery" class="clear-btn" @click="searchQuery = ''">✕</button>
           </div>
 
           <!-- Quick search tags -->
           <div class="quick-tags">
-            <span class="tag-label">Gợi ý tìm kiếm:</span>
+            <span class="tag-label">{{ $t('guide.search_tag_label') }}</span>
             <button
               v-for="tag in quickTags"
               :key="tag"
@@ -44,8 +44,8 @@
         <!-- ══════════ KHU VỰC VAI TRÒ (ROLE TABS) ══════════ -->
         <section class="roles-section">
           <div class="section-header text-center">
-            <h2 class="section-title">Bạn muốn xem hướng dẫn cho vai trò nào?</h2>
-            <p class="section-sub">Chọn vai trò để xem quy trình 4 bước chi tiết và mẹo sử dụng hiệu quả</p>
+            <h2 class="section-title">{{ $t('guide.roles_heading') }}</h2>
+            <p class="section-sub">{{ $t('guide.roles_sub') }}</p>
           </div>
 
           <div class="role-tabs">
@@ -74,79 +74,71 @@
             <div v-if="activeTab === 'requester'" key="requester" class="guide-panel panel-requester">
               <div class="panel-header">
                 <div class="panel-badge bg-rose-subtle">
-                  <span>🚨 Dành cho Người dân / Hộ gia đình cần ứng cứu</span>
+                  <span>{{ $t('guide.requester_badge') }}</span>
                 </div>
-                <h3>Quy trình 4 bước gửi & nhận cứu trợ</h3>
-                <p>Thao tác đơn giản, nhận hỗ trợ nhanh chóng ngay cả khi tín hiệu mạng yếu.</p>
+                <h3>{{ $t('guide.requester_title') }}</h3>
+                <p>{{ $t('guide.requester_sub') }}</p>
               </div>
 
               <div class="timeline-steps">
                 <div class="timeline-step">
-                  <div class="step-badge step-rose">Bước 1</div>
+                  <div class="step-badge step-rose">{{ $t('common.step') }} 1</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-rose-subtle text-rose">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><polyline points="16 11 18 13 22 9"/></svg>
                       </span>
-                      <h4>Tạo tài khoản hoặc Gửi yêu cầu nhanh</h4>
+                      <h4>{{ $t('guide.req_step_1_title') }}</h4>
                     </div>
                     <p>
-                      Đăng ký tài khoản với Số điện thoại & Họ tên. 
-                      Nếu trong tình huống khẩn cấp, bạn có thể gọi hotline <strong>1900 1234</strong> để được hỗ trợ nhập liệu giúp.
+                      {{ $t('guide.req_step_1_desc') }}
                     </p>
                     <div class="step-tip">
-                      💡 <strong>Mẹo nhỏ:</strong> Cho phép trình duyệt truy cập Vị trí GPS để hệ thống tự động xác định địa chỉ cứu hộ chính xác nhất.
+                      {{ $t('guide.req_step_1_tip') }}
                     </div>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-rose">Bước 2</div>
+                  <div class="step-badge step-rose">{{ $t('common.step') }} 2</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-orange-subtle text-orange">
-                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="17"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
                       </span>
-                      <h4>Điền nhu cầu vật tư & Mức độ ưu tiên</h4>
+                      <h4>{{ $t('guide.req_step_2_title') }}</h4>
                     </div>
                     <p>
-                      Chọn các hạng mục cần hỗ trợ (Lương thực, Nước uống, Thuốc men, Nơi trú ẩn hay Di tản). 
-                      Đánh dấu mức độ khẩn cấp (Nguy hiểm tính mạng / Cần gấp trong ngày / Bình thường).
+                      {{ $t('guide.req_step_2_desc') }}
                     </p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-rose">Bước 3</div>
+                  <div class="step-badge step-rose">{{ $t('common.step') }} 3</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-blue-subtle text-blue">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                       </span>
-                      <h4>Theo dõi tiến độ tiếp nhận & Phân công</h4>
+                      <h4>{{ $t('guide.req_step_3_title') }}</h4>
                     </div>
-                    <p>Trạng thái yêu cầu được cập nhật theo thời gian thực trên màn hình <strong>"Yêu cầu của tôi"</strong>:</p>
-                    <div class="status-pills">
-                      <span class="pill status-pending">Chờ tiếp nhận</span> ➔ 
-                      <span class="pill status-accepted">Đã duyệt</span> ➔ 
-                      <span class="pill status-delivering">Đang cứu trợ</span> ➔ 
-                      <span class="pill status-done">Hoàn thành</span>
-                    </div>
+                    <p>{{ $t('guide.req_step_3_desc') }}</p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-rose">Bước 4</div>
+                  <div class="step-badge step-rose">{{ $t('common.step') }} 4</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-green-subtle text-green">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       </span>
-                      <h4>Xác nhận đã nhận cứu trợ</h4>
+                      <h4>{{ $t('guide.req_step_4_title') }}</h4>
                     </div>
-                    <p>Khi Tình nguyện viên bàn giao nhu yếu phẩm, bấm nút <strong>"Xác nhận hoàn thành"</strong> để hoàn tất quy trình và gửi lời nhắn tới tình nguyện viên.</p>
+                    <p>{{ $t('guide.req_step_4_desc') }}</p>
                     <div class="step-actions">
-                      <router-link to="/register" class="action-btn btn-rose">Gửi yêu cầu ngay →</router-link>
+                      <router-link to="/register" class="action-btn btn-rose">{{ $t('home.request_emergency') }} →</router-link>
                     </div>
                   </div>
                 </div>
@@ -157,74 +149,72 @@
             <div v-else-if="activeTab === 'volunteer'" key="volunteer" class="guide-panel panel-volunteer">
               <div class="panel-header">
                 <div class="panel-badge bg-green-subtle">
-                  <span>💚 Dành cho Tình nguyện viên & Nhóm cứu hộ</span>
+                  <span>{{ $t('guide.volunteer_badge') }}</span>
                 </div>
-                <h3>Hướng dẫn tham gia cứu trợ cho Tình nguyện viên</h3>
-                <p>Cập nhật kỹ năng, sẵn sàng ứng phó và mang nguồn lực cứu trợ tới từng hộ dân.</p>
+                <h3>{{ $t('guide.volunteer_title') }}</h3>
+                <p>{{ $t('guide.volunteer_sub') }}</p>
               </div>
 
               <div class="timeline-steps">
                 <div class="timeline-step">
-                  <div class="step-badge step-green">Bước 1</div>
+                  <div class="step-badge step-green">{{ $t('common.step') }} 1</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-green-subtle text-green">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
                       </span>
-                      <h4>Đăng ký Kỹ năng & Vùng hoạt động</h4>
+                      <h4>{{ $t('guide.vol_step_1_title') }}</h4>
                     </div>
                     <p>
-                      Đăng nhập tài khoản TNV, truy cập <strong>"Hồ sơ cá nhân"</strong> → chọn các kỹ năng chuyên môn (lái thuyền, y tế sơ cấp cứu, bốc xếp vật tư, lái xe cứu thương) 
-                      và bán kính vùng hoạt động.
+                      {{ $t('guide.vol_step_1_desc') }}
                     </p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-green">Bước 2</div>
+                  <div class="step-badge step-green">{{ $t('common.step') }} 2</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-blue-subtle text-blue">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
                       </span>
-                      <h4>Nhận thông báo Phân công Nhiệm vụ</h4>
+                      <h4>{{ $t('guide.vol_step_2_title') }}</h4>
                     </div>
                     <p>
-                      Khi Ban điều phối phân công nhiệm vụ phù hợp với vị trí của bạn, bạn sẽ nhận được <strong>Thông báo khẩn</strong>. 
-                      Bạn có thể chọn <em>"Chấp nhận nhiệm vụ"</em> hoặc <em>"Tạm từ chối"</em> nếu bận đột xuất.
+                      {{ $t('guide.vol_step_2_desc') }}
                     </p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-green">Bước 3</div>
+                  <div class="step-badge step-green">{{ $t('common.step') }} 3</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-orange-subtle text-orange">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
                       </span>
-                      <h4>Nhận hàng từ Kho & Di chuyển tới điểm hỗ trợ</h4>
+                      <h4>{{ $t('guide.vol_step_3_title') }}</h4>
                     </div>
                     <p>
-                      Đến điểm Kho cứu trợ được chỉ định để xuất nhu yếu phẩm, mở bản đồ chỉ đường trên trang nhiệm vụ và di chuyển tới điểm của người cần hỗ trợ.
+                      {{ $t('guide.vol_step_3_desc') }}
                     </p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-green">Bước 4</div>
+                  <div class="step-badge step-green">{{ $t('common.step') }} 4</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-green-subtle text-green">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       </span>
-                      <h4>Cập nhật Hoàn thành Nhiệm vụ</h4>
+                      <h4>{{ $t('guide.vol_step_4_title') }}</h4>
                     </div>
                     <p>
-                      Xác nhận đã bàn giao hàng hóa cho người dân và ghi lại chú thích nếu có sự cố để Ban điều phối nắm tình hình.
+                      {{ $t('guide.vol_step_4_desc') }}
                     </p>
                     <div class="step-actions">
-                      <router-link to="/register" class="action-btn btn-green">Đăng ký Tình nguyện viên →</router-link>
+                      <router-link to="/register" class="action-btn btn-green">{{ $t('footer.volunteer_reg') }} →</router-link>
                     </div>
                   </div>
                 </div>
@@ -235,51 +225,51 @@
             <div v-else-if="activeTab === 'coordinator'" key="coordinator" class="guide-panel panel-coordinator">
               <div class="panel-header">
                 <div class="panel-badge bg-blue-subtle">
-                  <span>📊 Dành cho Điều phối viên & Quản lý Kho</span>
+                  <span>{{ $t('guide.coordinator_badge') }}</span>
                 </div>
-                <h3>Hướng dẫn Vận hành & Điều phối Hệ thống</h3>
-                <p>Tối ưu quy trình duyệt, phân công lực lượng và quản lý minh bạch kho vật tư.</p>
+                <h3>{{ $t('guide.coordinator_title') }}</h3>
+                <p>{{ $t('guide.coordinator_sub') }}</p>
               </div>
 
               <div class="timeline-steps">
                 <div class="timeline-step">
-                  <div class="step-badge step-blue">Bước 1</div>
+                  <div class="step-badge step-blue">{{ $t('common.step') }} 1</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-blue-subtle text-blue">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
                       </span>
-                      <h4>Giám sát Dashboard Điều phối Realtime</h4>
+                      <h4>{{ $t('guide.coor_step_1_title') }}</h4>
                     </div>
-                    <p>Theo dõi luồng yêu cầu cứu trợ đổ về trên bản đồ nhiệt (Heatmap) và danh sách phân loại khẩn cấp.</p>
+                    <p>{{ $t('guide.coor_step_1_desc') }}</p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-blue">Bước 2</div>
+                  <div class="step-badge step-blue">{{ $t('common.step') }} 2</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-orange-subtle text-orange">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
                       </span>
-                      <h4>Kiểm soát Kho & Phân bổ Nhu yếu phẩm</h4>
+                      <h4>{{ $t('guide.coor_step_2_title') }}</h4>
                     </div>
-                    <p>Khớp nối nhu cầu cứu trợ với số lượng tồn kho khả dụng tại các điểm kho lân cận để tránh thiếu hụt cục bộ.</p>
+                    <p>{{ $t('guide.coor_step_2_desc') }}</p>
                   </div>
                 </div>
 
                 <div class="timeline-step">
-                  <div class="step-badge step-blue">Bước 3</div>
+                  <div class="step-badge step-blue">{{ $t('common.step') }} 3</div>
                   <div class="step-content-card">
                     <div class="step-header">
                       <span class="step-icon-box bg-rose-subtle text-rose">
                         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
                       </span>
-                      <h4>Giao nhiệm vụ cho Tình nguyện viên phù hợp</h4>
+                      <h4>{{ $t('guide.coor_step_3_title') }}</h4>
                     </div>
-                    <p>Chọn tình nguyện viên gần nhất có đúng kỹ năng cần thiết để gán nhiệm vụ trực tiếp.</p>
+                    <p>{{ $t('guide.coor_step_3_desc') }}</p>
                     <div class="step-actions">
-                      <router-link to="/login" class="action-btn btn-blue">Đăng nhập Điều phối →</router-link>
+                      <router-link to="/login" class="action-btn btn-blue">{{ $t('nav.login') }} →</router-link>
                     </div>
                   </div>
                 </div>
@@ -291,15 +281,15 @@
         <!-- ══════════ BỘ CÂU HỎI THƯỜNG GẶP FAQ ══════════ -->
         <section class="faq-section">
           <div class="faq-header text-center">
-            <span class="faq-badge">Giải đáp thắc mắc</span>
-            <h2 class="faq-title">Câu Hỏi Thường Gặp (FAQ)</h2>
-            <p class="faq-sub">Các thắc mắc phổ biến nhất của người dùng khi sử dụng ReliefConnect</p>
+            <span class="faq-badge">FAQ</span>
+            <h2 class="faq-title">{{ $t('guide.faq_title') }}</h2>
+            <p class="faq-sub">{{ $t('guide.faq_sub') }}</p>
           </div>
 
           <div class="faq-container">
             <div v-if="filteredFaqs.length === 0" class="faq-empty text-center">
-              <p>🔍 Không tìm thấy câu hỏi nào phù hợp với từ khóa "<strong>{{ searchQuery }}</strong>".</p>
-              <button class="reset-search-btn" @click="searchQuery = ''">Xem tất cả câu hỏi</button>
+              <p>🔍 {{ $t('common.error') }}: "<strong>{{ searchQuery }}</strong>"</p>
+              <button class="reset-search-btn" @click="searchQuery = ''">{{ $t('common.see_more') }}</button>
             </div>
 
             <div v-else class="faq-accordion-list">
@@ -334,16 +324,16 @@
         <section class="help-cta-banner">
           <div class="help-cta-inner">
             <div class="help-cta-text">
-              <h3>Vẫn chưa tìm thấy câu trả lời bạn cần?</h3>
-              <p>Tổng đài viên và đội ngũ hỗ trợ kỹ thuật của ReliefConnect luôn sẵn sàng 24/7.</p>
+              <h3>{{ $t('guide.help_title') }}</h3>
+              <p>{{ $t('guide.help_sub') }}</p>
             </div>
             <div class="help-cta-buttons">
               <a href="tel:19001234" class="cta-btn btn-call">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                Gọi Hotline 1900 1234
+                {{ $t('guide.call_hotline') }}
               </a>
               <router-link to="/contact" class="cta-btn btn-chat">
-                Gửi tin nhắn hỗ trợ →
+                {{ $t('guide.send_msg') }}
               </router-link>
             </div>
           </div>
@@ -355,82 +345,91 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
+
+const { t } = useI18n()
 
 const activeTab = ref('requester')
 const openFaq = ref<number | null>(0)
 const searchQuery = ref('')
 
-const quickTags = ['gửi yêu cầu', 'tình nguyện viên', 'kho vật tư', 'hotline khẩn cấp', 'xác minh']
+const quickTags = computed(() => [
+  t('home.request_emergency'),
+  t('home.volunteer_role'),
+  t('nav.warehouse'),
+  t('home.hotline_label'),
+  t('common.confirm'),
+])
 
 function toggleFaq(index: number) {
   openFaq.value = openFaq.value === index ? null : index
 }
 
-const tabs = [
+const tabs = computed(() => [
   {
     id: 'requester',
-    label: 'Người cần hỗ trợ',
-    subtitle: 'Hướng dẫn tạo & theo dõi yêu cầu',
+    label: t('guide.tab_requester'),
+    subtitle: t('guide.tab_requester_sub'),
     color: '#e11d48',
     bg: 'rgba(225, 29, 72, 0.12)',
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>`,
   },
   {
     id: 'volunteer',
-    label: 'Tình nguyện viên',
-    subtitle: 'Quy trình nhận & ứng cứu nhiệm vụ',
+    label: t('guide.tab_volunteer'),
+    subtitle: t('guide.tab_volunteer_sub'),
     color: '#276749',
     bg: 'rgba(39, 103, 73, 0.12)',
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
   },
   {
     id: 'coordinator',
-    label: 'Điều phối & Quản trị',
-    subtitle: 'Vận hành kho & phân công lực lượng',
+    label: t('guide.tab_coordinator'),
+    subtitle: t('guide.tab_coordinator_sub'),
     color: '#1a4f8d',
     bg: 'rgba(26, 79, 141, 0.12)',
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>`,
   },
-]
+])
 
-const faqs = [
+const faqs = computed(() => [
   {
-    category: 'Chi phí',
+    category: t('common.normal'),
     tagClass: 'tag-blue',
-    question: 'Sử dụng hệ thống ReliefConnect có mất phí không?',
-    answer: 'Hoàn toàn không. ReliefConnect là giải pháp công nghệ nhân đạo phi lợi nhuận phục vụ cộng đồng. Mọi tính năng dành cho Người dân, Tình nguyện viên và Tổ chức cứu trợ đều hoàn toàn miễn phí.',
+    question: t('guide.faq_1_q'),
+    answer: t('guide.faq_1_a'),
   },
   {
-    category: 'Kỹ thuật / Offline',
+    category: t('common.urgent'),
     tagClass: 'tag-rose',
-    question: 'Nếu tôi ở vùng lũ bị mất Internet thì làm thế nào để gửi cứu trợ?',
-    answer: 'Bạn có thể gọi trực tiếp tới Hotline cứu hộ 1900 1234 (miễn phí cước gọi). Tổng đài viên 24/7 của ReliefConnect sẽ tiếp nhận tọa độ, số điện thoại và nhu cầu của bạn để tạo yêu cầu cứu trợ khẩn trên hệ thống.',
+    question: t('guide.faq_2_q'),
+    answer: t('guide.faq_2_a'),
   },
   {
-    category: 'Xác minh',
+    category: t('home.volunteer_role'),
     tagClass: 'tag-green',
-    question: 'Tình nguyện viên có cần qua kiểm duyệt kỹ năng không?',
-    answer: 'Có. Đội ngũ Điều phối viên sẽ kiểm tra thông tin liên lạc, phương tiện cứu hộ và các chứng chỉ kỹ năng (y tế, lặn cứu hộ, lái xuồng) trước khi giao các nhiệm vụ khẩn cấp nhằm đảm bảo an toàn tối đa.',
+    question: t('guide.faq_3_q'),
+    answer: t('guide.faq_3_a'),
   },
   {
-    category: 'Quản lý Kho',
+    category: t('nav.warehouse'),
     tagClass: 'tag-orange',
-    question: 'Làm thế nào để các Quỹ từ thiện / Đội cứu trợ mở Kho hàng trên ReliefConnect?',
-    answer: 'Vui lòng vào trang Liên hệ hoặc gửi thông tin tới email hotro@reliefconnect.vn. Ban quản trị hệ thống sẽ xác minh tổ chức và cấp tài khoản Quản lý Kho vật tư trong vòng 2 giờ.',
+    question: t('guide.faq_4_q'),
+    answer: t('guide.faq_4_a'),
   },
   {
-    category: 'Theo dõi',
+    category: t('common.status'),
     tagClass: 'tag-blue',
-    question: 'Làm sao để biết khi nào Tình nguyện viên mang vật tư tới nơi?',
-    answer: 'Sau khi yêu cầu được duyệt và phân công, hệ thống sẽ gửi tin nhắn SMS/Zalo kèm tên, số điện thoại và mã cứu trợ của Tình nguyện viên đang di chuyển tới địa điểm của bạn.',
+    question: t('guide.faq_5_q'),
+    answer: t('guide.faq_5_a'),
   },
-]
+])
 
 const filteredFaqs = computed(() => {
-  if (!searchQuery.value.trim()) return faqs
+  if (!searchQuery.value.trim()) return faqs.value
   const q = searchQuery.value.toLowerCase()
-  return faqs.filter(
+  return faqs.value.filter(
     (f) =>
       f.question.toLowerCase().includes(q) ||
       f.answer.toLowerCase().includes(q) ||

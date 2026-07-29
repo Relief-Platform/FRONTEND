@@ -4,11 +4,10 @@
       <!-- ══════════ HERO ══════════ -->
       <section class="about-hero">
         <div class="hero-container">
-          <span class="hero-badge">Về ReliefConnect</span>
-          <h1 class="hero-title">Sứ mệnh gắn kết – Cứu trợ kịp thời</h1>
+          <span class="hero-badge">{{ $t('about.hero_badge') }}</span>
+          <h1 class="hero-title">{{ $t('about.hero_title') }}</h1>
           <p class="hero-subtitle">
-            Nền tảng công nghệ nhân đạo kết nối trực tiếp Người cần cứu trợ, Tình nguyện viên 
-            và Đội ngũ Điều phối nhằm nâng cao hiệu quả cứu trợ thiên tai tại Việt Nam.
+            {{ $t('about.hero_sub') }}
           </p>
         </div>
       </section>
@@ -32,10 +31,9 @@
               <div class="card-icon bg-blue">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
               </div>
-              <h3>Sứ mệnh của chúng tôi</h3>
+              <h3>{{ $t('about.mission_title') }}</h3>
               <p>
-                Rút ngắn tối đa thời gian từ khi người dân gửi yêu cầu cứu trợ cho đến khi vật tư 
-                và tình nguyện viên đến tận tay họ. Sử dụng công nghệ minh bạch để không ai bị bỏ lại phía sau.
+                {{ $t('about.mission_desc') }}
               </p>
             </div>
 
@@ -43,10 +41,9 @@
               <div class="card-icon bg-orange">
                 <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
               </div>
-              <h3>Tầm nhìn phát triển</h3>
+              <h3>{{ $t('about.vision_title') }}</h3>
               <p>
-                Trở thành nền tảng số hóa quản lý cứu trợ thiên tai toàn diện hàng đầu, 
-                được các tổ chức từ thiện, tình nguyện viên và chính quyền địa phương tin tưởng ứng dụng.
+                {{ $t('about.vision_desc') }}
               </p>
             </div>
           </div>
@@ -54,8 +51,8 @@
 
         <!-- ══════════ GIÁ TRỊ CỐT LÕI ══════════ -->
         <section class="values-section">
-          <h2 class="section-title text-center">Giá trị cốt lõi</h2>
-          <p class="section-sub text-center">4 trụ cột định hình mọi hoạt động của ReliefConnect</p>
+          <h2 class="section-title text-center">{{ $t('about.values_title') }}</h2>
+          <p class="section-sub text-center">{{ $t('about.values_sub') }}</p>
 
           <div class="values-grid">
             <div class="value-card" v-for="v in coreValues" :key="v.title">
@@ -70,19 +67,16 @@
         <section class="story-section">
           <div class="story-content">
             <div class="story-text">
-              <h2>Tại sao ReliefConnect ra đời?</h2>
+              <h2>{{ $t('about.story_title') }}</h2>
               <p>
-                Trong các đợt thiên tai, lũ lụt miền Trung hay thiên tai khẩn cấp, hàng ngàn cuộc gọi 
-                cứu trợ bị trôi mất, thông tin cứu trợ thiếu tập trung khiến nơi thì dư thừa vật tư, 
-                nơi lại hoàn toàn cô lập.
+                {{ $t('about.story_text_1') }}
               </p>
               <p>
-                ReliefConnect được xây dựng nhằm giải quyết bài toán điều phối cứu trợ bằng bản đồ số, 
-                quản lý kho vật tư minh bạch và quy trình kết nối tình nguyện viên thông minh theo thời gian thực.
+                {{ $t('about.story_text_2') }}
               </p>
               <div class="story-cta">
-                <router-link to="/register" class="btn-primary">Tham gia cùng chúng tôi</router-link>
-                <router-link to="/contact" class="btn-outline">Liên hệ hợp tác</router-link>
+                <router-link to="/register" class="btn-primary">{{ $t('about.join_us') }}</router-link>
+                <router-link to="/contact" class="btn-outline">{{ $t('about.contact_partner') }}</router-link>
               </div>
             </div>
           </div>
@@ -93,37 +87,41 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 
-const stats = [
-  { value: '10,000+', label: 'Yêu cầu hỗ trợ', desc: 'Đã được tiếp nhận & xác minh' },
-  { value: '5,000+', label: 'Tình nguyện viên', desc: 'Sẵn sàng ứng phó khẩn cấp' },
-  { value: '120+', label: 'Điểm kho vật tư', desc: 'Phân bố trên toàn quốc' },
-  { value: '98%', label: 'Cứu trợ thành công', desc: 'Tỷ lệ ứng cứu hoàn thành' },
-]
+const { t } = useI18n()
 
-const coreValues = [
+const stats = computed(() => [
+  { value: '10,000+', label: t('about.stat_requests'), desc: 'Realtime verified' },
+  { value: '5,000+', label: t('about.stat_volunteers'), desc: 'Ready for emergency' },
+  { value: '120+', label: t('about.stat_warehouses'), desc: 'Nationwide coverage' },
+  { value: '98%', label: t('about.stat_success'), desc: 'Completion rate' },
+])
+
+const coreValues = computed(() => [
   {
-    title: 'Minh bạch tuyệt đối',
-    desc: 'Mọi yêu cầu, vật tư trong kho và trạng thái phân công được công khai rõ ràng, theo dõi thời gian thực.',
+    title: t('about.val_transparency'),
+    desc: t('about.val_transparency_desc'),
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#1a4f8d" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>`,
   },
   {
-    title: 'Tốc độ & Kịp thời',
-    desc: 'Tối ưu hóa quy trình duyệt và điều hướng tình nguyện viên gần nhất đến vị trí cần giúp đỡ.',
+    title: t('about.val_speed'),
+    desc: t('about.val_speed_desc'),
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>`,
   },
   {
-    title: 'Kết nối mạng lưới',
-    desc: 'Liên kết chặt chẽ giữa người dân, tình nguyện viên, quản lý kho và các đơn vị cứu trợ.',
+    title: t('about.val_network'),
+    desc: t('about.val_network_desc'),
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   },
   {
-    title: 'Nhân ái & Tôn trọng',
-    desc: 'Đặt sự an toàn, phẩm giá và nhu cầu thiết yếu của người gặp khó khăn lên hàng đầu.',
+    title: t('about.val_compassion'),
+    desc: t('about.val_compassion_desc'),
     icon: `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#e11d48" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
   },
-]
+])
 </script>
 
 <style scoped>
