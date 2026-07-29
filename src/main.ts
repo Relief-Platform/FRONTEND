@@ -8,6 +8,7 @@ import * as ElementPlusIconsVue from '@element-plus/icons-vue'
 
 import App from './App.vue'
 import router from './router'
+import { i18n } from './i18n'
 
 const app = createApp(App)
 
@@ -15,6 +16,7 @@ const app = createApp(App)
 app.use(createPinia())
 app.use(router)
 app.use(ElementPlus)
+app.use(i18n)
 
 // ── Element Plus icons (global) ──────────────────────────────
 for (const [name, component] of Object.entries(ElementPlusIconsVue)) {
