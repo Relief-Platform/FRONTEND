@@ -74,16 +74,6 @@ const routes: RouteRecordRaw[] = [
     },
   },
   {
-    path: '/requester/create',
-    name: 'create-request',
-    component: () => import('@/views/requester/CreateRequestView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: ['Requester', 'Admin'],
-      title: 'Tạo yêu cầu hỗ trợ',
-    },
-  },
-  {
     path: '/requester/notifications',
     name: 'requester-notifications',
     component: () => import('@/views/requester/NotificationsView.vue'),
@@ -91,16 +81,6 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['Requester', 'Admin'],
       title: 'Thông báo',
-    },
-  },
-  {
-    path: '/requester/request/:id',
-    name: 'request-detail',
-    component: () => import('@/views/requester/RequestDetailView.vue'),
-    meta: {
-      requiresAuth: true,
-      roles: ['Requester', 'Admin'],
-      title: 'Chi tiết yêu cầu',
     },
   },
   {
