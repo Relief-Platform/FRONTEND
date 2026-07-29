@@ -2,11 +2,11 @@
   <RequesterLayout>
     <div class="tracking-page">
       <div class="page-header">
-        <h2>Theo dõi hỗ trợ</h2>
-        <p class="subtitle">Tiến độ các yêu cầu đang được xử lý của bạn.</p>
+        <h2>{{ $t('requester.tracking_title') }}</h2>
+        <p class="subtitle">{{ $t('requester.tracking_sub') }}</p>
       </div>
 
-      <div v-if="isLoading" class="empty-card">Đang tải...</div>
+      <div v-if="isLoading" class="empty-card">{{ $t('common.loading') }}</div>
 
       <div v-else-if="activeRequests.length === 0" class="empty-card">
         <div class="empty-icon">
@@ -15,9 +15,9 @@
             <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
           </svg>
         </div>
-        <h3>Chưa có yêu cầu nào đang xử lý</h3>
-        <p class="subtitle">Các yêu cầu đã hoàn thành hoặc đã hủy sẽ không hiển thị ở đây.</p>
-        <router-link to="/requester/my-requests" class="btn-primary">Xem tất cả yêu cầu</router-link>
+        <h3>{{ $t('requester.no_active_title') }}</h3>
+        <p class="subtitle">{{ $t('requester.no_active_desc') }}</p>
+        <router-link to="/requester/my-requests" class="btn-primary">{{ $t('requester.view_all_requests') }}</router-link>
       </div>
 
       <div v-else class="tracking-list">
@@ -27,7 +27,7 @@
               <h4>{{ item.title }}</h4>
               <span class="meta">{{ item.address }} · {{ formatDateTimeVI(item.createdAt) }}</span>
             </div>
-            <span class="badge" :style="badgeStyle(item.status)">{{ STATUS_LABEL_VI[item.status] }}</span>
+            <span class="badge" :style="badgeStyle(item.status)">{{ statusLabel(item.status) }}</span>
           </div>
 
           <div class="progress-track">
@@ -50,10 +50,24 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import { getReliefRequests } from '@/features/requests/requests.api'
-import { STATUS_LABEL_VI, type ReliefRequestResponse, type ReliefRequestStatus } from '@/features/requests/requests.types'
+import { type ReliefRequestResponse, type ReliefRequestStatus } from '@/features/requests/requests.types'
 import { badgeStyle, formatDateTimeVI } from '@/features/requests/requests.helpers'
+
+const { t } = useI18n()
+
+// Nhãn trạng thái dịch trên FE, gộp theo cùng nhóm với STATUS_LABEL_VI cũ
+const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
+  Pending: 'requester.status_processing',
+  Approved: 'requester.status_processing',
+  Assigned: 'requester.status_received',
+  InProgress: 'requester.status_received',
+  Completed: 'requester.status_completed',
+  Cancelled: 'requester.status_cancelled',
+}
+const statusLabel = (status: ReliefRequestStatus) => t(STATUS_LABEL_KEY[status])
 
 const isLoading = ref(true)
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -73,16 +87,16 @@ const activeRequests = computed(() =>
 )
 
 // Timeline hiển thị theo state machine BE: Pending → Approved → Assigned → InProgress → Completed
-const TRACKING_STEPS: { status: ReliefRequestStatus; label: string }[] = [
-  { status: 'Pending', label: 'Đã gửi' },
-  { status: 'Approved', label: 'Đã duyệt' },
-  { status: 'Assigned', label: 'Đã phân công TNV' },
-  { status: 'InProgress', label: 'Đang hỗ trợ' },
-  { status: 'Completed', label: 'Hoàn thành' },
-]
+const TRACKING_STEPS = computed<{ status: ReliefRequestStatus; label: string }[]>(() => [
+  { status: 'Pending', label: t('requester.step_sent') },
+  { status: 'Approved', label: t('requester.step_approved') },
+  { status: 'Assigned', label: t('requester.step_assigned') },
+  { status: 'InProgress', label: t('requester.step_inprogress') },
+  { status: 'Completed', label: t('requester.step_completed') },
+])
 
 function currentStepIndex(item: ReliefRequestResponse): number {
-  const idx = TRACKING_STEPS.findIndex((s) => s.status === item.status)
+  const idx = TRACKING_STEPS.value.findIndex((s) => s.status === item.status)
   return idx === -1 ? 0 : idx
 }
 </script>

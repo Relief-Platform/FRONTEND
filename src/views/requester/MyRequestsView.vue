@@ -4,11 +4,11 @@
 
       <div class="page-header">
         <div>
-          <h2>Yêu cầu của tôi</h2>
-          <p class="subtitle">Danh sách tất cả yêu cầu cứu trợ bạn đã gửi</p>
+          <h2>{{ $t('requester.my_requests_title') }}</h2>
+          <p class="subtitle">{{ $t('requester.my_requests_sub') }}</p>
         </div>
         <button class="btn-primary" @click="openCreateModal">
-          + Tạo yêu cầu mới
+          {{ $t('requester.create_new') }}
         </button>
       </div>
 
@@ -27,9 +27,9 @@
 
       <!-- Danh sách -->
       <div class="card">
-        <div v-if="isLoading" class="empty-state">Đang tải...</div>
+        <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
         <div v-else-if="filteredRequests.length === 0" class="empty-state">
-          Không có yêu cầu nào phù hợp.
+          {{ $t('requester.no_matching_requests') }}
         </div>
 
         <div class="request-list" v-else>
@@ -44,8 +44,8 @@
               </div>
             </div>
             <div class="req-actions">
-              <span class="badge" :style="badgeStyle(item.status)">{{ STATUS_LABEL_VI[item.status] }}</span>
-              <button class="btn-outline" @click="openDetailModal(item)">Xem chi tiết</button>
+              <span class="badge" :style="badgeStyle(item.status)">{{ statusLabel(item.status) }}</span>
+              <button class="btn-outline" @click="openDetailModal(item)">{{ $t('requester.view_detail') }}</button>
             </div>
           </div>
         </div>
@@ -55,75 +55,75 @@
       <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
         <div class="modal-box">
           <div class="modal-header">
-            <h3>Tạo yêu cầu cứu trợ mới</h3>
+            <h3>{{ $t('requester.modal_create_title') }}</h3>
             <button class="modal-close" @click="closeCreateModal">✕</button>
           </div>
 
           <form class="modal-body" @submit.prevent="handleCreateSubmit">
             <div class="form-group">
-              <label>Tiêu đề yêu cầu <span class="required">*</span></label>
-              <input v-model="form.title" type="text" placeholder="VD: Cần hỗ trợ lương thực khẩn cấp..." required />
+              <label>{{ $t('requester.form_title_label') }} <span class="required">*</span></label>
+              <input v-model="form.title" type="text" :placeholder="$t('requester.form_title_placeholder')" required />
             </div>
 
             <div class="form-row">
               <div class="form-group half">
-                <label>Mức độ khẩn cấp <span class="required">*</span></label>
+                <label>{{ $t('requester.form_emergency_level') }} <span class="required">*</span></label>
                 <select v-model.number="form.emergencyLevel">
-                  <option :value="2">Trung bình</option>
-                  <option :value="3">Cao</option>
-                  <option :value="4">Khẩn cấp</option>
+                  <option :value="2">{{ $t('requester.level_medium') }}</option>
+                  <option :value="3">{{ $t('requester.level_high') }}</option>
+                  <option :value="4">{{ $t('requester.level_urgent') }}</option>
                 </select>
               </div>
               <div class="form-group half">
-                <label>Số người bị ảnh hưởng <span class="required">*</span></label>
+                <label>{{ $t('requester.form_affected_people') }} <span class="required">*</span></label>
                 <input v-model.number="form.affectedPeople" type="number" min="1" required />
               </div>
             </div>
 
             <div class="form-group">
-              <label>Địa chỉ cụ thể <span class="required">*</span></label>
-              <input v-model="form.address" type="text" placeholder="Số nhà, thôn/xóm, phường/xã..." required />
+              <label>{{ $t('requester.form_address') }} <span class="required">*</span></label>
+              <input v-model="form.address" type="text" :placeholder="$t('requester.form_address_placeholder')" required />
             </div>
 
             <div class="form-row">
               <div class="form-group half">
-                <label>Vĩ độ <span class="required">*</span></label>
+                <label>{{ $t('requester.form_latitude') }} <span class="required">*</span></label>
                 <input v-model.number="form.latitude" type="number" step="any" required />
               </div>
               <div class="form-group half">
-                <label>Kinh độ <span class="required">*</span></label>
+                <label>{{ $t('requester.form_longitude') }} <span class="required">*</span></label>
                 <input v-model.number="form.longitude" type="number" step="any" required />
               </div>
             </div>
-            <button type="button" class="btn-geo" @click="useCurrentLocation">📍 Dùng vị trí hiện tại</button>
+            <button type="button" class="btn-geo" @click="useCurrentLocation">{{ $t('requester.use_current_location') }}</button>
 
             <div class="form-group">
-              <label>Số điện thoại liên hệ <span class="required">*</span></label>
+              <label>{{ $t('requester.form_contact_phone') }} <span class="required">*</span></label>
               <input v-model="form.contactPhone" type="tel" required />
             </div>
 
             <div class="form-group">
-              <label>Mô tả tình trạng <span class="required">*</span></label>
+              <label>{{ $t('requester.form_description') }} <span class="required">*</span></label>
               <textarea v-model="form.description" rows="3" required></textarea>
             </div>
 
             <div class="form-group">
-              <label>Nhu cầu cần hỗ trợ</label>
+              <label>{{ $t('requester.form_needs') }}</label>
               <div class="needs-grid">
-                <label class="need-item"><input type="checkbox" v-model="form.needFood" /> Lương thực</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needWater" /> Nước sạch</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needMedicine" /> Thuốc men</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needBlanket" /> Chăn màn</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needShelter" /> Nơi trú ẩn</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needFood" /> {{ $t('requester.need_food') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needWater" /> {{ $t('requester.need_water') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needMedicine" /> {{ $t('requester.need_medicine') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needBlanket" /> {{ $t('requester.need_blanket') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needShelter" /> {{ $t('requester.need_shelter') }}</label>
               </div>
             </div>
 
             <p v-if="createError" class="error-text">{{ createError }}</p>
 
             <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeCreateModal">Hủy</button>
+              <button type="button" class="btn-outline" @click="closeCreateModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="isSubmitting">
-                {{ isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu' }}
+                {{ isSubmitting ? $t('requester.submitting') : $t('requester.btn_submit_request') }}
               </button>
             </div>
           </form>
@@ -139,16 +139,16 @@
           </div>
           <div class="modal-body detail-body">
             <span class="badge" :style="badgeStyle(selectedRequest.status)">
-              {{ STATUS_LABEL_VI[selectedRequest.status] }}
+              {{ statusLabel(selectedRequest.status) }}
             </span>
 
-            <div class="detail-row"><strong>Địa chỉ:</strong> {{ selectedRequest.address }}</div>
-            <div class="detail-row"><strong>Số người ảnh hưởng:</strong> {{ selectedRequest.affectedPeople }}</div>
-            <div class="detail-row"><strong>SĐT liên hệ:</strong> {{ selectedRequest.contactPhone }}</div>
-            <div class="detail-row"><strong>Ngày tạo:</strong> {{ formatDateTimeVI(selectedRequest.createdAt) }}</div>
-            <div class="detail-row"><strong>Mô tả:</strong> {{ selectedRequest.description }}</div>
+            <div class="detail-row"><strong>{{ $t('requester.detail_address') }}</strong> {{ selectedRequest.address }}</div>
+            <div class="detail-row"><strong>{{ $t('requester.detail_affected') }}</strong> {{ selectedRequest.affectedPeople }}</div>
+            <div class="detail-row"><strong>{{ $t('requester.detail_phone') }}</strong> {{ selectedRequest.contactPhone }}</div>
+            <div class="detail-row"><strong>{{ $t('requester.detail_created') }}</strong> {{ formatDateTimeVI(selectedRequest.createdAt) }}</div>
+            <div class="detail-row"><strong>{{ $t('requester.detail_description') }}</strong> {{ selectedRequest.description }}</div>
             <div class="detail-row">
-              <strong>Nhu cầu:</strong>
+              <strong>{{ $t('requester.detail_needs') }}</strong>
               {{ needsSummary(selectedRequest) }}
             </div>
 
@@ -161,7 +161,7 @@
                 :disabled="isCancelling"
                 @click="handleCancelRequest(selectedRequest)"
               >
-                {{ isCancelling ? 'Đang hủy...' : 'Hủy yêu cầu' }}
+                {{ isCancelling ? $t('requester.cancelling') : $t('requester.cancel_request_btn') }}
               </button>
             </div>
           </div>
@@ -175,6 +175,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   createReliefRequest,
@@ -182,7 +183,6 @@ import {
   cancelReliefRequest,
 } from '@/features/requests/requests.api'
 import {
-  STATUS_LABEL_VI,
   STATUS_GROUP_COLOR,
   type CreateReliefRequestPayload,
   type ReliefRequestResponse,
@@ -198,6 +198,18 @@ import {
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
+
+// Nhãn trạng thái dịch trên FE, gộp theo cùng nhóm với STATUS_LABEL_VI cũ
+const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
+  Pending: 'requester.status_processing',
+  Approved: 'requester.status_processing',
+  Assigned: 'requester.status_received',
+  InProgress: 'requester.status_received',
+  Completed: 'requester.status_completed',
+  Cancelled: 'requester.status_cancelled',
+}
+const statusLabel = (status: ReliefRequestStatus) => t(STATUS_LABEL_KEY[status])
 
 // ── Danh sách yêu cầu ─────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -232,10 +244,10 @@ onMounted(async () => {
 // ── Filter ────────────────────────────────────────────────
 // Tab active đổi màu theo đúng nhóm trạng thái:
 // đang xử lý = vàng, đã tiếp nhận = xanh dương, hoàn thành = xanh lá
-const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeStyle?: Record<string, string> }[] = [
-  { label: 'Tất cả', value: 'all', activeStyle: undefined },
+const filterTabs = computed<{ label: string; value: 'all' | RequesterFilterGroup; activeStyle?: Record<string, string> }[]>(() => [
+  { label: t('requester.filter_all'), value: 'all', activeStyle: undefined },
   {
-    label: 'Đang xử lý',
+    label: t('requester.filter_processing'),
     value: 'processing',
     activeStyle: {
       background: STATUS_GROUP_COLOR.pending.bg,
@@ -244,7 +256,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
     },
   },
   {
-    label: 'Đã tiếp nhận',
+    label: t('requester.filter_received'),
     value: 'received',
     activeStyle: {
       background: STATUS_GROUP_COLOR.assigned.bg,
@@ -253,7 +265,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
     },
   },
   {
-    label: 'Đã hoàn thành',
+    label: t('requester.filter_completed'),
     value: 'completed',
     activeStyle: {
       background: STATUS_GROUP_COLOR.completed.bg,
@@ -261,7 +273,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
       color: STATUS_GROUP_COLOR.completed.color,
     },
   },
-]
+])
 const activeFilter = ref<'all' | RequesterFilterGroup>('all')
 
 const filteredRequests = computed(() => {
@@ -301,7 +313,7 @@ const closeCreateModal = () => { showCreateModal.value = false }
 
 const useCurrentLocation = () => {
   if (!navigator.geolocation) {
-    alert('Trình duyệt không hỗ trợ định vị.')
+    alert(t('requester.geolocation_unsupported'))
     return
   }
   navigator.geolocation.getCurrentPosition(
@@ -309,7 +321,7 @@ const useCurrentLocation = () => {
       form.value.latitude = pos.coords.latitude
       form.value.longitude = pos.coords.longitude
     },
-    () => alert('Không thể lấy vị trí hiện tại. Vui lòng nhập tay.'),
+    () => alert(t('requester.geolocation_failed')),
   )
 }
 
@@ -321,7 +333,7 @@ const handleCreateSubmit = async () => {
     closeCreateModal()
     await loadRequests()
   } catch (err) {
-    createError.value = (err as Error).message || 'Gửi yêu cầu thất bại. Vui lòng thử lại!'
+    createError.value = (err as Error).message || t('requester.create_failed')
   } finally {
     isSubmitting.value = false
   }
@@ -351,7 +363,7 @@ const isCancelling = ref(false)
 const cancelError = ref('')
 
 const handleCancelRequest = async (item: ReliefRequestResponse) => {
-  if (!confirm(`Bạn có chắc chắn muốn hủy yêu cầu "${item.title}"? Hành động này không thể hoàn tác.`)) {
+  if (!confirm(t('requester.cancel_confirm', { title: item.title }))) {
     return
   }
 
@@ -362,7 +374,7 @@ const handleCancelRequest = async (item: ReliefRequestResponse) => {
     closeDetailModal()
     await loadRequests()
   } catch (err) {
-    cancelError.value = (err as Error).message || 'Hủy yêu cầu thất bại. Vui lòng thử lại!'
+    cancelError.value = (err as Error).message || t('requester.cancel_failed')
   } finally {
     isCancelling.value = false
   }

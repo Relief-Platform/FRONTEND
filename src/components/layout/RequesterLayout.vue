@@ -83,6 +83,27 @@
         </div>
 
         <div class="topbar-right">
+          <!-- Language Switcher -->
+          <div class="lang-switch">
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'vi' }"
+              @click="changeLang('vi')"
+              title="Tiếng Việt"
+            >
+              🇻🇳 VI
+            </button>
+            <span class="lang-divider">|</span>
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'en' }"
+              @click="changeLang('en')"
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+
           <!-- Notification Button -->
           <button class="topbar-icon-btn" title="Thông báo" @click="router.push('/requester/notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -124,15 +145,23 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { locale } = useI18n()
 
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
 const hasUnreadNotifications = ref(true)
+
+const currentLang = computed(() => locale.value)
+function changeLang(lang: 'vi' | 'en'): void {
+  locale.value = lang
+  localStorage.setItem('app_lang', lang)
+}
 
 const roleLabel = computed(() => (auth.role === 'requester' ? 'Người yêu cầu hỗ trợ' : auth.role ?? ''))
 
@@ -443,6 +472,35 @@ const vClickOutside = {
 .topbar-name { color: #1a1a2e; font-weight: 700; }
 
 .topbar-right { display: flex; align-items: center; gap: 10px; }
+
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f1f5f9;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid #e2e8f0;
+}
+.lang-btn {
+  background: none;
+  border: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  cursor: pointer;
+  padding: 3px 6px;
+  border-radius: 99px;
+  transition: all 0.15s ease;
+}
+.lang-btn:hover { color: #276749; }
+.lang-btn.active {
+  background: #ffffff;
+  color: #276749;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+.lang-divider { font-size: 11px; color: #cbd5e1; }
+
 .topbar-icon-btn {
   position: relative;
   width: 38px;

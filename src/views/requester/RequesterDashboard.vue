@@ -4,13 +4,13 @@
       <!-- Banner khẩn cấp -->
       <section class="banner-section">
         <div class="banner-content">
-          <h3 class="highlight-text">KHI BẠN CẦN HỖ TRỢ,</h3>
-          <h2 class="main-heading">Chúng tôi luôn sẵn sàng!</h2>
-          <p class="sub-text">Tạo yêu cầu cứu trợ khẩn cấp để được hỗ trợ nhanh nhất.</p>
+          <h3 class="highlight-text">{{ $t('requester.banner_highlight') }}</h3>
+          <h2 class="main-heading">{{ $t('requester.banner_title') }}</h2>
+          <p class="sub-text">{{ $t('requester.banner_desc') }}</p>
         </div>
         <button class="btn-emergency" @click="goToCreate">
           <svg class="alert-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-          YÊU CẦU CỨU TRỢ KHẨN CẤP
+          {{ $t('requester.banner_btn') }}
         </button>
       </section>
 
@@ -19,10 +19,10 @@
         <div>
           <div class="role-badge">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 8v4l3 3"/></svg>
-            Người yêu cầu hỗ trợ
+            {{ $t('requester.role_badge') }}
           </div>
-          <h1 class="dash-title">Tổng quan yêu cầu</h1>
-          <p class="dash-sub">Theo dõi tình trạng các yêu cầu cứu trợ của bạn</p>
+          <h1 class="dash-title">{{ $t('requester.dashboard_title') }}</h1>
+          <p class="dash-sub">{{ $t('requester.dashboard_sub') }}</p>
         </div>
         <div class="dash-date">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -64,11 +64,11 @@
         <!-- Cột trái: Yêu cầu gần đây -->
         <section class="dash-panel recent-requests">
           <div class="panel-header">
-            <h2 class="panel-title">Yêu cầu gần đây</h2>
-            <a href="#" class="panel-link" @click.prevent="router.push('/requester/my-requests')">Xem tất cả →</a>
+            <h2 class="panel-title">{{ $t('requester.recent_requests') }}</h2>
+            <a href="#" class="panel-link" @click.prevent="router.push('/requester/my-requests')">{{ $t('requester.see_all') }}</a>
           </div>
-          <div v-if="isLoading" class="empty-state">Đang tải...</div>
-          <div v-else-if="recentRequests.length === 0" class="empty-state">Bạn chưa gửi yêu cầu nào.</div>
+          <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
+          <div v-else-if="recentRequests.length === 0" class="empty-state">{{ $t('requester.no_requests') }}</div>
           <div class="request-list" v-else>
             <div class="request-item" v-for="item in recentRequests" :key="item.id">
               <!-- Màu dot/tag lấy từ STATUS_GROUP_COLOR: vàng / xanh dương / xanh lá -->
@@ -78,7 +78,7 @@
                 <p class="request-meta">{{ item.time }}</p>
               </div>
               <span class="request-tag" :style="tagStyle(item.status)">{{ item.statusText }}</span>
-              <button class="btn-outline" @click="goToDetail(item.id)">Chi tiết</button>
+              <button class="btn-outline" @click="goToDetail(item.id)">{{ $t('requester.detail_btn') }}</button>
             </div>
           </div>
         </section>
@@ -87,7 +87,7 @@
         <section class="right-column">
           <div class="dash-panel">
             <div class="panel-header">
-              <h2 class="panel-title">Hành động nhanh</h2>
+              <h2 class="panel-title">{{ $t('requester.quick_actions') }}</h2>
             </div>
             <div class="quick-actions">
               <button
@@ -126,22 +126,22 @@
                 </svg>
                 <div class="ring-label">
                   <span class="ring-pct">{{ progressPercent }}%</span>
-                  <span class="ring-sub">hoàn thành</span>
+                  <span class="ring-sub">{{ $t('requester.progress_pct_label') }}</span>
                 </div>
               </div>
               <div class="progress-info">
-                <p class="progress-info-title">Tiến độ xử lý yêu cầu</p>
-                <p class="progress-info-desc">Bạn có {{ completedRequests }} / {{ totalRequests }} yêu cầu đã được hoàn thành</p>
+                <p class="progress-info-title">{{ $t('requester.progress_title') }}</p>
+                <p class="progress-info-desc">{{ $t('requester.progress_desc', { completed: completedRequests, total: totalRequests }) }}</p>
                 <div class="progress-legend">
-                  <span class="legend-dot" style="background: #ea580c"/> <span>Hoàn thành: {{ completedRequests }}</span>
-                  <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>Còn lại: {{ totalRequests - completedRequests }}</span>
+                  <span class="legend-dot" style="background: #ea580c"/> <span>{{ $t('requester.legend_completed') }}: {{ completedRequests }}</span>
+                  <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>{{ $t('requester.legend_remaining') }}: {{ totalRequests - completedRequests }}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div class="dash-panel emergency-contact">
-            <p class="contact-title">Thông tin liên hệ khẩn cấp</p>
+            <p class="contact-title">{{ $t('requester.emergency_contact_title') }}</p>
             <p class="phone">
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 8px; vertical-align: middle;"><path stroke-linecap="round" stroke-linejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/></svg>
               1900 1234
@@ -160,11 +160,12 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import { getReliefRequests } from '@/features/requests/requests.api'
 import {
-  STATUS_LABEL_VI,
   type ReliefRequestResponse,
+  type ReliefRequestStatus,
 } from '@/features/requests/requests.types'
 import {
   dotStyle,
@@ -175,6 +176,18 @@ import {
 } from '@/features/requests/requests.helpers'
 
 const router = useRouter()
+const { t } = useI18n()
+
+// Nhãn trạng thái dịch trên FE, gộp theo cùng nhóm với STATUS_LABEL_VI
+const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
+  Pending: 'requester.status_processing',
+  Approved: 'requester.status_processing',
+  Assigned: 'requester.status_received',
+  InProgress: 'requester.status_received',
+  Completed: 'requester.status_completed',
+  Cancelled: 'requester.status_cancelled',
+}
+const statusLabel = (status: ReliefRequestStatus) => t(STATUS_LABEL_KEY[status])
 
 const currentDate = computed(() =>
   new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
@@ -199,7 +212,7 @@ const recentRequests = computed(() =>
       title: r.title,
       time: formatDateTimeVI(r.createdAt),
       status: r.status, // giữ status gốc, màu sắc do helpers quyết định
-      statusText: STATUS_LABEL_VI[r.status],
+      statusText: statusLabel(r.status),
     })),
 )
 
@@ -220,10 +233,10 @@ const shareOfTotal = (count: number) =>
 // Màu stat card đồng bộ quy ước: xử lý = vàng, tiếp nhận = xanh dương, hoàn thành = xanh lá
 const statCards = computed(() => [
   {
-    label: 'Yêu cầu đang xử lý',
+    label: t('requester.stat_processing'),
     value: String(processingCount.value),
-    unit: 'yêu cầu',
-    trend: 'Cần theo dõi',
+    unit: t('requester.stat_unit'),
+    trend: t('requester.trend_watch'),
     trendUp: false,
     progress: shareOfTotal(processingCount.value),
     color: '#b45309',
@@ -231,10 +244,10 @@ const statCards = computed(() => [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>`,
   },
   {
-    label: 'Đã tiếp nhận',
+    label: t('requester.stat_received'),
     value: String(receivedCount.value),
-    unit: 'yêu cầu',
-    trend: 'Đang triển khai',
+    unit: t('requester.stat_unit'),
+    trend: t('requester.trend_progress'),
     trendUp: false,
     progress: shareOfTotal(receivedCount.value),
     color: '#1d4ed8',
@@ -242,10 +255,10 @@ const statCards = computed(() => [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#1d4ed8" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12V8a2 2 0 0 0-2-2h-3l-2-2H9L7 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h6"/><circle cx="17" cy="17" r="4"/><path d="M17 15.5v3"/></svg>`,
   },
   {
-    label: 'Đã hoàn thành',
+    label: t('requester.stat_completed'),
     value: String(completedRequests.value),
-    unit: 'yêu cầu',
-    trend: 'Đã hỗ trợ xong',
+    unit: t('requester.stat_unit'),
+    trend: t('requester.trend_done'),
     trendUp: false,
     progress: shareOfTotal(completedRequests.value),
     color: '#15803d',
@@ -253,10 +266,10 @@ const statCards = computed(() => [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#15803d" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`,
   },
   {
-    label: 'Tổng yêu cầu đã gửi',
+    label: t('requester.stat_total'),
     value: String(totalRequests.value),
-    unit: 'yêu cầu',
-    trend: 'Từ trước đến nay',
+    unit: t('requester.stat_unit'),
+    trend: t('requester.trend_alltime'),
     trendUp: false,
     progress: 100,
     color: '#6b46c1',
@@ -267,38 +280,38 @@ const statCards = computed(() => [
 
 const goToCreate = () => router.push({ path: '/requester/my-requests', query: { create: 'true' } })
 
-const quickActions = [
+const quickActions = computed(() => [
   {
-    label: 'Tạo yêu cầu mới',
+    label: t('requester.qa_create'),
     color: '#e11d48',
     action: goToCreate,
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>`,
   },
   {
-    label: 'Yêu cầu của tôi',
+    label: t('requester.qa_my_requests'),
     color: '#3182ce',
     action: () => router.push('/requester/my-requests'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
   },
   {
-    label: 'Theo dõi hỗ trợ',
+    label: t('requester.qa_tracking'),
     color: '#6b46c1',
     action: () => router.push('/requester/tracking'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
   },
   {
-    label: 'Hồ sơ cá nhân',
+    label: t('requester.qa_profile'),
     color: '#276749',
     action: () => router.push('/profile'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
   },
   {
-    label: 'Trở thành TNV',
+    label: t('requester.qa_become_volunteer'),
     color: '#7c3aed',
     action: () => router.push('/requester/become-volunteer'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   },
-]
+])
 
 const goToDetail = (id: string) => {
   router.push({ path: '/requester/my-requests', query: { id } })
