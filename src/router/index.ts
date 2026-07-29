@@ -32,6 +32,24 @@ const routes: RouteRecordRaw[] = [
     meta: { title: 'Trang chủ' }, // Không requiresAuth → guest OK
   },
   {
+    path: '/about',
+    name: 'about',
+    component: () => import('@/views/shared/AboutView.vue'),
+    meta: { title: 'Về chúng tôi' },
+  },
+  {
+    path: '/guide',
+    name: 'guide',
+    component: () => import('@/views/shared/GuideView.vue'),
+    meta: { title: 'Hướng dẫn sử dụng' },
+  },
+  {
+    path: '/contact',
+    name: 'contact',
+    component: () => import('@/views/shared/ContactView.vue'),
+    meta: { title: 'Liên hệ' },
+  },
+  {
     path: '/profile',
     name: 'profile',
     component: () => import('@/views/shared/ProfileView.vue'),

@@ -7,8 +7,11 @@
       </router-link>
 
       <div class="navbar__links">
-        <!-- Public link -->
+        <!-- Public links -->
         <router-link to="/home" class="nav-link">Trang chủ</router-link>
+        <router-link to="/about" class="nav-link">Về chúng tôi</router-link>
+        <router-link to="/guide" class="nav-link">Hướng dẫn</router-link>
+        <router-link to="/contact" class="nav-link">Liên hệ</router-link>
 
         <!-- Requester + Admin -->
         <router-link
@@ -84,14 +87,53 @@
     </nav>
 
     <!-- ── Page content ──────────────────────────────────────── -->
-    <!-- SLOT chứ không phải RouterView: AppLayout được dùng kiểu
-         <AppLayout>...nội dung trang...</AppLayout> bên trong các view.
-         RouterView ở đây chỉ render route CON (không có) → thân trang trống. -->
     <main class="app-layout__main">
       <slot>
         <RouterView />
       </slot>
     </main>
+
+    <!-- ── Global Footer ────────────────────────────────────── -->
+    <footer class="app-footer">
+      <div class="footer-inner">
+        <div class="footer-brand">
+          <router-link to="/home" class="footer-logo">
+            <span class="brand-navy-light">Relief</span><span class="brand-orange">Connect</span>
+          </router-link>
+          <p class="footer-desc">
+            Nền tảng kết nối cứu trợ thiên tai khẩn cấp, minh bạch và kịp thời cho cộng đồng Việt Nam.
+          </p>
+        </div>
+
+        <div class="footer-links-group">
+          <div class="footer-col">
+            <h4 class="footer-heading">Khám phá</h4>
+            <router-link to="/home">Trang chủ</router-link>
+            <router-link to="/about">Về chúng tôi</router-link>
+            <router-link to="/guide">Hướng dẫn sử dụng</router-link>
+            <router-link to="/contact">Liên hệ hỗ trợ</router-link>
+          </div>
+
+          <div class="footer-col">
+            <h4 class="footer-heading">Tham gia</h4>
+            <router-link to="/register">Gửi yêu cầu cứu trợ</router-link>
+            <router-link to="/register">Đăng ký Tình nguyện viên</router-link>
+            <router-link to="/login">Đăng nhập tài khoản</router-link>
+          </div>
+
+          <div class="footer-col">
+            <h4 class="footer-heading">Khẩn cấp 24/7</h4>
+            <a href="tel:19001234" class="footer-phone">📞 1900 1234</a>
+            <a href="mailto:hotro@reliefconnect.vn">✉ hotro@reliefconnect.vn</a>
+            <span class="footer-addr">📍 Tầng 5, Tòa nhà Cứu hộ Quốc gia, Hà Nội</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>© 2026 ReliefConnect. Tất cả quyền được bảo lưu.</p>
+      </div>
+    </footer>
   </div>
 </template>
 
@@ -238,9 +280,92 @@ const vClickOutside = {
 /* ── Main ── */
 .app-layout__main { flex: 1; background: var(--color-bg); }
 
+/* ── Footer ── */
+.app-footer {
+  background: #0f2540;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 48px 24px 24px;
+  margin-top: auto;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+.footer-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  gap: 48px;
+}
+.footer-logo {
+  font-size: 24px;
+  font-weight: 900;
+  text-decoration: none;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.brand-navy-light { color: #ffffff; }
+.footer-desc {
+  font-size: 13.5px;
+  line-height: 1.6;
+  color: rgba(255, 255, 255, 0.65);
+}
+.footer-links-group {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+.footer-heading {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fbbf24;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.footer-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.footer-col a {
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 13.5px;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.footer-col a:hover {
+  color: #ffffff;
+}
+.footer-phone {
+  font-weight: 800;
+  color: #fbbf24 !important;
+  font-size: 15px !important;
+}
+.footer-addr {
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.5;
+  margin-top: 4px;
+}
+.footer-bottom {
+  max-width: 1200px;
+  margin: 36px auto 0;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  text-align: center;
+  font-size: 12.5px;
+  color: rgba(255, 255, 255, 0.45);
+}
+
+@media (max-width: 900px) {
+  .footer-inner { grid-template-columns: 1fr; gap: 32px; }
+  .footer-links-group { grid-template-columns: 1fr 1fr; }
+}
 @media (max-width: 768px) {
   .navbar { padding: 0 var(--space-4); }
   .navbar__links { display: none; }
   .user-info { display: none; }
+}
+@media (max-width: 500px) {
+  .footer-links-group { grid-template-columns: 1fr; }
 }
 </style>
