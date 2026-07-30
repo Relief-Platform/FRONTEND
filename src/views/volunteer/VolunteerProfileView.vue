@@ -69,13 +69,13 @@
 
             <!-- Profile Form / View -->
             <form @submit.prevent="saveProfile">
-              <!-- Account (Readonly from user store) -->
+              <!-- Account (Readonly from profile / user store) -->
               <div class="user-summary">
                 <div class="avatar-large">{{ initials }}</div>
                 <div class="user-meta">
-                  <h3>{{ authStore.user?.fullName }}</h3>
-                  <p class="user-email">{{ authStore.user?.email }}</p>
-                  <p class="user-phone">{{ $t('volunteer.profile_phone', { phone: authStore.user?.phoneNumber ?? $t('volunteer.profile_not_updated') }) }}</p>
+                  <h3>{{ profile?.fullName || authStore.user?.fullName }}</h3>
+                  <p class="user-email">{{ profile?.email || authStore.user?.email }}</p>
+                  <p class="user-phone">{{ $t('volunteer.profile_phone', { phone: profile?.phoneNumber || authStore.user?.phoneNumber || $t('volunteer.profile_not_updated') }) }}</p>
                 </div>
               </div>
 
@@ -176,7 +176,7 @@
             <template #header>
               <div class="card-header-flex">
                 <span>{{ $t('volunteer.profile_skills_title') }}</span>
-                <span class="skills-count" v-if="profile">{{ $t('volunteer.profile_skills_count', { count: profile.skills.length }) }}</span>
+                <span class="skills-count" v-if="profile && profile.skills">{{ $t('volunteer.profile_skills_count', { count: profile.skills.length }) }}</span>
               </div>
             </template>
  
@@ -189,7 +189,7 @@
             </div>
  
             <div v-else class="skills-manager">
-              <div v-if="profile.skills.length === 0" class="no-skills-state">
+              <div v-if="!profile.skills || profile.skills.length === 0" class="no-skills-state">
                 {{ $t('volunteer.profile_no_skills') }}
               </div>
 
@@ -312,7 +312,7 @@ const form = reactive({
 
 // Computed
 const initials = computed(() => {
-  const name = authStore.user?.fullName || ''
+  const name = profile.value?.fullName || authStore.user?.fullName || ''
   return name
     .split(' ')
     .slice(-2)
@@ -338,9 +338,8 @@ const statusClass = computed(() => ({
 // Filter available skills that the user hasn't registered yet
 const registerableSkills = computed(() => {
   if (!profile.value) return availableSkills.value
-  return availableSkills.value.filter(
-    (skill) => !profile.value!.skills.includes(skill.name)
-  )
+  const registeredIds = new Set(profile.value.skills.map((s) => s.skillId))
+  return availableSkills.value.filter((skill) => !registeredIds.has(skill.id))
 })
 
 const selectedSkillDescription = computed(() => {
@@ -372,7 +371,11 @@ const loadProfile = async () => {
   errorMessage.value = ''
   try {
     const [data] = await Promise.all([getVolunteerProfile(), loadAvailableSkills()])
-    profile.value = data
+    // Guard: BE có thể trả về skills: null thay vì [] khi chưa có kỹ năng nào
+    profile.value = {
+      ...data,
+      skills: Array.isArray(data.skills) ? data.skills : [],
+    }
     // Map data to form
     form.address = data.address
     form.latitude = data.latitude

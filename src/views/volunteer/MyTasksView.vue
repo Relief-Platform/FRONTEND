@@ -121,69 +121,16 @@ const filters = [
   { value: 'completed', labelKey: 'volunteer.tasks_filter_completed' },
 ]
 
-const mockTasks: TaskItem[] = [
-  {
-    id: 1,
-    title: 'Cứu trợ tại Quảng Ninh',
-    address: 'Bãi biển Cửa Ông, Quảng Ninh',
-    date: '10/07/2026',
-    time: '08:00 - 12:00',
-    progress: 68,
-    status: 'ongoing',
-    statusLabel: 'Đang thực hiện',
-    note: 'Đã phân phát 120 thùng cứu trợ',
-  },
-  {
-    id: 2,
-    title: 'Phát quà cho người bị ảnh hưởng lũ lụt',
-    address: 'Đường Nguyễn Huệ, Đà Nẵng',
-    date: '12/07/2026',
-    time: '13:00 - 17:00',
-    progress: 32,
-    status: 'upcoming',
-    statusLabel: 'Sắp diễn ra',
-    note: 'Chuẩn bị nhóm vận chuyển và quà hỗ trợ',
-  },
-  {
-    id: 3,
-    title: 'Vệ sinh môi trường tại khu dân cư',
-    address: 'Phường 8, TP. Vũng Tàu',
-    date: '14/07/2026',
-    time: '07:30 - 10:30',
-    progress: 100,
-    status: 'completed',
-    statusLabel: 'Đã hoàn thành',
-    note: 'Đã hoàn tất và gửi báo cáo',
-  },
-  {
-    id: 4,
-    title: 'Hỗ trợ sơ cấp tại lễ hội cộng đồng',
-    address: 'Sân vận động Hòa Bình, Hà Nội',
-    date: '18/07/2026',
-    time: '15:00 - 18:00',
-    progress: 76,
-    status: 'ongoing',
-    statusLabel: 'Đang thực hiện',
-    note: 'Đội y tế đã sẵn sàng tại điểm tập kết',
-  },
-]
-
 const tasks = ref<TaskItem[]>([])
 
 async function loadTasks() {
   isLoading.value = true
   errorMessage.value = ''
   try {
-    const result = await getMyTasks()
-    if (result.length > 0) {
-      tasks.value = result
-    } else {
-      tasks.value = mockTasks
-      errorMessage.value = t('volunteer.tasks_msg_no_server_using_mock')
-    }
-  } catch {
-    tasks.value = mockTasks
-    errorMessage.value = t('volunteer.tasks_msg_api_failed_using_mock')
+    tasks.value = await getMyTasks()
+  } catch (err: any) {
+    tasks.value = []
+    errorMessage.value = err?.message || 'Không thể tải danh sách nhiệm vụ.'
   } finally {
     isLoading.value = false
   }

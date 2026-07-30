@@ -85,7 +85,7 @@
                 <span class="status-badge approved">{{ $t('volunteer.skills_active_badge') }}</span>
                 <button
                   class="btn-delete-skill"
-                  @click="handleRemoveSkill(skill.id, skill.name)"
+                  @click="handleRemoveSkill(getVolunteerSkillId(skill.id), skill.name)"
                   :disabled="isSubmitting"
                 >
                   {{ $t('volunteer.skills_btn_delete') }}
@@ -200,17 +200,52 @@ const loadAvailableSkills = async () => {
   }
 }
 
+// Helper: check if a string looks like a GUID
+function isGuid(val: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(val)
+}
+
 // Compute registered skills as Skill list
 const registeredSkills = computed<Skill[]>(() => {
   if (!profile.value) return []
-  return availableSkills.value.filter(s => profile.value!.skills.includes(s.name))
+  const vs = profile.value.skills
+  // Nếu BE trả string[] (name), skillId = name → match theo name
+  const useNameMatch = vs.length > 0 && !isGuid(vs[0].skillId)
+  if (useNameMatch) {
+    const registeredNames = new Set(vs.map((s) => s.name.toLowerCase()))
+    return availableSkills.value.filter((s) => registeredNames.has(s.name.toLowerCase()))
+  }
+  const registeredSkillIds = new Set(vs.map((s) => s.skillId))
+  return availableSkills.value.filter((s) => registeredSkillIds.has(s.id))
 })
 
 // Compute remaining skills that can be registered
 const availableSkillsToRegister = computed<Skill[]>(() => {
   if (!profile.value) return availableSkills.value
-  return availableSkills.value.filter(s => !profile.value!.skills.includes(s.name))
+  const vs = profile.value.skills
+  const useNameMatch = vs.length > 0 && !isGuid(vs[0].skillId)
+  if (useNameMatch) {
+    const registeredNames = new Set(vs.map((s) => s.name.toLowerCase()))
+    return availableSkills.value.filter((s) => !registeredNames.has(s.name.toLowerCase()))
+  }
+  const registeredSkillIds = new Set(vs.map((s) => s.skillId))
+  return availableSkills.value.filter((s) => !registeredSkillIds.has(s.id))
 })
+
+/**
+ * Lấy VolunteerSkill.id (join-table record) để gọi DELETE /volunteers/skills/{id}
+ * bằng cách tìm ngược từ Skill catalog id → VolunteerSkill.skillId hoặc name
+ */
+function getVolunteerSkillId(catalogSkillId: string): string {
+  if (!profile.value) return catalogSkillId
+  // Tìm theo skillId (GUID) trước, rồi fallback tìm theo catalog skill name
+  const catalogSkill = availableSkills.value.find((s) => s.id === catalogSkillId)
+  const vs = profile.value.skills.find(
+    (s) => s.skillId === catalogSkillId ||
+           (catalogSkill && s.name.toLowerCase() === catalogSkill.name.toLowerCase()),
+  )
+  return vs?.id ?? catalogSkillId
+}
 
 const handleAddSkill = async (skillId: string) => {
   isSubmitting.value = true
@@ -233,6 +268,7 @@ const handleRemoveSkill = async (skillId: string, skillName: string) => {
 
   isSubmitting.value = true
   try {
+    // skillId ở đây là VolunteerSkill.id (join-table record ID) để DELETE /volunteers/skills/{id}
     await deleteSkill(skillId)
     triggerNotification('success', t('volunteer.skills_msg_unregister_success', { name: skillName }))
     await loadProfile()

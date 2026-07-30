@@ -68,28 +68,28 @@ function extractList(payload: unknown): RawTask[] {
 // ── API functions ─────────────────────────────────────────────
 
 /**
- * Lấy danh sách nhiệm vụ của tình nguyện viên đang đăng nhập.
- * Endpoint: GET /volunteer/tasks
+ * Lấy danh sách nhiệm vụ (assignments) của tình nguyện viên đang đăng nhập.
+ * Endpoint: GET /api/assignments
  */
 export async function getMyTasks(): Promise<TaskItem[]> {
-  const { data } = await http.get<unknown>('/volunteer/tasks')
+  const { data } = await http.get<unknown>('/assignments')
   return extractList(data).map((item, i) => normalizeTask(item, i))
 }
 
 /**
  * Lấy nhiệm vụ theo trạng thái.
- * Endpoint: GET /volunteer/tasks?status=ongoing|upcoming|completed
+ * Endpoint: GET /api/assignments
  */
 export async function getMyTasksByStatus(status: TaskStatus): Promise<TaskItem[]> {
-  const { data } = await http.get<unknown>('/volunteer/tasks', { params: { status } })
+  const { data } = await http.get<unknown>('/assignments', { params: { status } })
   return extractList(data).map((item, i) => normalizeTask(item, i))
 }
 
 /**
  * Lấy chi tiết một nhiệm vụ.
- * Endpoint: GET /volunteer/tasks/:id
+ * Endpoint: GET /api/assignments/:id
  */
 export async function getTaskById(id: string | number): Promise<TaskItem> {
-  const { data } = await http.get<RawTask>(`/volunteer/tasks/${id}`)
+  const { data } = await http.get<RawTask>(`/assignments/${id}`)
   return normalizeTask(data, 0)
 }

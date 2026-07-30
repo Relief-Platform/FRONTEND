@@ -49,44 +49,7 @@ function ensureOfflineRequests(): ReliefRequestResponse[] {
   const existing = readOfflineRequests()
   if (existing.length > 0) return existing
 
-  const seeded: ReliefRequestResponse[] = [
-    {
-      id: 'mock-1',
-      title: 'Cần hỗ trợ lương thực khẩn cấp',
-      description: 'Gia đình đang thiếu thực phẩm sau mưa lũ.',
-      address: 'Thôn A, xã B',
-      latitude: 16.4637,
-      longitude: 107.5909,
-      emergencyLevel: 4,
-      affectedPeople: 8,
-      contactPhone: '0909123456',
-      status: 'Pending',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 3).toISOString(),
-      needFood: true,
-      needWater: true,
-      needMedicine: false,
-      needBlanket: false,
-      needShelter: false,
-    },
-    {
-      id: 'mock-2',
-      title: 'Cần xe vận chuyển thuốc',
-      description: 'Cần hỗ trợ vận chuyển thuốc đến điểm sơ cứu.',
-      address: 'Phường C, thị xã D',
-      latitude: 16.0544,
-      longitude: 108.2022,
-      emergencyLevel: 3,
-      affectedPeople: 3,
-      contactPhone: '0912345678',
-      status: 'InProgress',
-      createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString(),
-      needFood: false,
-      needWater: false,
-      needMedicine: true,
-      needBlanket: false,
-      needShelter: false,
-    },
-  ]
+  const seeded: ReliefRequestResponse[] = []
 
   writeOfflineRequests(seeded)
   return seeded

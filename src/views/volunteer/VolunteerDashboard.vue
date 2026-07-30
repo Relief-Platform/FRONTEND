@@ -55,17 +55,21 @@
             <router-link to="/volunteer/history" class="panel-link">{{ $t('volunteer.view_all') }}</router-link>
           </div>
           <div class="activity-list">
+            <div v-if="recentActivities.length === 0" class="no-activity-state" style="padding: 16px; color: #a0aec0; font-size: 13.5px; text-align: center;">
+              Chưa có hoạt động mới
+            </div>
             <div
+              v-else
               v-for="act in recentActivities"
               :key="act.id"
               class="activity-item"
             >
               <div class="activity-dot" :class="`dot--${act.type}`" />
               <div class="activity-content">
-                <p class="activity-title">{{ $t(act.titleKey) }}</p>
-                <p class="activity-meta">{{ $t(act.timeKey) }}</p>
+                <p class="activity-title">{{ act.title }}</p>
+                <p class="activity-meta">{{ act.time }}</p>
               </div>
-              <span class="activity-tag" :class="`tag--${act.type}`">{{ $t(act.typeLabelKey) }}</span>
+              <span class="activity-tag" :class="`tag--${act.type}`">{{ act.typeLabel }}</span>
             </div>
           </div>
         </div>
@@ -100,7 +104,7 @@
                   stroke-width="10"
                   stroke-linecap="round"
                   :stroke-dasharray="`${2 * Math.PI * 42}`"
-                  :stroke-dashoffset="`${2 * Math.PI * 42 * (1 - 0.68)}`"
+                  :stroke-dashoffset="`${2 * Math.PI * 42 * (1 - completionRate / 100)}`"
                   transform="rotate(-90 50 50)"
                 />
                 <defs>
@@ -111,16 +115,16 @@
                 </defs>
               </svg>
               <div class="ring-label">
-                <span class="ring-pct">68%</span>
+                <span class="ring-pct">{{ completionRate }}%</span>
                 <span class="ring-sub">{{ $t('volunteer.dash_progress_completed') }}</span>
               </div>
             </div>
             <div class="progress-info">
               <p class="progress-info-title">{{ $t('volunteer.dash_progress_this_month') }}</p>
-              <p class="progress-info-desc">{{ $t('volunteer.dash_progress_desc', { completed: 17, total: 25 }) }}</p>
+              <p class="progress-info-desc">{{ $t('volunteer.dash_progress_desc', { completed: completedCount, total: totalCount }) }}</p>
               <div class="progress-legend">
-                <span class="legend-dot" style="background: #276749"/> <span>{{ $t('volunteer.dash_progress_legend_completed', { count: 17 }) }}</span>
-                <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>{{ $t('volunteer.dash_progress_legend_remaining', { count: 8 }) }}</span>
+                <span class="legend-dot" style="background: #276749"/> <span>{{ $t('volunteer.dash_progress_legend_completed', { count: completedCount }) }}</span>
+                <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>{{ $t('volunteer.dash_progress_legend_remaining', { count: remainingCount }) }}</span>
               </div>
             </div>
           </div>
@@ -131,11 +135,15 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
+import { getAssignments, type Assignment } from '@/features/tasks/assignments.api'
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
+
+const assignmentsList = ref<Assignment[]>([])
+const isLoading = ref(true)
 
 const currentDate = computed(() => {
   const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
@@ -147,60 +155,91 @@ const currentDate = computed(() => {
   })
 })
 
-const statCards = [
+async function loadDashboardData() {
+  isLoading.value = true
+  try {
+    assignmentsList.value = await getAssignments(1, 100)
+  } catch (err) {
+    console.error('Failed to load volunteer dashboard data', err)
+  } finally {
+    isLoading.value = false
+  }
+}
+
+onMounted(() => {
+  void loadDashboardData()
+})
+
+const ongoingCount = computed(() =>
+  assignmentsList.value.filter((a) => a.status === 'Assigned' || a.status === 'Accepted' || a.status === 'OnTheWay').length,
+)
+const completedCount = computed(() =>
+  assignmentsList.value.filter((a) => a.status === 'Completed').length,
+)
+const totalCount = computed(() => assignmentsList.value.length)
+const remainingCount = computed(() => Math.max(0, totalCount.value - completedCount.value))
+
+const completionRate = computed(() => {
+  if (totalCount.value === 0) return 0
+  return Math.round((completedCount.value / totalCount.value) * 100)
+})
+
+const totalHours = computed(() => {
+  return completedCount.value * 4 + ongoingCount.value * 2
+})
+
+const statCards = computed(() => [
   {
     labelKey: 'volunteer.dash_stat_ongoing',
-    value: '5',
+    value: String(ongoingCount.value),
     unitKey: 'volunteer.dash_stat_unit_task',
     trendKey: 'volunteer.dash_stat_trend_ongoing',
-    trendUp: true,
-    progress: 50,
+    trendUp: ongoingCount.value > 0,
+    progress: totalCount.value > 0 ? Math.round((ongoingCount.value / totalCount.value) * 100) : 0,
     color: '#e27d24',
     bg: 'linear-gradient(135deg, #fef3e2 0%, #fde8c8 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
   {
     labelKey: 'volunteer.dash_stat_completed',
-    value: '23',
+    value: String(completedCount.value),
     unitKey: 'volunteer.dash_stat_unit_task',
     trendKey: 'volunteer.dash_stat_trend_completed',
-    trendUp: true,
-    progress: 75,
+    trendUp: completedCount.value > 0,
+    progress: completionRate.value,
     color: '#276749',
     bg: 'linear-gradient(135deg, #e8f5ee 0%, #c6f6d5 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`,
   },
   {
     labelKey: 'volunteer.dash_stat_hours',
-    value: '142',
+    value: String(totalHours.value),
     unitKey: 'volunteer.dash_stat_unit_hour',
     trendKey: 'volunteer.dash_stat_trend_hours',
-    trendUp: false,
-    progress: 62,
+    trendUp: totalHours.value > 0,
+    progress: Math.min(100, Math.round((totalHours.value / 40) * 100)),
     color: '#3182ce',
     bg: 'linear-gradient(135deg, #ebf8ff 0%, #bee3f8 100%)',
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   },
-  {
-    labelKey: 'volunteer.dash_points',
-    value: '1,280',
-    unitKey: 'volunteer.dash_unit_points',
-    trendKey: 'volunteer.dash_stat_trend_skills',
-    trendUp: true,
-    progress: 85,
-    color: '#6b46c1',
-    bg: 'linear-gradient(135deg, #f3eeff 0%, #e9d8fd 100%)',
-    icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#6b46c1" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  },
-]
 
-const recentActivities = [
-  { id: 1, titleKey: 'volunteer.dash_act_1', timeKey: 'volunteer.dash_time_2h', type: 'done', typeLabelKey: 'volunteer.dash_completed' },
-  { id: 2, titleKey: 'volunteer.dash_act_2', timeKey: 'volunteer.dash_time_yesterday', type: 'assigned', typeLabelKey: 'volunteer.dash_assigned' },
-  { id: 3, titleKey: 'volunteer.dash_act_3', timeKey: 'volunteer.dash_time_3d', type: 'skill', typeLabelKey: 'volunteer.dash_skills' },
-  { id: 4, titleKey: 'volunteer.dash_act_4', timeKey: 'volunteer.dash_time_5d', type: 'done', typeLabelKey: 'volunteer.dash_completed' },
-  { id: 5, titleKey: 'volunteer.dash_act_5', timeKey: 'volunteer.dash_time_1w', type: 'assigned', typeLabelKey: 'volunteer.dash_assigned' },
-]
+])
+
+const recentActivities = computed(() => {
+  if (assignmentsList.value.length === 0) return []
+  return assignmentsList.value.slice(0, 5).map((act) => {
+    const isCompleted = act.status === 'Completed'
+    const dateStr = act.completedAt || act.assignedAt
+    const formattedTime = dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : 'Mới đây'
+    return {
+      id: act.id,
+      title: act.reliefRequestTitle || 'Phân công nhiệm vụ',
+      time: formattedTime,
+      type: isCompleted ? 'done' : 'assigned',
+      typeLabel: isCompleted ? 'Đã hoàn thành' : 'Đã phân công',
+    }
+  })
+})
 
 const quickActions = [
   {

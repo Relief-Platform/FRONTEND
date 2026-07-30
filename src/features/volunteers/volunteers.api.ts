@@ -41,13 +41,8 @@ function unwrap<T>(data: ApiResponse<T> | T): T {
 }
 
 // ── Cache skills lấy từ /api/skills (public endpoint, không cần auth) ─────────────────
-export let AVAILABLE_SKILLS: SkillItem[] = [
-  { id: 'sk-0001-8f4b-4a5f-9e8c-123456789abc', name: 'Sơ cứu y tế',               description: 'Có chứng chỉ sơ cấp cứu, xử lý chấn thương cơ bản' },
-  { id: 'sk-0002-8f4b-4a5f-9e8c-123456789abc', name: 'Lái xe cứu thương / xe tải', description: 'Bằng lái B2 trở lên, có kinh nghiệm lái đường đèo dốc' },
-  { id: 'sk-0003-8f4b-4a5f-9e8c-123456789abc', name: 'Hậu cần và phân phát',       description: 'Sắp xếp kho bãi, kiểm kê hàng hóa, điều phối phân quà' },
-  { id: 'sk-0004-8f4b-4a5f-9e8c-123456789abc', name: 'Tìm kiếm & Cứu hộ',         description: 'Đã qua đào tạo cứu hộ thiên tai, bơi lội tốt, sức khỏe tốt' },
-  { id: 'sk-0005-8f4b-4a5f-9e8c-123456789abc', name: 'Hỗ trợ tâm lý / truyền thông', description: 'Động viên tinh thần người dân bị nạn, viết bài cập nhật thông tin' },
-]
+export let AVAILABLE_SKILLS: SkillItem[] = []
+
 
 // ── Public: GET /api/skills (không cần auth) ─────────────────
 
@@ -72,6 +67,23 @@ export async function loadAvailableSkills(): Promise<SkillItem[]> {
 
 // ── GET /api/volunteers/me ────────────────────────────────────
 
+export function normalizeVolunteerSkills(rawSkills: any): VolunteerSkill[] {
+  if (!Array.isArray(rawSkills)) return []
+  return rawSkills.map((s, idx) => {
+    if (typeof s === 'string') {
+      return { id: s, skillId: s, name: s }
+    }
+    if (s && typeof s === 'object') {
+      return {
+        id: String(s.id ?? s.skillId ?? `skill-${idx}`),
+        skillId: String(s.skillId ?? s.id ?? `skill-${idx}`),
+        name: String(s.name ?? s.id ?? s.skillId ?? ''),
+      }
+    }
+    return { id: String(s), skillId: String(s), name: String(s) }
+  })
+}
+
 /**
  * Lấy hồ sơ tình nguyện viên của user đang đăng nhập.
  * 🔒 Auth: RequesterOrVolunteer
@@ -79,7 +91,11 @@ export async function loadAvailableSkills(): Promise<SkillItem[]> {
  */
 export async function getVolunteerProfile(): Promise<VolunteerProfile> {
   const { data } = await http.get<ApiResponse<VolunteerProfile>>('/volunteers/me')
-  return unwrap(data)
+  const res = unwrap(data)
+  if (res) {
+    res.skills = normalizeVolunteerSkills(res.skills)
+  }
+  return res
 }
 
 // ── POST /api/volunteers/profile ─────────────────────────────
