@@ -61,7 +61,7 @@
             @click="changeLang('vi')"
             title="Tiếng Việt"
           >
-            🇻🇳 VI
+            VI
           </button>
           <span class="lang-divider">|</span>
           <button
@@ -70,7 +70,7 @@
             @click="changeLang('en')"
             title="English"
           >
-            🇬🇧 EN
+            EN
           </button>
         </div>
 
