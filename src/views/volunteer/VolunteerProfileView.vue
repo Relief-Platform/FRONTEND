@@ -9,10 +9,10 @@
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
               <circle cx="12" cy="7" r="4" />
             </svg>
-            Tình nguyện viên
+            {{ $t('volunteer.role_title') }}
           </div>
-          <h1 class="page-title">Hồ sơ tình nguyện viên</h1>
-          <p class="page-sub">Cập nhật thông tin liên hệ, chuyên môn và quản lý kỹ năng cứu trợ của bạn.</p>
+          <h1 class="page-title">{{ $t('volunteer.profile_title') }}</h1>
+          <p class="page-sub">{{ $t('volunteer.profile_sub') }}</p>
         </div>
 
         <div v-if="profile" class="approval-status" :class="statusClass">
@@ -43,7 +43,7 @@
 
       <div v-if="isLoading" class="loading-container">
         <BaseSpinner />
-        <p>Đang tải thông tin hồ sơ...</p>
+        <p>{{ $t('volunteer.profile_loading') }}</p>
       </div>
 
       <div v-else class="profile-grid">
@@ -52,7 +52,7 @@
           <BaseCard>
             <template #header>
               <div class="card-header-flex">
-                <span>{{ isEditMode ? 'Chỉnh sửa hồ sơ' : 'Thông tin chi tiết' }}</span>
+                <span>{{ isEditMode ? $t('volunteer.profile_card_edit') : $t('volunteer.profile_card_details') }}</span>
                 <button
                   v-if="profile && !isEditMode"
                   class="action-btn"
@@ -62,7 +62,7 @@
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" />
                     <path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z" />
                   </svg>
-                  Chỉnh sửa
+                  {{ $t('volunteer.profile_btn_edit') }}
                 </button>
               </div>
             </template>
@@ -75,26 +75,26 @@
                 <div class="user-meta">
                   <h3>{{ authStore.user?.fullName }}</h3>
                   <p class="user-email">{{ authStore.user?.email }}</p>
-                  <p class="user-phone">SĐT: {{ authStore.user?.phoneNumber ?? 'Chưa cập nhật' }}</p>
+                  <p class="user-phone">{{ $t('volunteer.profile_phone', { phone: authStore.user?.phoneNumber ?? $t('volunteer.profile_not_updated') }) }}</p>
                 </div>
               </div>
 
               <div class="form-grid">
                 <!-- Address -->
                 <div class="form-group span-full">
-                  <label for="address">Địa chỉ thường trú</label>
+                  <label for="address">{{ $t('volunteer.profile_form_address') }}</label>
                   <BaseInput
                     id="address"
                     v-model="form.address"
                     :disabled="!isEditMode && !!profile"
-                    placeholder="VD: 123 Đường X, Quận Y, Hà Nội"
+                    :placeholder="$t('volunteer.profile_form_address_placeholder')"
                     required
                   />
                 </div>
-
+ 
                 <!-- Coordinates -->
                 <div class="form-group">
-                  <label for="latitude">Vĩ độ (Latitude)</label>
+                  <label for="latitude">{{ $t('volunteer.profile_form_lat') }}</label>
                   <BaseInput
                     id="latitude"
                     type="number"
@@ -106,7 +106,7 @@
                   />
                 </div>
                 <div class="form-group">
-                  <label for="longitude">Kinh độ (Longitude)</label>
+                  <label for="longitude">{{ $t('volunteer.profile_form_lng') }}</label>
                   <BaseInput
                     id="longitude"
                     type="number"
@@ -117,29 +117,29 @@
                     required
                   />
                 </div>
-
+ 
                 <!-- Experience Years -->
                 <div class="form-group span-full">
-                  <label for="experienceYears">Số năm kinh nghiệm cứu trợ</label>
+                  <label for="experienceYears">{{ $t('volunteer.profile_form_experience') }}</label>
                   <BaseInput
                     id="experienceYears"
                     type="number"
                     min="0"
                     v-model.number="form.experienceYears"
                     :disabled="!isEditMode && !!profile"
-                    placeholder="VD: 2"
+                    :placeholder="$t('volunteer.profile_form_experience_placeholder')"
                     required
                   />
                 </div>
-
+ 
                 <!-- Bio -->
                 <div class="form-group span-full">
-                  <label for="bio">Mô tả bản thân (Giới thiệu ngắn)</label>
+                  <label for="bio">{{ $t('volunteer.profile_form_bio') }}</label>
                   <textarea
                     id="bio"
                     v-model="form.bio"
                     :disabled="!isEditMode && !!profile"
-                    placeholder="Hãy mô tả ngắn gọn về bản thân, các tổ chức cứu trợ bạn từng tham gia..."
+                    :placeholder="$t('volunteer.profile_form_bio_placeholder')"
                     rows="4"
                     class="custom-textarea"
                   />
@@ -155,14 +155,14 @@
                   @click="cancelEdit"
                   :disabled="isSaving"
                 >
-                  Hủy bỏ
+                  {{ $t('volunteer.profile_btn_cancel') }}
                 </BaseButton>
                 <BaseButton
                   type="submit"
                   variant="primary"
                   :loading="isSaving"
                 >
-                  {{ profile ? 'Lưu thay đổi' : 'Tạo hồ sơ mới' }}
+                  {{ profile ? $t('volunteer.profile_btn_save') : $t('volunteer.profile_btn_create') }}
                 </BaseButton>
               </div>
             </form>
@@ -175,22 +175,22 @@
           <BaseCard>
             <template #header>
               <div class="card-header-flex">
-                <span>Kỹ năng cứu trợ</span>
-                <span class="skills-count" v-if="profile">{{ profile.skills.length }} kỹ năng</span>
+                <span>{{ $t('volunteer.profile_skills_title') }}</span>
+                <span class="skills-count" v-if="profile">{{ $t('volunteer.profile_skills_count', { count: profile.skills.length }) }}</span>
               </div>
             </template>
-
+ 
             <div v-if="!profile" class="skills-locked">
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
                 <path d="M7 11V7a5 5 0 0 1 10 0v4" />
               </svg>
-              <p>Vui lòng tạo hồ sơ cá nhân trước khi đăng ký kỹ năng.</p>
+              <p>{{ $t('volunteer.profile_skills_locked') }}</p>
             </div>
-
+ 
             <div v-else class="skills-manager">
               <div v-if="profile.skills.length === 0" class="no-skills-state">
-                Bạn chưa đăng ký kỹ năng cứu trợ nào. Hãy đăng ký bên dưới.
+                {{ $t('volunteer.profile_no_skills') }}
               </div>
 
               <div v-else class="skills-list">
@@ -202,7 +202,7 @@
                   <span class="skill-name">{{ skill.name }}</span>
                   <button
                     class="remove-skill-btn"
-                    title="Xóa kỹ năng này"
+                    :title="$t('volunteer.profile_remove_title')"
                     @click="handleRemoveSkill(skill.id, skill.name)"
                     :disabled="isModifyingSkills"
                   >
@@ -216,10 +216,10 @@
 
               <!-- Add Skills Section -->
               <div class="add-skills-section">
-                <h4>Đăng ký thêm kỹ năng</h4>
+                <h4>{{ $t('volunteer.profile_skills_add_title') }}</h4>
                 <div class="skill-picker-row">
                   <select v-model="selectedSkillToAdd" class="custom-select" :disabled="isModifyingSkills">
-                    <option value="" disabled>Chọn kỹ năng từ danh sách...</option>
+                    <option value="" disabled>{{ $t('volunteer.profile_skills_select_placeholder') }}</option>
                     <option
                       v-for="skill in registerableSkills"
                       :key="skill.id"
@@ -235,7 +235,7 @@
                     @click="handleAddSkill"
                     :loading="isModifyingSkills"
                   >
-                    Đăng ký
+                    {{ $t('volunteer.profile_skills_btn_register') }}
                   </BaseButton>
                 </div>
                 <p class="skill-desc" v-if="selectedSkillDescription">
@@ -253,12 +253,12 @@
                 <line x1="12" y1="16" x2="12" y2="12" />
                 <line x1="12" y1="8" x2="12.01" y2="8" />
               </svg>
-              Hướng dẫn tình nguyện viên
+              {{ $t('volunteer.profile_guide_title') }}
             </h4>
             <ul class="guide-list">
-              <li>Hãy đảm bảo địa chỉ và tọa độ của bạn chính xác để hệ thống gợi ý nhiệm vụ gần nhất.</li>
-              <li>Bạn có thể tìm kiếm tọa độ thông qua các trang bản đồ trực tuyến.</li>
-              <li>Các kỹ năng đăng ký sẽ được Điều phối viên phê duyệt trước khi giao nhiệm vụ chuyên sâu.</li>
+              <li>{{ $t('volunteer.profile_guide_1') }}</li>
+              <li>{{ $t('volunteer.profile_guide_2') }}</li>
+              <li>{{ $t('volunteer.profile_guide_3') }}</li>
             </ul>
           </BaseCard>
         </div>
@@ -269,6 +269,7 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -287,6 +288,7 @@ import type { VolunteerProfile } from '@/features/volunteers/volunteers.types'
 import type { Skill } from '@/features/skills/skills.types'
 
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 // State
 const profile = ref<VolunteerProfile | null>(null)
@@ -299,7 +301,6 @@ const successMessage = ref('')
 const errorMessage = ref('')
 
 const selectedSkillToAdd = ref('')
-const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
 
 const form = reactive({
   address: '',
@@ -323,9 +324,9 @@ const initials = computed(() => {
 // Status badge theo VolunteerStatus
 const statusLabel = computed(() => {
   switch (profile.value?.status) {
-    case 'Approved': return 'Đã được duyệt'
-    case 'Rejected': return 'Bị từ chối'
-    default:         return 'Đang chờ duyệt'
+    case 'Approved': return t('volunteer.profile_status_approved')
+    case 'Rejected': return t('volunteer.profile_status_rejected')
+    default:         return t('volunteer.profile_status_pending')
   }
 })
 
@@ -384,7 +385,7 @@ const loadProfile = async () => {
     if (error.message && error.message.includes('chưa được tạo')) {
       profile.value = null
     } else {
-      triggerNotification('error', error.message || 'Không thể tải hồ sơ tình nguyện viên.')
+      triggerNotification('error', error.message || t('volunteer.profile_msg_load_failed'))
     }
   } finally {
     isLoading.value = false
@@ -421,17 +422,17 @@ const saveProfile = async () => {
 
     if (profile.value) {
       await updateVolunteerProfile(payload)
-      triggerNotification('success', 'Đã cập nhật hồ sơ tình nguyện viên thành công!')
+      triggerNotification('success', t('volunteer.profile_msg_update_success'))
     } else {
       await createVolunteerProfile(payload)
-      triggerNotification('success', 'Đã tạo hồ sơ mới thành công! Vui lòng chờ Admin duyệt.')
+      triggerNotification('success', t('volunteer.profile_msg_create_success'))
     }
     // Reload để lấy dữ liệu mới nhất từ BE
     await loadProfile()
     isEditMode.value = false
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể lưu hồ sơ.')
+    triggerNotification('error', error.message || t('volunteer.profile_msg_save_failed'))
   } finally {
     isSaving.value = false
   }
@@ -442,45 +443,38 @@ const handleAddSkill = async () => {
   isModifyingSkills.value = true
   try {
     await registerSkills([selectedSkillToAdd.value])
-    triggerNotification('success', 'Đã đăng ký thêm kỹ năng thành công!')
+    triggerNotification('success', t('volunteer.profile_msg_add_skill_success'))
     selectedSkillToAdd.value = ''
     await loadProfile() // reload để lấy danh sách kỹ năng mới nhất
   } catch (err: unknown) {
     const error = err as Error
     const detail = error.message.includes('ApiError') ? error.message : error.message
-    triggerNotification('error', detail || 'Không thể đăng ký thêm kỹ năng.')
+    triggerNotification('error', detail || t('volunteer.profile_msg_add_skill_failed'))
   } finally {
     isModifyingSkills.value = false
   }
 }
 
-const handleRemoveSkill = async (skillName: string) => {
-  const targetSkill = availableSkills.value.find(s => s.name === skillName)
-  const idToDelete = targetSkill ? targetSkill.id : skillName
-
-  if (!confirm(`Bạn có chắc chắn muốn xóa kỹ năng "${skillName}" không?`)) {
+const handleRemoveSkill = async (skillId: string, skillName: string) => {
+  if (!confirm(t('volunteer.profile_msg_remove_confirm', { name: skillName }))) {
     return
   }
 
   isModifyingSkills.value = true
   try {
     await deleteSkill(skillId)
-    triggerNotification('success', `Đã xóa kỹ năng "${skillName}" thành công!`)
+    triggerNotification('success', t('volunteer.profile_msg_remove_success', { name: skillName }))
     await loadProfile()
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể xóa kỹ năng.')
+    triggerNotification('error', error.message || t('volunteer.profile_msg_remove_failed'))
   } finally {
     isModifyingSkills.value = false
   }
 }
 
-const loadSkills = async () => {
-  skillOptions.value = await loadAvailableSkills()
-}
-
 onMounted(() => {
-  void Promise.all([loadSkills(), loadProfile()])
+  void loadProfile()
 })
 </script>
 

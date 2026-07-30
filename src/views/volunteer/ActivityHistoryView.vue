@@ -7,9 +7,9 @@
           <polyline points="12 6 12 12 16 14"/>
         </svg>
       </div>
-      <h1 class="empty-title">Lịch sử hoạt động</h1>
-      <p class="empty-desc">Trang này đang được xây dựng. Vui lòng quay lại sau.</p>
-      <router-link to="/volunteer" class="back-btn back-btn--blue">← Về Dashboard</router-link>
+      <h1 class="empty-title">{{ $t('volunteer.history_title') }}</h1>
+      <p class="empty-desc">{{ $t('volunteer.under_construction') }}</p>
+      <router-link to="/volunteer" class="back-btn back-btn--blue">{{ $t('volunteer.back_to_dashboard') }}</router-link>
     </div>
   </VolunteerLayout>
 </template>

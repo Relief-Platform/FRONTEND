@@ -7,9 +7,9 @@
           <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
         </svg>
       </div>
-      <h1 class="empty-title">Thông báo</h1>
-      <p class="empty-desc">Trang này đang được xây dựng. Vui lòng quay lại sau.</p>
-      <router-link to="/volunteer" class="back-btn">← Về Dashboard</router-link>
+      <h1 class="empty-title">{{ $t('volunteer.notifications_title') }}</h1>
+      <p class="empty-desc">{{ $t('volunteer.under_construction') }}</p>
+      <router-link to="/volunteer" class="back-btn">{{ $t('volunteer.back_to_dashboard') }}</router-link>
     </div>
   </VolunteerLayout>
 </template>

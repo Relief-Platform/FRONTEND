@@ -8,10 +8,10 @@
               <path d="M9 11l3 3L22 4" />
               <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
             </svg>
-            Tình nguyện viên
+            {{ $t('volunteer.role_title') }}
           </div>
-          <h1 class="page-title">Nhiệm vụ của tôi</h1>
-          <p class="page-sub">Theo dõi các nhiệm vụ đang diễn ra, sắp tới và đã hoàn thành.</p>
+          <h1 class="page-title">{{ $t('volunteer.tasks_title') }}</h1>
+          <p class="page-sub">{{ $t('volunteer.tasks_sub') }}</p>
         </div>
         <div class="page-badge">
           <span class="page-badge__dot" />
@@ -21,15 +21,15 @@
 
       <div class="summary-grid">
         <div class="summary-card summary-card--active">
-          <p class="summary-label">Đang thực hiện</p>
+          <p class="summary-label">{{ $t('volunteer.tasks_filter_ongoing') }}</p>
           <strong class="summary-value">{{ activeCount }}</strong>
         </div>
         <div class="summary-card summary-card--upcoming">
-          <p class="summary-label">Sắp diễn ra</p>
+          <p class="summary-label">{{ $t('volunteer.tasks_filter_upcoming') }}</p>
           <strong class="summary-value">{{ upcomingCount }}</strong>
         </div>
         <div class="summary-card summary-card--done">
-          <p class="summary-label">Đã hoàn thành</p>
+          <p class="summary-label">{{ $t('volunteer.tasks_filter_completed') }}</p>
           <strong class="summary-value">{{ completedCount }}</strong>
         </div>
       </div>
@@ -42,15 +42,15 @@
           :class="{ active: selectedFilter === filter.value }"
           @click="selectedFilter = filter.value"
         >
-          {{ filter.label }}
+          {{ $t(filter.labelKey) }}
         </button>
       </div>
 
-      <div v-if="isLoading" class="loading-state">Đang tải nhiệm vụ...</div>
+      <div v-if="isLoading" class="loading-state">{{ $t('volunteer.tasks_loading') }}</div>
       <div v-else-if="errorMessage" class="error-banner">{{ errorMessage }}</div>
-
+ 
       <div v-else-if="filteredTasks.length === 0" class="empty-state">
-        <p>Chưa có nhiệm vụ nào phù hợp với bộ lọc hiện tại.</p>
+        <p>{{ $t('volunteer.tasks_empty') }}</p>
       </div>
 
       <div v-else class="task-list">
@@ -60,7 +60,7 @@
               <h3 class="task-title">{{ task.title }}</h3>
               <p class="task-address">{{ task.address }}</p>
             </div>
-            <span class="task-status" :class="`status--${task.status}`">{{ task.statusLabel }}</span>
+            <span class="task-status" :class="`status--${task.status}`">{{ $t(`volunteer.tasks_status_${task.status}`) }}</span>
           </div>
 
           <div class="task-meta">
@@ -84,7 +84,7 @@
 
           <div class="progress-block">
             <div class="progress-top">
-              <span>Tiến độ</span>
+              <span>{{ $t('volunteer.tasks_progress') }}</span>
               <strong>{{ task.progress }}%</strong>
             </div>
             <div class="progress-bar">
@@ -94,7 +94,7 @@
 
           <div class="task-footer">
             <span class="task-note">{{ task.note }}</span>
-            <button class="detail-btn">Xem chi tiết</button>
+            <button class="detail-btn">{{ $t('volunteer.tasks_btn_detail') }}</button>
           </div>
         </article>
       </div>
@@ -104,19 +104,21 @@
 
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getMyTasks } from '@/features/tasks/tasks.api'
 import type { TaskItem } from '@/features/tasks/tasks.types'
 
+const { t } = useI18n()
 const selectedFilter = ref('all')
 const isLoading = ref(false)
 const errorMessage = ref('')
 
 const filters = [
-  { value: 'all', label: 'Tất cả' },
-  { value: 'ongoing', label: 'Đang thực hiện' },
-  { value: 'upcoming', label: 'Sắp diễn ra' },
-  { value: 'completed', label: 'Đã hoàn thành' },
+  { value: 'all', labelKey: 'volunteer.tasks_filter_all' },
+  { value: 'ongoing', labelKey: 'volunteer.tasks_filter_ongoing' },
+  { value: 'upcoming', labelKey: 'volunteer.tasks_filter_upcoming' },
+  { value: 'completed', labelKey: 'volunteer.tasks_filter_completed' },
 ]
 
 const mockTasks: TaskItem[] = [
@@ -177,11 +179,11 @@ async function loadTasks() {
       tasks.value = result
     } else {
       tasks.value = mockTasks
-      errorMessage.value = 'Không có nhiệm vụ nào từ máy chủ, đang dùng dữ liệu mẫu.'
+      errorMessage.value = t('volunteer.tasks_msg_no_server_using_mock')
     }
   } catch {
     tasks.value = mockTasks
-    errorMessage.value = 'Không thể kết nối API, đang dùng dữ liệu mẫu.'
+    errorMessage.value = t('volunteer.tasks_msg_api_failed_using_mock')
   } finally {
     isLoading.value = false
   }
@@ -197,7 +199,8 @@ const filteredTasks = computed(() => {
 })
 
 const activeFilterLabel = computed(() => {
-  return filters.find((item) => item.value === selectedFilter.value)?.label ?? 'Tất cả'
+  const item = filters.find((item) => item.value === selectedFilter.value)
+  return item ? t(item.labelKey) : t('volunteer.tasks_filter_all')
 })
 
 const activeCount = computed(() => tasks.value.filter((task) => task.status === 'ongoing').length)
