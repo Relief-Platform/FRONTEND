@@ -4,6 +4,14 @@ export default {
     slogan: 'Kết nối trái tim – Vẹn tròn cứu trợ',
   },
 
+  roles: {
+    Admin: 'Quản trị viên',
+    Volunteer: 'Tình nguyện viên',
+    Requester: 'Người yêu cầu hỗ trợ',
+    Coordinator: 'Quản lý kho',
+    Organization: 'Tổ chức',
+  },
+
   nav: {
     home: 'Trang chủ',
     about: 'Về chúng tôi',

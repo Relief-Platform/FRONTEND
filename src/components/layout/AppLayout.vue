@@ -185,9 +185,13 @@ const normalizedRole = computed(() => (auth.role ?? '').toLowerCase() as UserRol
 const hasRole = (...roles: string[]): boolean =>
   normalizedRole.value !== '' && roles.includes(normalizedRole.value)
 
-const roleLabel = computed(() =>
-  normalizedRole.value ? (ROLE_LABELS[normalizedRole.value as UserRole] ?? auth.role ?? '') : '',
-)
+const roleLabel = computed(() => {
+  const _ = locale.value
+  if (!auth.role) return ''
+  // Normalize PascalCase or lowercase role to UserRole key
+  const roleName = auth.role.charAt(0).toUpperCase() + auth.role.slice(1).toLowerCase()
+  return t(`roles.${roleName}`, ROLE_LABELS[auth.role as UserRole] ?? auth.role)
+})
 const roleColor = computed(() =>
   normalizedRole.value ? (ROLE_COLORS[normalizedRole.value as UserRole] ?? '#4a5568') : '#4a5568',
 )

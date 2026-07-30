@@ -4,6 +4,14 @@ export default {
     slogan: 'Connecting Hearts – Complete Relief',
   },
 
+  roles: {
+    Admin: 'Administrator',
+    Volunteer: 'Volunteer',
+    Requester: 'Aid Requester',
+    Coordinator: 'Warehouse Manager',
+    Organization: 'Organization',
+  },
+
   nav: {
     home: 'Home',
     about: 'About Us',

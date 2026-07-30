@@ -142,20 +142,32 @@ const initials = computed(() =>
   auth.user?.fullName.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase() ?? "?"
 )
 
-const roleLabel = computed(() => (auth.user ? ROLE_LABELS[auth.user.role] : ''))
+const roleLabel = computed(() => {
+  const _ = locale.value
+  if (!auth.user?.role) return ''
+  return t(`roles.${auth.user.role}`, ROLE_LABELS[auth.user.role] ?? auth.user.role)
+})
 
-const navItems = computed(() => [
-  {
-    name: "warehouses", routeName: "warehouses", to: "/warehouses", label: t('warehouse.nav_warehouses'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
-  },
-  {
-    name: "inventory", routeName: "inventory", to: "/inventory", label: t('warehouse.nav_inventory'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
-  },
-])
+const navItems = computed(() => {
+  const _ = locale.value
+  return [
+    {
+      name: "warehouses", routeName: "warehouses", to: "/warehouses", label: t('warehouse.nav_warehouses'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
+    },
+    {
+      name: "inventory", routeName: "inventory", to: "/inventory", label: t('warehouse.nav_inventory'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+    },
+  ]
+})
 
-const pageTitle = computed(() => (route.meta.title as string) ?? '')
+const pageTitle = computed(() => {
+  const _ = locale.value
+  if (route.name === 'warehouses') return t('warehouse.nav_warehouses')
+  if (route.name === 'inventory') return t('warehouse.nav_inventory')
+  return (route.meta.title as string) ?? ''
+})
 
 async function handleLogout() {
   showUserMenu.value = false
