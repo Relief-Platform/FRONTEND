@@ -18,7 +18,7 @@
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="brand-text">
             <span class="brand-name">ReliefConnect</span>
-            <span class="brand-sub">Quản lý kho</span>
+            <span class="brand-sub">{{ $t('warehouse.brand_sub') }}</span>
           </div>
         </Transition>
       </router-link>
@@ -39,7 +39,7 @@
         </router-link>
       </nav>
 
-      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Mở rộng' : 'Thu gọn'">
+      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? $t('common.expand') : $t('common.collapse')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path :d="sidebarCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'" />
         </svg>
@@ -69,6 +69,27 @@
           </div>
         </div>
         <div class="topbar-right">
+          <!-- Language Switcher -->
+          <div class="lang-switch">
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'vi' }"
+              @click="changeLang('vi')"
+              title="Tiếng Việt"
+            >
+              🇻🇳 VI
+            </button>
+            <span class="lang-divider">|</span>
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'en' }"
+              @click="changeLang('en')"
+              title="English"
+            >
+              🇬🇧 EN
+            </button>
+          </div>
+
           <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
             <div class="topbar-avatar">{{ initials }}</div>
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
@@ -76,12 +97,12 @@
               <div v-if="showUserMenu" class="topbar-dropdown">
                 <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Hồ sơ cá nhân
+                  {{ $t('nav.profile') }}
                 </router-link>
                 <div class="dropdown-divider" />
                 <button class="dropdown-item dropdown-item--danger" @click="handleLogout">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                  Đăng xuất
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </Transition>
@@ -100,14 +121,22 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
 import { useRoute, useRouter } from "vue-router"
+import { useI18n } from "vue-i18n"
 import { useAuthStore } from "@/stores/auth"
 import { ROLE_LABELS } from "@/features/auth/auth.types"
 
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
+const { locale, t } = useI18n()
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
+
+const currentLang = computed(() => locale.value)
+function changeLang(lang: 'vi' | 'en'): void {
+  locale.value = lang
+  localStorage.setItem('app_lang', lang)
+}
 
 const initials = computed(() =>
   auth.user?.fullName.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase() ?? "?"
@@ -115,16 +144,16 @@ const initials = computed(() =>
 
 const roleLabel = computed(() => (auth.user ? ROLE_LABELS[auth.user.role] : ''))
 
-const navItems = [
+const navItems = computed(() => [
   {
-    name: "warehouses", routeName: "warehouses", to: "/warehouses", label: 'Quản lý kho',
+    name: "warehouses", routeName: "warehouses", to: "/warehouses", label: t('warehouse.nav_warehouses'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>`,
   },
   {
-    name: "inventory", routeName: "inventory", to: "/inventory", label: 'Vật tư & tồn kho',
+    name: "inventory", routeName: "inventory", to: "/inventory", label: t('warehouse.nav_inventory'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82Z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
   },
-]
+])
 
 const pageTitle = computed(() => (route.meta.title as string) ?? '')
 
@@ -198,6 +227,11 @@ const vClickOutside = {
 .topbar-page-info { font-size: 15px; }
 .topbar-name { color: #1a3b5c; font-weight: 700; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
+.lang-switch { display: flex; align-items: center; gap: 4px; background: #f1f5f9; padding: 3px 8px; border-radius: 99px; border: 1px solid #e2e8f0; }
+.lang-btn { background: none; border: none; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer; padding: 3px 6px; border-radius: 99px; transition: all 0.15s ease; }
+.lang-btn:hover { color: #1a4f8d; }
+.lang-btn.active { background: #ffffff; color: #1a4f8d; box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); }
+.lang-divider { font-size: 11px; color: #cbd5e1; }
 .topbar-user-menu { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid #e9ecef; background: #f8fafc; position: relative; user-select: none; transition: all 0.15s ease; }
 .topbar-user-menu:hover { background: #f0f4f8; }
 .topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #1a4f8d, #2b6cb0); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }

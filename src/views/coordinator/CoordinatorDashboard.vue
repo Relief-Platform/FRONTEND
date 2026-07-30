@@ -3,8 +3,8 @@
     <div class="page-container">
       <div class="dashboard-header">
         <div>
-          <p class="dashboard-role-badge role--coordinator">🗂️ Điều phối viên</p>
-          <h1 class="page-title">Xin chào, {{ auth.user?.fullName }}!</h1>
+          <p class="dashboard-role-badge role--coordinator">🗂️ {{ $t('coordinator.role_badge') }}</p>
+          <h1 class="page-title">{{ $t('coordinator.greeting', { name: auth.user?.fullName }) }}</h1>
         </div>
       </div>
 
@@ -21,12 +21,12 @@
       <div class="two-col">
         <BaseCard>
           <template #header>
-            Yêu cầu cần phân công
+            {{ $t('coordinator.dispatch_panel_title') }}
             <span v-if="needDispatch.length > 0" class="header-count">{{ needDispatch.length }}</span>
           </template>
-          <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">Đang tải...</p>
+          <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">{{ $t('common.loading') }}</p>
           <p v-else-if="needDispatch.length === 0" class="text-muted text-center" style="padding: 40px 0;">
-            Chưa có yêu cầu nào chờ xử lý.
+            {{ $t('coordinator.no_dispatch') }}
           </p>
           <div class="dispatch-list" v-else>
             <div class="dispatch-item" v-for="req in needDispatch" :key="req.id">
@@ -36,30 +36,30 @@
                 <p class="dispatch-meta">{{ req.address }} · {{ formatDateTimeVI(req.createdAt) }}</p>
               </div>
               <span class="emergency-badge" :class="`elv-${req.emergencyLevel}`">
-                {{ EMERGENCY_LABELS[req.emergencyLevel] }}
+                {{ emergencyLabel(req.emergencyLevel) }}
               </span>
-              <button class="btn-outline" @click="goDispatch(req.id)">Phân công</button>
+              <button class="btn-outline" @click="goDispatch(req.id)">{{ $t('coordinator.dispatch_btn') }}</button>
             </div>
           </div>
         </BaseCard>
 
         <BaseCard>
           <template #header>
-            Tình nguyện viên sẵn sàng
+            {{ $t('coordinator.volunteers_panel_title') }}
             <span v-if="availableVolunteers.length > 0" class="header-count">{{ availableVolunteers.length }}</span>
           </template>
-          <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">Đang tải...</p>
+          <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">{{ $t('common.loading') }}</p>
           <p v-else-if="availableVolunteers.length === 0" class="text-muted text-center" style="padding: 40px 0;">
-            Chưa có TNV online.
+            {{ $t('coordinator.no_volunteers') }}
           </p>
           <div class="volunteer-list" v-else>
             <div class="volunteer-item" v-for="vol in availableVolunteers" :key="vol.id">
               <div class="volunteer-avatar">{{ volunteerInitial(vol.fullName) }}</div>
               <div class="dispatch-content">
                 <p class="dispatch-title">{{ vol.fullName }}</p>
-                <p class="dispatch-meta">{{ vol.phoneNumber }} · {{ vol.experienceYears }} năm kinh nghiệm</p>
+                <p class="dispatch-meta">{{ vol.phoneNumber }} · {{ vol.experienceYears }} {{ $t('coordinator.years_exp') }}</p>
               </div>
-              <span class="ready-badge">Sẵn sàng</span>
+              <span class="ready-badge">{{ $t('coordinator.ready_badge') }}</span>
             </div>
           </div>
         </BaseCard>
@@ -71,6 +71,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import { useAuthStore } from '@/stores/auth'
@@ -82,13 +83,15 @@ import { getAdminVolunteers, type VolunteerSummary } from '@/features/volunteers
 
 const auth = useAuthStore()
 const router = useRouter()
+const { t } = useI18n()
 
-const EMERGENCY_LABELS: Record<number, string> = {
-  1: 'Thấp',
-  2: 'Trung bình',
-  3: 'Cao',
-  4: 'Nguy cấp',
+const EMERGENCY_LABEL_KEY: Record<number, string> = {
+  1: 'coordinator.emergency_low',
+  2: 'coordinator.emergency_medium',
+  3: 'coordinator.emergency_high',
+  4: 'coordinator.emergency_critical',
 }
+const emergencyLabel = (level: number) => t(EMERGENCY_LABEL_KEY[level] ?? 'coordinator.emergency_low')
 
 // ── State ────────────────────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -155,10 +158,10 @@ const needsAttention = computed(() => {
 })
 
 const stats = computed(() => [
-  { icon: '📋', value: String(needDispatch.value.length), label: 'Yêu cầu cần phân công' },
-  { icon: '🙋', value: String(activeVolunteerIds.value.size), label: 'TNV đang hoạt động' },
-  { icon: '✅', value: String(completedToday.value), label: 'Đã hoàn thành hôm nay' },
-  { icon: '⚠️', value: String(needsAttention.value), label: 'Cần chú ý' },
+  { icon: '📋', value: String(needDispatch.value.length), label: t('coordinator.stat_need_dispatch') },
+  { icon: '🙋', value: String(activeVolunteerIds.value.size), label: t('coordinator.stat_active_volunteers') },
+  { icon: '✅', value: String(completedToday.value), label: t('coordinator.stat_completed_today') },
+  { icon: '⚠️', value: String(needsAttention.value), label: t('coordinator.stat_needs_attention') },
 ])
 
 function goDispatch(requestId: string) {
