@@ -15,8 +15,9 @@ export type VolunteerStatus = 'Pending' | 'Approved' | 'Rejected'
  * BE trả Skills[] là array object {id, name}, không phải string[].
  */
 export interface VolunteerSkill {
-  id:   string   // GUID — dùng để DELETE /volunteers/skills/{skillId}
-  name: string
+  id:      string   // GUID — join-table record ID, dùng để DELETE /volunteers/skills/{id}
+  skillId: string   // GUID — catalog skill ID, dùng để lọc trùng & POST /volunteers/skills
+  name:    string
 }
 
 // ── Public Skill (từ GET /api/skills) ────────────────────────

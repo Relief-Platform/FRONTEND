@@ -69,13 +69,13 @@
 
             <!-- Profile Form / View -->
             <form @submit.prevent="saveProfile">
-              <!-- Account (Readonly from user store) -->
+              <!-- Account (Readonly from profile / user store) -->
               <div class="user-summary">
                 <div class="avatar-large">{{ initials }}</div>
                 <div class="user-meta">
-                  <h3>{{ authStore.user?.fullName }}</h3>
-                  <p class="user-email">{{ authStore.user?.email }}</p>
-                  <p class="user-phone">{{ $t('volunteer.profile_phone', { phone: authStore.user?.phoneNumber ?? $t('volunteer.profile_not_updated') }) }}</p>
+                  <h3>{{ profile?.fullName || authStore.user?.fullName }}</h3>
+                  <p class="user-email">{{ profile?.email || authStore.user?.email }}</p>
+                  <p class="user-phone">{{ $t('volunteer.profile_phone', { phone: profile?.phoneNumber || authStore.user?.phoneNumber || $t('volunteer.profile_not_updated') }) }}</p>
                 </div>
               </div>
 
@@ -312,7 +312,7 @@ const form = reactive({
 
 // Computed
 const initials = computed(() => {
-  const name = authStore.user?.fullName || ''
+  const name = profile.value?.fullName || authStore.user?.fullName || ''
   return name
     .split(' ')
     .slice(-2)
@@ -338,7 +338,7 @@ const statusClass = computed(() => ({
 // Filter available skills that the user hasn't registered yet
 const registerableSkills = computed(() => {
   if (!profile.value) return availableSkills.value
-  const registeredIds = new Set(profile.value.skills.map((s) => s.id))
+  const registeredIds = new Set(profile.value.skills.map((s) => s.skillId))
   return availableSkills.value.filter((skill) => !registeredIds.has(skill.id))
 })
 

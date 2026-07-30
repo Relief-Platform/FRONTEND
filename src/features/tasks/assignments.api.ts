@@ -38,6 +38,25 @@ export interface AssignmentActionResult {
   message: string
 }
 
+export interface CreateAssignmentPayload {
+  reliefRequestId: string
+  volunteerProfileId: string
+  note?: string
+}
+
+// ── Admin — Create ───────────────────────────────────────────
+
+/**
+ * POST /api/assignments
+ * Tạo phân công mới cho Volunteer.
+ */
+export async function createAssignment(
+  payload: CreateAssignmentPayload,
+): Promise<AssignmentActionResult> {
+  const { data } = await http.post<AssignmentActionResult>('/assignments', payload)
+  return data
+}
+
 // ── Admin — List all ─────────────────────────────────────────
 
 /**
