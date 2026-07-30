@@ -8,10 +8,10 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
               <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
             </svg>
-            Kỹ năng cứu trợ
+            {{ $t('volunteer.skills_badge') }}
           </div>
-          <h1 class="page-title">Đăng ký kỹ năng cứu trợ</h1>
-          <p class="page-sub">Trang bị các kỹ năng chuyên môn phù hợp để tham gia hiệu quả vào các chiến dịch cứu trợ.</p>
+          <h1 class="page-title">{{ $t('volunteer.skills_title') }}</h1>
+          <p class="page-sub">{{ $t('volunteer.skills_sub') }}</p>
         </div>
       </div>
 
@@ -37,7 +37,7 @@
 
       <div v-if="isLoading" class="loading-container">
         <BaseSpinner />
-        <p>Đang tải danh sách kỹ năng...</p>
+        <p>{{ $t('volunteer.skills_loading') }}</p>
       </div>
 
       <div v-else-if="!hasProfile" class="no-profile-container">
@@ -48,10 +48,10 @@
               <path d="M7 11V7a5 5 0 0 1 10 0v4" />
             </svg>
           </div>
-          <h3>Chưa tìm thấy hồ sơ tình nguyện viên</h3>
-          <p>Bạn cần tạo hồ sơ tình nguyện viên trước khi thực hiện đăng ký kỹ năng chuyên môn.</p>
+          <h3>{{ $t('volunteer.skills_no_profile_title') }}</h3>
+          <p>{{ $t('volunteer.skills_no_profile_desc') }}</p>
           <router-link to="/volunteer/profile" class="create-profile-btn">
-            Tạo hồ sơ ngay
+            {{ $t('volunteer.skills_create_profile_btn') }}
           </router-link>
         </div>
       </div>
@@ -59,9 +59,9 @@
       <div v-else class="skills-layout">
         <!-- Section: Registered Skills -->
         <div class="skills-section">
-          <h3 class="section-title">Kỹ năng của tôi ({{ registeredSkills.length }})</h3>
+          <h3 class="section-title">{{ $t('volunteer.skills_my_skills', { count: registeredSkills.length }) }}</h3>
           <div v-if="registeredSkills.length === 0" class="empty-registered-state">
-            Bạn chưa đăng ký kỹ năng nào. Hãy tham khảo và đăng ký các kỹ năng bên dưới.
+            {{ $t('volunteer.skills_no_skills') }}
           </div>
           <div v-else class="skills-grid">
             <div
@@ -79,16 +79,16 @@
                 <h4 class="skill-title">{{ skill.name }}</h4>
               </div>
               <p class="skill-description">
-                {{ skillOptions.find(s => s.id === skill.id)?.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}
+                {{ skill.description || $t('volunteer.skills_no_description') }}
               </p>
               <div class="skill-card__actions">
-                <span class="status-badge approved">Đang hoạt động</span>
+                <span class="status-badge approved">{{ $t('volunteer.skills_active_badge') }}</span>
                 <button
                   class="btn-delete-skill"
                   @click="handleRemoveSkill(skill.id, skill.name)"
                   :disabled="isSubmitting"
                 >
-                  Hủy đăng ký
+                  {{ $t('volunteer.skills_btn_delete') }}
                 </button>
               </div>
             </div>
@@ -97,9 +97,9 @@
 
         <!-- Section: Available Skills for registration -->
         <div class="skills-section add-section">
-          <h3 class="section-title">Kỹ năng gợi ý cho bạn ({{ availableSkillsToRegister.length }})</h3>
+          <h3 class="section-title">{{ $t('volunteer.skills_suggested', { count: availableSkillsToRegister.length }) }}</h3>
           <div v-if="availableSkillsToRegister.length === 0" class="empty-registered-state">
-            Bạn đã đăng ký toàn bộ kỹ năng có sẵn trên hệ thống. Cảm ơn sự nhiệt huyết của bạn!
+            {{ $t('volunteer.skills_all_registered') }}
           </div>
           <div v-else class="skills-grid">
             <div
@@ -116,15 +116,15 @@
                 </div>
                 <h4 class="skill-title">{{ skill.name }}</h4>
               </div>
-              <p class="skill-description">{{ skill.description || 'Chưa có thông tin mô tả chi tiết cho kỹ năng này.' }}</p>
+              <p class="skill-description">{{ skill.description || $t('volunteer.skills_no_description') }}</p>
               <div class="skill-card__actions">
-                <span class="status-badge info">Có thể đăng ký</span>
+                <span class="status-badge info">{{ $t('volunteer.skills_registerable_badge') }}</span>
                 <button
                   class="btn-register-skill"
                   @click="handleAddSkill(skill.id)"
                   :disabled="isSubmitting"
                 >
-                  Đăng ký ngay
+                  {{ $t('volunteer.skills_btn_register') }}
                 </button>
               </div>
             </div>
@@ -137,6 +137,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import BaseSpinner from '@/components/ui/BaseSpinner.vue'
 import {
@@ -148,6 +149,8 @@ import { getSkills } from '@/features/skills/skills.api'
 import type { VolunteerProfile } from '@/features/volunteers/volunteers.types'
 import type { Skill } from '@/features/skills/skills.types'
 
+const { t } = useI18n()
+
 const profile = ref<VolunteerProfile | null>(null)
 const availableSkills = ref<Skill[]>([])
 const hasProfile = ref(true)
@@ -155,7 +158,7 @@ const isLoading = ref(true)
 const isSubmitting = ref(false)
 const successMessage = ref('')
 const errorMessage = ref('')
-const skillOptions = ref<SkillItem[]>([...AVAILABLE_SKILLS])
+
 
 const triggerNotification = (type: 'success' | 'error', msg: string) => {
   if (type === 'success') {
@@ -182,7 +185,7 @@ const loadProfile = async () => {
     if (error.message && error.message.includes('chưa được tạo')) {
       hasProfile.value = false
     } else {
-      triggerNotification('error', error.message || 'Không thể tải hồ sơ tình nguyện viên.')
+      triggerNotification('error', error.message || t('volunteer.profile_msg_load_failed'))
     }
   } finally {
     isLoading.value = false
@@ -213,43 +216,36 @@ const handleAddSkill = async (skillId: string) => {
   isSubmitting.value = true
   try {
     await registerSkills([skillId])
-    triggerNotification('success', 'Đăng ký kỹ năng thành công!')
+    triggerNotification('success', t('volunteer.skills_msg_register_success'))
     await loadProfile()
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể đăng ký kỹ năng.')
+    triggerNotification('error', error.message || t('volunteer.skills_msg_register_failed'))
   } finally {
     isSubmitting.value = false
   }
 }
 
-const handleRemoveSkill = async (skillName: string) => {
-  const targetSkill = availableSkills.value.find(s => s.name === skillName)
-  const idToDelete = targetSkill ? targetSkill.id : skillName
-
-  if (!confirm(`Bạn có chắc muốn hủy đăng ký kỹ năng "${skillName}" không?`)) {
+const handleRemoveSkill = async (skillId: string, skillName: string) => {
+  if (!confirm(t('volunteer.skills_confirm_unregister', { name: skillName }))) {
     return
   }
 
   isSubmitting.value = true
   try {
     await deleteSkill(skillId)
-    triggerNotification('success', `Đã hủy đăng ký kỹ năng "${skillName}" thành công!`)
+    triggerNotification('success', t('volunteer.skills_msg_unregister_success', { name: skillName }))
     await loadProfile()
   } catch (err: unknown) {
     const error = err as Error
-    triggerNotification('error', error.message || 'Không thể hủy đăng ký kỹ năng.')
+    triggerNotification('error', error.message || t('volunteer.skills_msg_unregister_failed'))
   } finally {
     isSubmitting.value = false
   }
 }
 
-const loadSkills = async () => {
-  skillOptions.value = await loadAvailableSkills()
-}
-
 onMounted(() => {
-  void Promise.all([loadSkills(), loadProfile()])
+  void loadProfile()
 })
 </script>
 

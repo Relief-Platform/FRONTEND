@@ -46,7 +46,7 @@
       </nav>
 
       <!-- Collapse toggle -->
-      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Mở rộng' : 'Thu gọn'">
+      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? $t('common.expand') : $t('common.collapse')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path :d="sidebarCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'" />
         </svg>
@@ -58,7 +58,7 @@
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="sidebar-user-info">
             <span class="sidebar-user-name">{{ auth.user?.fullName }}</span>
-            <span class="sidebar-user-role">Tình nguyện viên</span>
+            <span class="sidebar-user-role">{{ $t('roles.Volunteer') }}</span>
           </div>
         </Transition>
       </div>
@@ -83,7 +83,28 @@
         </div>
 
         <div class="topbar-right">
-          <button class="topbar-icon-btn" title="Thông báo">
+          <!-- Language Switcher -->
+          <div class="lang-switch">
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'vi' }"
+              @click="changeLang('vi')"
+              :title="$t('nav.vietnamese')"
+            >
+              VI
+            </button>
+            <span class="lang-divider">|</span>
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'en' }"
+              @click="changeLang('en')"
+              :title="$t('nav.english')"
+            >
+              EN
+            </button>
+          </div>
+
+          <button class="topbar-icon-btn" :title="$t('nav.notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -95,14 +116,14 @@
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">▾</span>
             <Transition name="fade">
               <div v-if="showUserMenu" class="topbar-dropdown">
-                <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
+                <router-link to="/volunteer/profile" class="dropdown-item" @click="showUserMenu = false">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Hồ sơ cá nhân
+                  {{ $t('nav.profile') }}
                 </router-link>
                 <div class="dropdown-divider" />
                 <button class="dropdown-item dropdown-item--danger" @click="handleLogout">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                  Đăng xuất
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </Transition>
@@ -121,12 +142,21 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 
 const router = useRouter()
 const auth = useAuthStore()
+const { locale, t } = useI18n()
+const currentLang = computed(() => locale.value)
+
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
+
+function changeLang(lang: 'vi' | 'en') {
+  locale.value = lang
+  localStorage.setItem('app_lang', lang)
+}
 
 const initials = computed(() =>
   auth.user?.fullName
@@ -139,24 +169,24 @@ const initials = computed(() =>
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  if (h < 12) return 'Chào buổi sáng'
-  if (h < 18) return 'Chào buổi chiều'
-  return 'Chào buổi tối'
+  if (h < 12) return t('common.greeting_morning')
+  if (h < 18) return t('common.greeting_afternoon')
+  return t('common.greeting_evening')
 })
 
-const navItems = [
+const navItems = computed(() => [
   {
     name: 'dashboard',
     routeName: 'volunteer-dashboard',
     to: '/volunteer',
-    label: 'Dashboard',
+    label: t('volunteer.dash_overview'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
   },
   {
     name: 'my-tasks',
     routeName: 'volunteer-my-tasks',
     to: '/volunteer/my-tasks',
-    label: 'Nhiệm vụ của tôi',
+    label: t('volunteer.tasks_title'),
     badge: '3',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
@@ -164,21 +194,21 @@ const navItems = [
     name: 'history',
     routeName: 'volunteer-history',
     to: '/volunteer/history',
-    label: 'Lịch sử hoạt động',
+    label: t('volunteer.history_title'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   },
   {
     name: 'skills',
     routeName: 'volunteer-skills',
     to: '/volunteer/skills',
-    label: 'Đăng ký kỹ năng',
+    label: t('volunteer.dash_action_skills'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
   },
   {
     name: 'notifications',
     routeName: 'volunteer-notifications',
     to: '/volunteer/notifications',
-    label: 'Thông báo',
+    label: t('nav.notifications'),
     badge: '2',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>`,
   },
@@ -186,10 +216,10 @@ const navItems = [
     name: 'profile',
     routeName: 'volunteer-profile',
     to: '/volunteer/profile',
-    label: 'Hồ sơ cá nhân',
+    label: t('nav.profile'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
   },
-]
+])
 
 async function handleLogout(): Promise<void> {
   showUserMenu.value = false
@@ -541,5 +571,40 @@ async function handleLogout(): Promise<void> {
   .vol-body { margin-left: 0 !important; }
   .mobile-menu-btn { display: flex; }
   .vol-content { padding: 20px 16px; }
+}
+
+/* ── Language Switcher ── */
+.lang-switch {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #e8f5ee;
+  padding: 3px 8px;
+  border-radius: 99px;
+  border: 1px solid #c6f6d5;
+  margin-right: 12px;
+}
+.lang-btn {
+  background: none;
+  border: none;
+  font-size: 11px;
+  font-weight: 700;
+  color: #276749;
+  cursor: pointer;
+  padding: 3px 8px;
+  border-radius: 99px;
+  transition: all 0.2s ease;
+}
+.lang-btn:hover {
+  color: #1c4530;
+}
+.lang-btn.active {
+  background: #ffffff;
+  color: #276749;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+.lang-divider {
+  font-size: 11px;
+  color: #a3d9c9;
 }
 </style>

@@ -170,7 +170,7 @@ const router = useRouter()
 const auth   = useAuthStore()
 const showMenu = ref(false)
 
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 const currentLang = computed(() => locale.value)
 
 function changeLang(lang: 'vi' | 'en') {

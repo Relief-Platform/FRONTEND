@@ -6,10 +6,10 @@
         <div>
           <div class="role-badge">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Tình nguyện viên
+            {{ $t('volunteer.role_title') }}
           </div>
-          <h1 class="dash-title">Tổng quan hoạt động</h1>
-          <p class="dash-sub">Theo dõi nhiệm vụ và đóng góp của bạn</p>
+          <h1 class="dash-title">{{ $t('volunteer.dash_overview') }}</h1>
+          <p class="dash-sub">{{ $t('volunteer.dash_sub') }}</p>
         </div>
         <div class="dash-date">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -21,7 +21,7 @@
       <div class="stat-grid">
         <div
           v-for="(card, i) in statCards"
-          :key="card.label"
+          :key="card.labelKey"
           class="stat-card"
           :style="{ '--card-color': card.color, '--card-bg': card.bg, '--delay': `${i * 80}ms` }"
         >
@@ -32,14 +32,14 @@
             <div class="stat-card__trend" :class="card.trendUp ? 'trend--up' : 'trend--neutral'">
               <svg v-if="card.trendUp" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
               <svg v-else width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              {{ card.trend }}
+              {{ $t(card.trendKey) }}
             </div>
           </div>
           <div class="stat-card__body">
             <div class="stat-card__value">{{ card.value }}</div>
-            <div class="stat-card__unit">{{ card.unit }}</div>
+            <div class="stat-card__unit">{{ $t(card.unitKey) }}</div>
           </div>
-          <div class="stat-card__label">{{ card.label }}</div>
+          <div class="stat-card__label">{{ $t(card.labelKey) }}</div>
           <div class="stat-card__bar-wrap">
             <div class="stat-card__bar" :style="{ width: card.progress + '%' }" />
           </div>
@@ -51,8 +51,8 @@
         <!-- Recent activity -->
         <div class="dash-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Hoạt động gần đây</h2>
-            <router-link to="/volunteer/history" class="panel-link">Xem tất cả →</router-link>
+            <h2 class="panel-title">{{ $t('volunteer.dash_recent_activity') }}</h2>
+            <router-link to="/volunteer/history" class="panel-link">{{ $t('volunteer.view_all') }}</router-link>
           </div>
           <div class="activity-list">
             <div
@@ -62,10 +62,10 @@
             >
               <div class="activity-dot" :class="`dot--${act.type}`" />
               <div class="activity-content">
-                <p class="activity-title">{{ act.title }}</p>
-                <p class="activity-meta">{{ act.time }}</p>
+                <p class="activity-title">{{ $t(act.titleKey) }}</p>
+                <p class="activity-meta">{{ $t(act.timeKey) }}</p>
               </div>
-              <span class="activity-tag" :class="`tag--${act.type}`">{{ act.typeLabel }}</span>
+              <span class="activity-tag" :class="`tag--${act.type}`">{{ $t(act.typeLabelKey) }}</span>
             </div>
           </div>
         </div>
@@ -73,18 +73,18 @@
         <!-- Quick actions -->
         <div class="dash-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Hành động nhanh</h2>
+            <h2 class="panel-title">{{ $t('volunteer.dash_quick_actions') }}</h2>
           </div>
           <div class="quick-actions">
             <router-link
               v-for="qa in quickActions"
-              :key="qa.label"
+              :key="qa.labelKey"
               :to="qa.to"
               class="quick-action-btn"
               :style="{ '--qa-color': qa.color }"
             >
               <div class="qa-icon" v-html="qa.icon" />
-              <span>{{ qa.label }}</span>
+              <span>{{ $t(qa.labelKey) }}</span>
             </router-link>
           </div>
 
@@ -112,15 +112,15 @@
               </svg>
               <div class="ring-label">
                 <span class="ring-pct">68%</span>
-                <span class="ring-sub">hoàn thành</span>
+                <span class="ring-sub">{{ $t('volunteer.dash_progress_completed') }}</span>
               </div>
             </div>
             <div class="progress-info">
-              <p class="progress-info-title">Tiến độ tháng này</p>
-              <p class="progress-info-desc">Bạn đã hoàn thành 17 / 25 nhiệm vụ trong tháng 7</p>
+              <p class="progress-info-title">{{ $t('volunteer.dash_progress_this_month') }}</p>
+              <p class="progress-info-desc">{{ $t('volunteer.dash_progress_desc', { completed: 17, total: 25 }) }}</p>
               <div class="progress-legend">
-                <span class="legend-dot" style="background: #276749"/> <span>Hoàn thành: 17</span>
-                <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>Còn lại: 8</span>
+                <span class="legend-dot" style="background: #276749"/> <span>{{ $t('volunteer.dash_progress_legend_completed', { count: 17 }) }}</span>
+                <span class="legend-dot" style="background: #e9ecef; border: 1px solid #d0d5dd"/> <span>{{ $t('volunteer.dash_progress_legend_remaining', { count: 8 }) }}</span>
               </div>
             </div>
           </div>
@@ -132,10 +132,14 @@
 
 <script setup lang="ts">
 import { computed } from 'vue'
+import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 
+const { locale } = useI18n()
+
 const currentDate = computed(() => {
-  return new Date().toLocaleDateString('vi-VN', {
+  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
+  return new Date().toLocaleDateString(loc, {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -145,10 +149,10 @@ const currentDate = computed(() => {
 
 const statCards = [
   {
-    label: 'Nhiệm vụ đang nhận',
+    labelKey: 'volunteer.dash_stat_ongoing',
     value: '5',
-    unit: 'nhiệm vụ',
-    trend: '+2 tuần này',
+    unitKey: 'volunteer.dash_stat_unit_task',
+    trendKey: 'volunteer.dash_stat_trend_ongoing',
     trendUp: true,
     progress: 50,
     color: '#e27d24',
@@ -156,10 +160,10 @@ const statCards = [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
   {
-    label: 'Đã hoàn thành',
+    labelKey: 'volunteer.dash_stat_completed',
     value: '23',
-    unit: 'nhiệm vụ',
-    trend: '+5 tháng này',
+    unitKey: 'volunteer.dash_stat_unit_task',
+    trendKey: 'volunteer.dash_stat_trend_completed',
     trendUp: true,
     progress: 75,
     color: '#276749',
@@ -167,10 +171,10 @@ const statCards = [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="16 12 12 8 8 12"/><line x1="12" y1="16" x2="12" y2="8"/></svg>`,
   },
   {
-    label: 'Tổng giờ hoạt động',
+    labelKey: 'volunteer.dash_stat_hours',
     value: '142',
-    unit: 'giờ',
-    trend: 'Tất cả thời gian',
+    unitKey: 'volunteer.dash_stat_unit_hour',
+    trendKey: 'volunteer.dash_stat_trend_hours',
     trendUp: false,
     progress: 62,
     color: '#3182ce',
@@ -178,10 +182,10 @@ const statCards = [
     icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   },
   {
-    label: 'Điểm đóng góp',
+    labelKey: 'volunteer.dash_points',
     value: '1,280',
-    unit: 'điểm',
-    trend: '+120 tháng này',
+    unitKey: 'volunteer.dash_unit_points',
+    trendKey: 'volunteer.dash_stat_trend_skills',
     trendUp: true,
     progress: 85,
     color: '#6b46c1',
@@ -191,34 +195,34 @@ const statCards = [
 ]
 
 const recentActivities = [
-  { id: 1, title: 'Hoàn thành nhiệm vụ phát cơm từ thiện', time: '2 giờ trước', type: 'done', typeLabel: 'Hoàn thành' },
-  { id: 2, title: 'Nhận nhiệm vụ hỗ trợ lũ lụt tại Đà Nẵng', time: 'Hôm qua, 14:30', type: 'assigned', typeLabel: 'Được giao' },
-  { id: 3, title: 'Đăng ký kỹ năng Sơ cứu y tế', time: '3 ngày trước', type: 'skill', typeLabel: 'Kỹ năng' },
-  { id: 4, title: 'Hoàn thành đào tạo ứng phó thiên tai', time: '5 ngày trước', type: 'done', typeLabel: 'Hoàn thành' },
-  { id: 5, title: 'Tham gia chiến dịch bảo vệ môi trường', time: '1 tuần trước', type: 'assigned', typeLabel: 'Được giao' },
+  { id: 1, titleKey: 'volunteer.dash_act_1', timeKey: 'volunteer.dash_time_2h', type: 'done', typeLabelKey: 'volunteer.dash_completed' },
+  { id: 2, titleKey: 'volunteer.dash_act_2', timeKey: 'volunteer.dash_time_yesterday', type: 'assigned', typeLabelKey: 'volunteer.dash_assigned' },
+  { id: 3, titleKey: 'volunteer.dash_act_3', timeKey: 'volunteer.dash_time_3d', type: 'skill', typeLabelKey: 'volunteer.dash_skills' },
+  { id: 4, titleKey: 'volunteer.dash_act_4', timeKey: 'volunteer.dash_time_5d', type: 'done', typeLabelKey: 'volunteer.dash_completed' },
+  { id: 5, titleKey: 'volunteer.dash_act_5', timeKey: 'volunteer.dash_time_1w', type: 'assigned', typeLabelKey: 'volunteer.dash_assigned' },
 ]
 
 const quickActions = [
   {
-    label: 'Xem nhiệm vụ',
+    labelKey: 'volunteer.dash_action_tasks',
     to: '/volunteer/my-tasks',
     color: '#e27d24',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>`,
   },
   {
-    label: 'Lịch sử',
+    labelKey: 'volunteer.dash_action_history',
     to: '/volunteer/history',
     color: '#3182ce',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>`,
   },
   {
-    label: 'Đăng ký kỹ năng',
+    labelKey: 'volunteer.dash_action_skills',
     to: '/volunteer/skills',
     color: '#6b46c1',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
   },
   {
-    label: 'Hồ sơ cá nhân',
+    labelKey: 'volunteer.dash_action_profile',
     to: '/volunteer/profile',
     color: '#276749',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
