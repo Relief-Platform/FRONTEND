@@ -3,7 +3,7 @@
     <div class="page-container">
       <!-- Header -->
       <div class="page-header">
-        <h1 class="page-title">Quản lý người dùng</h1>
+        <h1 class="page-title">{{ $t('admin.users_title') }}</h1>
       </div>
 
       <!-- Search bar -->
@@ -11,7 +11,7 @@
         <BaseInput
           id="search-users"
           v-model="query"
-          placeholder="Tìm kiếm theo tên, email..."
+          :placeholder="$t('admin.users_search')"
           style="max-width: 340px"
         >
           <template #prefix>
@@ -23,7 +23,7 @@
         </BaseInput>
 
         <select v-model="selectedRole" class="role-filter" @change="onRoleChange">
-          <option value="">Tất cả vai trò</option>
+          <option value="">{{ $t('admin.all_roles') }}</option>
           <option value="Admin">Admin</option>
           <option value="Volunteer">Volunteer</option>
           <option value="Requester">Requester</option>
@@ -39,19 +39,19 @@
         </div>
 
         <div v-else-if="filteredUsers.length === 0" class="users-empty">
-          <p>{{ query.trim() ? 'Không tìm thấy người dùng phù hợp.' : 'Chưa có người dùng nào.' }}</p>
+          <p>{{ query.trim() ? $t('admin.no_users_found') : $t('admin.no_users_empty') }}</p>
         </div>
 
         <table v-else class="users-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Họ và tên</th>
-              <th>Email</th>
-              <th>Điện thoại</th>
-              <th>Trạng thái</th>
-              <th>Vai trò</th>
-              <th>Thao tác</th>
+              <th>{{ $t('admin.col_name') }}</th>
+              <th>{{ $t('admin.col_email') }}</th>
+              <th>{{ $t('admin.col_phone') }}</th>
+              <th>{{ $t('admin.col_status') }}</th>
+              <th>{{ $t('admin.col_role') }}</th>
+              <th>{{ $t('admin.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -62,14 +62,14 @@
               <td>{{ user.phoneNumber ?? '—' }}</td>
               <td>
                 <span class="status-badge" :class="user.isActive ? 'status--active' : 'status--inactive'">
-                  {{ user.isActive ? 'Hoạt động' : 'Đã khoá' }}
+                  {{ user.isActive ? $t('admin.status_active') : $t('admin.status_locked') }}
                 </span>
               </td>
-              <td><span class="role-badge">{{ user.role ?? 'User' }}</span></td>
+              <td><span class="role-badge">{{ user.role ? $t(`roles.${user.role}`, user.role) : 'User' }}</span></td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--edit" @click="openEditRole(user)">Đổi Role</button>
-                <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">Khoá</button>
-                <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">Mở Khoá</button>
+                <button class="action-btn action-btn--edit" @click="openEditRole(user)">{{ $t('admin.btn_change_role') }}</button>
+                <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">{{ $t('admin.btn_lock') }}</button>
+                <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">{{ $t('admin.btn_unlock') }}</button>
               </td>
             </tr>
           </tbody>
@@ -77,9 +77,9 @@
 
         <!-- Pagination -->
         <div v-if="!query.trim() && store.total > store.pageSize" class="users-pagination">
-          <button class="page-btn" :disabled="!hasPrev" @click="changePage(-1)">‹ Trước</button>
-          <span class="page-info">Trang {{ store.page }} / {{ totalPages }}</span>
-          <button class="page-btn" :disabled="!hasNext" @click="changePage(1)">Tiếp ›</button>
+          <button class="page-btn" :disabled="!hasPrev" @click="changePage(-1)">{{ $t('admin.page_prev') }}</button>
+          <span class="page-info">{{ $t('admin.page_info', { page: store.page, total: totalPages }) }}</span>
+          <button class="page-btn" :disabled="!hasNext" @click="changePage(1)">{{ $t('admin.page_next') }}</button>
         </div>
       </BaseCard>
     </div>

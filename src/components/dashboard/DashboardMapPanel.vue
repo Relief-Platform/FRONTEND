@@ -2,28 +2,28 @@
   <div class="dm-panel">
     <div class="dm-header">
       <div>
-        <h2 class="dm-title">Bản đồ hoạt động</h2>
-        <p class="dm-sub">Yêu cầu cứu trợ đang xử lý và vị trí kho hàng</p>
+        <h2 class="dm-title">{{ $t('admin.map_title') }}</h2>
+        <p class="dm-sub">{{ $t('admin.map_sub') }}</p>
       </div>
       <button class="dm-list-toggle" @click="showList = !showList">
-        {{ showList ? 'Xem bản đồ' : 'Xem dạng danh sách' }}
+        {{ showList ? $t('admin.btn_view_map') : $t('admin.btn_view_list') }}
       </button>
     </div>
 
     <div v-if="isLoading" class="dm-loading">
       <div class="loading-spinner" />
-      Đang tải dữ liệu bản đồ...
+      {{ $t('common.loading') }}
     </div>
 
     <div v-else-if="totalPoints === 0" class="dm-empty">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-      Chưa có yêu cầu hoặc kho hàng nào để hiển thị.
+      {{ $t('admin.no_map_data') }}
     </div>
 
     <!-- List view (fallback / accessibility) -->
     <div v-else-if="showList" class="dm-list-wrap">
       <div class="dm-list-group">
-        <p class="dm-list-group-title">Yêu cầu cứu trợ ({{ mapData?.requests.length ?? 0 }})</p>
+        <p class="dm-list-group-title">{{ $t('admin.nav_requests') }} ({{ mapData?.requests.length ?? 0 }})</p>
         <div v-for="r in mapData?.requests" :key="r.id" class="dm-list-item">
           <span class="dm-list-dot" :style="{ background: severityColor(r.emergencyLevel) }" />
           <span class="dm-list-item-title">{{ r.title }}</span>
@@ -31,7 +31,7 @@
         </div>
       </div>
       <div class="dm-list-group">
-        <p class="dm-list-group-title">Kho hàng ({{ mapData?.warehouses.length ?? 0 }})</p>
+        <p class="dm-list-group-title">{{ $t('nav.warehouse') }} ({{ mapData?.warehouses.length ?? 0 }})</p>
         <div v-for="w in mapData?.warehouses" :key="w.id" class="dm-list-item">
           <span class="dm-list-dot" style="background: #6b46c1;" />
           <span class="dm-list-item-title">{{ w.name }}</span>
@@ -43,10 +43,10 @@
     <template v-else>
       <div ref="mapElRef" class="dm-map" />
       <div class="dm-legend">
-        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#fecaca; width:8px; height:8px;" />Thấp</span>
-        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#f87171; width:11px; height:11px;" />Trung bình</span>
-        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#b91c1c; width:14px; height:14px;" />Cao</span>
-        <span class="dm-legend-item"><span class="dm-legend-dot dm-legend-dot--sq" style="background:#6b46c1;" />Kho hàng</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#fecaca; width:8px; height:8px;" />{{ $t('coordinator.emergency_low') }}</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#f87171; width:11px; height:11px;" />{{ $t('coordinator.emergency_medium') }}</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#b91c1c; width:14px; height:14px;" />{{ $t('coordinator.emergency_high') }}</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot dm-legend-dot--sq" style="background:#6b46c1;" />{{ $t('nav.warehouse') }}</span>
       </div>
     </template>
   </div>
@@ -54,9 +54,12 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onBeforeUnmount, watch, nextTick } from 'vue'
+import { useI18n } from 'vue-i18n'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import { getDashboardMap, type DashboardMap } from '@/features/dashboard/dashboard.api'
+
+const { locale, t } = useI18n()
 
 const mapData = ref<DashboardMap | null>(null)
 const isLoading = ref(true)
@@ -67,8 +70,6 @@ let mapInstance: L.Map | null = null
 
 const totalPoints = computed(() => (mapData.value?.requests.length ?? 0) + (mapData.value?.warehouses.length ?? 0))
 
-// Mức độ khẩn cấp: mã hoá ordinal 1 hue (đỏ), phân biệt bằng độ đậm + kích thước
-// — không dựa vào việc so màu giữa các mức (đã kiểm bằng validate_palette.js).
 function severityColor(level: number): string {
   if (level >= 3) return '#b91c1c'
   if (level === 2) return '#f87171'
@@ -80,9 +81,9 @@ function severityRadius(level: number): number {
   return 6
 }
 function severityLabel(level: number): string {
-  if (level >= 3) return 'Cao'
-  if (level === 2) return 'Trung bình'
-  return 'Thấp'
+  if (level >= 3) return t('coordinator.emergency_high')
+  if (level === 2) return t('coordinator.emergency_medium')
+  return t('coordinator.emergency_low')
 }
 
 async function load() {
@@ -115,6 +116,10 @@ function renderMap() {
 
   const bounds: L.LatLngTuple[] = []
 
+  const levelText = locale.value === 'vi' ? 'Mức độ' : 'Emergency'
+  const statusText = locale.value === 'vi' ? 'Trạng thái' : 'Status'
+  const warehouseText = locale.value === 'vi' ? 'Kho hàng' : 'Warehouse'
+
   for (const r of mapData.value.requests) {
     const pos: L.LatLngTuple = [r.latitude, r.longitude]
     bounds.push(pos)
@@ -125,7 +130,7 @@ function renderMap() {
       color: '#fff',
       weight: 2,
     })
-      .bindPopup(`<strong>${escapeHtml(r.title)}</strong><br>Mức độ: ${severityLabel(r.emergencyLevel)}<br>Trạng thái: ${escapeHtml(r.status)}`)
+      .bindPopup(`<strong>${escapeHtml(r.title)}</strong><br>${levelText}: ${severityLabel(r.emergencyLevel)}<br>${statusText}: ${escapeHtml(r.status)}`)
       .addTo(map)
   }
 
@@ -140,7 +145,7 @@ function renderMap() {
     const pos: L.LatLngTuple = [w.latitude, w.longitude]
     bounds.push(pos)
     L.marker(pos, { icon: warehouseIcon })
-      .bindPopup(`<strong>${escapeHtml(w.name)}</strong><br>Kho hàng`)
+      .bindPopup(`<strong>${escapeHtml(w.name)}</strong><br>${warehouseText}`)
       .addTo(map)
   }
 
@@ -167,6 +172,13 @@ onMounted(async () => {
 
 watch(showList, async (hidden) => {
   if (!hidden) {
+    await nextTick()
+    renderMap()
+  }
+})
+
+watch(locale, async () => {
+  if (!showList.value) {
     await nextTick()
     renderMap()
   }

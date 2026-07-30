@@ -6,10 +6,10 @@
         <div>
           <div class="role-badge">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            Quản lý Phân công
+            {{ $t('admin.assignments_title') }}
           </div>
-          <h1 class="page-title">Phân công Tình nguyện viên</h1>
-          <p class="page-sub">Theo dõi, duyệt huỷ và quản lý trạng thái tất cả phân công</p>
+          <h1 class="page-title">{{ $t('admin.assignments_title') }}</h1>
+          <p class="page-sub">{{ $t('admin.assignments_sub') }}</p>
         </div>
         <div class="header-stats">
           <div class="hstat" v-for="s in headerStats" :key="s.label" :style="{ '--hs-color': s.color }">
@@ -27,7 +27,7 @@
           @click="activeTab = 'all'"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-          Tất cả phân công
+          {{ $t('admin.tab_all_assignments') }}
           <span class="tab-count">{{ assignments.length }}</span>
         </button>
         <button
@@ -36,7 +36,7 @@
           @click="switchToPending"
         >
           <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          Đơn xin huỷ chờ duyệt
+          {{ $t('admin.tab_pending_cancellations') }}
           <span class="tab-count tab-count--danger" v-if="pendingCancellations.length > 0">{{ pendingCancellations.length }}</span>
         </button>
       </div>
@@ -47,7 +47,7 @@
         <div class="filter-bar">
           <div class="search-wrap">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-            <input v-model="searchQuery" class="search-input" placeholder="Tìm theo tên TNV, yêu cầu..." />
+            <input v-model="searchQuery" class="search-input" :placeholder="$t('admin.search_assignments')" />
           </div>
           <div class="status-filters">
             <button
@@ -68,22 +68,22 @@
         <!-- Table -->
         <div class="table-card">
           <div v-if="isLoading" class="loading-state">
-            <div class="spinner" /> Đang tải dữ liệu...
+            <div class="spinner" /> {{ $t('common.loading') }}
           </div>
           <div v-else-if="displayedRows.length === 0" class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <p>Chưa có phân công nào</p>
+            <p>{{ $t('admin.no_assignments') }}</p>
           </div>
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>Tình nguyện viên</th>
-                <th>Yêu cầu cứu trợ</th>
-                <th class="th-center">Trạng thái</th>
-                <th>Ngày phân công</th>
-                <th>Ngày hoàn thành</th>
-                <th class="th-center">Xin huỷ</th>
-                <th class="th-center">Thao tác</th>
+                <th>{{ $t('admin.col_volunteer') }}</th>
+                <th>{{ $t('admin.col_request') }}</th>
+                <th class="th-center">{{ $t('admin.col_status') }}</th>
+                <th>{{ $t('admin.col_assigned_date') }}</th>
+                <th>{{ $t('admin.col_completed_date') }}</th>
+                <th class="th-center">{{ $t('admin.col_cancellation') }}</th>
+                <th class="th-center">{{ $t('admin.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -109,11 +109,11 @@
                 <td class="td-date">{{ fmtDate(row.assignedAt) }}</td>
                 <td class="td-date">{{ row.completedAt ? fmtDate(row.completedAt) : '—' }}</td>
                 <td class="th-center">
-                  <span v-if="row.cancellationRequested" class="cancel-req-badge">Chờ duyệt</span>
+                  <span v-if="row.cancellationRequested" class="cancel-req-badge">{{ $t('admin.has_cancel_request') }}</span>
                   <span v-else class="no-badge">—</span>
                 </td>
                 <td class="th-center" @click.stop>
-                  <button class="btn-view" @click="openDrawer(row)">Chi tiết</button>
+                  <button class="btn-view" @click="openDrawer(row)">{{ $t('admin.btn_details') }}</button>
                 </td>
               </tr>
             </tbody>
@@ -125,20 +125,20 @@
       <template v-else>
         <div class="table-card" style="margin-top: 16px;">
           <div v-if="isPendingLoading" class="loading-state">
-            <div class="spinner" /> Đang tải đơn xin huỷ...
+            <div class="spinner" /> {{ $t('common.loading') }}
           </div>
           <div v-else-if="pendingCancellations.length === 0" class="empty-state">
             <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-            <p>Không có đơn xin huỷ nào đang chờ</p>
+            <p>{{ $t('admin.no_assignments') }}</p>
           </div>
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>Tình nguyện viên</th>
-                <th>Yêu cầu cứu trợ</th>
-                <th>Lý do xin huỷ</th>
-                <th>Thời gian gửi</th>
-                <th class="th-center">Hành động</th>
+                <th>{{ $t('admin.col_volunteer') }}</th>
+                <th>{{ $t('admin.col_request') }}</th>
+                <th>{{ $t('admin.col_cancellation') }}</th>
+                <th>{{ $t('admin.col_assigned_date') }}</th>
+                <th class="th-center">{{ $t('admin.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
@@ -161,7 +161,7 @@
                     >
                       <svg v-if="processingId === row.id && processingAction === 'approve'" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      Duyệt huỷ
+                      {{ $t('admin.btn_approve') }}
                     </button>
                     <button
                       class="btn-reject"
@@ -170,7 +170,7 @@
                     >
                       <svg v-if="processingId === row.id && processingAction === 'reject'" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      Từ chối
+                      {{ $t('admin.btn_reject') }}
                     </button>
                   </div>
                 </td>
@@ -189,7 +189,7 @@
             <!-- Modal Header -->
             <div class="modal-header">
               <div class="modal-header__inner">
-                <p class="modal-subtitle">Chi tiết phân công</p>
+                <p class="modal-subtitle">{{ $t('admin.btn_details') }}</p>
                 <h2 class="modal-title">{{ selected?.reliefRequestTitle }}</h2>
               </div>
               <button class="modal-close" @click="closeDrawer">
@@ -229,7 +229,7 @@
                   </div>
                   <div class="mtl-content">
                     <p class="mtl-label">{{ step.label }}</p>
-                    <p class="mtl-time">{{ stepTime(step.key) ?? (isStepFuture(step.key) ? 'Chưa đến' : '') }}</p>
+                    <p class="mtl-time">{{ stepTime(step.key) ?? (isStepFuture(step.key) ? '—' : '') }}</p>
                   </div>
                 </div>
               </div>
@@ -240,16 +240,16 @@
                 <div class="info-card">
                   <div class="info-card__header">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                    Yêu cầu cứu trợ
+                    {{ $t('admin.col_request') }}
                   </div>
-                  <p class="info-card__sublabel">Tiêu đề</p>
+                  <p class="info-card__sublabel">{{ $t('admin.col_request_title') }}</p>
                   <p class="info-card__val">{{ selected.reliefRequestTitle }}</p>
                   <template v-if="selected.note">
-                    <p class="info-card__sublabel" style="margin-top:10px">Ghi chú</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_skill_desc') }}</p>
                     <p class="info-card__val info-card__val--note">{{ selected.note }}</p>
                   </template>
                   <template v-if="selected.cancellationRequested">
-                    <p class="info-card__sublabel" style="margin-top:10px">Lý do xin huỷ</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_cancellation') }}</p>
                     <p class="info-card__val reason-text">{{ selected.cancellationReason }}</p>
                   </template>
                 </div>
@@ -258,35 +258,35 @@
                 <div class="info-card">
                   <div class="info-card__header">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Thời gian
+                    {{ $t('admin.section_location_time') }}
                   </div>
-                  <p class="info-card__sublabel">Phân công lúc</p>
+                  <p class="info-card__sublabel">{{ $t('admin.col_assigned_date') }}</p>
                   <div class="info-card__datebox">{{ fmtDate(selected.assignedAt) }}</div>
-                  <p class="info-card__sublabel" style="margin-top:10px">Hoàn thành lúc</p>
-                  <div class="info-card__datebox info-card__datebox--muted">{{ selected.completedAt ? fmtDate(selected.completedAt) : 'Chưa hoàn thành' }}</div>
+                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_completed_date') }}</p>
+                  <div class="info-card__datebox info-card__datebox--muted">{{ selected.completedAt ? fmtDate(selected.completedAt) : '—' }}</div>
                 </div>
               </div>
 
               <!-- Admin actions -->
               <div class="modal-admin">
-                <p class="modal-admin__label">Thao tác Admin</p>
+                <p class="modal-admin__label">{{ $t('admin.col_actions') }}</p>
 
                 <!-- Cancel request banner -->
                 <template v-if="selected.cancellationRequested && selected.status !== 'Cancelled'">
                   <div class="cancel-req-banner">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#b45309" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    <span>TNV đã gửi đơn xin huỷ lúc <strong>{{ fmtDate(selected.cancellationRequestedAt!) }}</strong></span>
+                    <span>{{ $t('admin.has_cancel_request') }} — <strong>{{ fmtDate(selected.cancellationRequestedAt!) }}</strong></span>
                   </div>
                   <div class="action-btns" style="margin-top:10px">
                     <button class="btn-approve btn-lg" :disabled="isActioning" @click="handleApprove(selected)">
                       <svg v-if="isActioning && actionType === 'approve'" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                      Duyệt huỷ phân công
+                      {{ $t('admin.btn_approve') }}
                     </button>
                     <button class="btn-reject btn-lg" :disabled="isActioning" @click="handleReject(selected)">
                       <svg v-if="isActioning && actionType === 'reject'" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                      Từ chối đơn
+                      {{ $t('admin.btn_reject') }}
                     </button>
                   </div>
                 </template>
@@ -294,12 +294,12 @@
                 <!-- Force cancel -->
                 <template v-if="selected.status !== 'Completed' && selected.status !== 'Cancelled'">
                   <div class="force-cancel-block">
-                    <p class="fc-title">Huỷ trực tiếp</p>
+                    <p class="fc-title">{{ $t('admin.col_cancellation') }}</p>
                     <div class="fc-row">
                       <input
                         v-model="forceCancelReason"
                         class="fc-input"
-                        placeholder="Lý do huỷ bắt buộc..."
+                        :placeholder="$t('admin.col_cancellation')"
                         :disabled="isActioning"
                       />
                       <button
@@ -308,7 +308,7 @@
                         @click="handleForceCancel"
                       >
                         <svg v-if="isActioning && actionType === 'force'" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
-                        Huỷ ngay
+                        {{ $t('admin.btn_lock') }}
                       </button>
                     </div>
                   </div>
@@ -326,6 +326,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import {
   getAssignments,
@@ -337,14 +338,24 @@ import {
   type AssignmentStatus,
 } from '@/features/tasks/assignments.api'
 
-// ── Status config ─────────────────────────────────────────────
-const ASN_STATUS_LABEL: Record<AssignmentStatus, string> = {
-  Assigned:  'Đã giao',
-  Accepted:  'Đã nhận',
-  OnTheWay:  'Đang đi',
-  Completed: 'Hoàn thành',
-  Cancelled: 'Đã huỷ',
+const { locale, t } = useI18n()
+
+const fmtDate = (dateStr: string) => {
+  const _ = locale.value
+  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
 }
+
+// ── Status config ─────────────────────────────────────────────
+const ASN_STATUS_LABEL = computed<Record<AssignmentStatus, string>>(() => {
+  const _ = locale.value
+  return {
+    Assigned:  locale.value === 'vi' ? 'Đã giao' : 'Assigned',
+    Accepted:  locale.value === 'vi' ? 'Đã nhận' : 'Accepted',
+    OnTheWay:  locale.value === 'vi' ? 'Đang đi' : 'On The Way',
+    Completed: locale.value === 'vi' ? 'Hoàn thành' : 'Completed',
+    Cancelled: locale.value === 'vi' ? 'Đã huỷ' : 'Cancelled',
+  }
+})
 
 interface StatusStyle { bg: string; color: string; dot: string }
 const ASN_STATUS_STYLE: Record<AssignmentStatus, StatusStyle> = {
@@ -364,12 +375,15 @@ function asnDotStyle(s: AssignmentStatus) {
 }
 
 // Timeline steps (volunteer flow)
-const statusTimeline = [
-  { key: 'Assigned',  label: 'Đã phân công' },
-  { key: 'Accepted',  label: 'TNV đã nhận' },
-  { key: 'OnTheWay',  label: 'Đang trên đường' },
-  { key: 'Completed', label: 'Hoàn thành' },
-]
+const statusTimeline = computed(() => {
+  const _ = locale.value
+  return [
+    { key: 'Assigned',  label: locale.value === 'vi' ? 'Đã phân công' : 'Assigned' },
+    { key: 'Accepted',  label: locale.value === 'vi' ? 'TNV đã nhận' : 'Accepted by Volunteer' },
+    { key: 'OnTheWay',  label: locale.value === 'vi' ? 'Đang trên đường' : 'On The Way' },
+    { key: 'Completed', label: locale.value === 'vi' ? 'Hoàn thành' : 'Completed' },
+  ]
+})
 const STATUS_ORDER: AssignmentStatus[] = ['Assigned', 'Accepted', 'OnTheWay', 'Completed', 'Cancelled']
 
 // ── State ────────────────────────────────────────────────────
@@ -398,23 +412,29 @@ const pendingMsg       = ref('')
 const pendingMsgType   = ref<'ok' | 'error'>('ok')
 
 // ── Computed ─────────────────────────────────────────────────
-const headerStats = computed(() => [
-  { label: 'Đã giao',    val: assignments.value.filter(a => a.status === 'Assigned').length,  color: '#3b82f6' },
-  { label: 'Đang đi',    val: assignments.value.filter(a => a.status === 'OnTheWay').length,  color: '#f97316' },
-  { label: 'Hoàn thành', val: assignments.value.filter(a => a.status === 'Completed').length, color: '#10b981' },
-  { label: 'Chờ duyệt',  val: pendingCancellations.value.length,                             color: '#ef4444' },
-])
+const headerStats = computed(() => {
+  const _ = locale.value
+  const labels = ASN_STATUS_LABEL.value
+  return [
+    { label: labels.Assigned,   val: assignments.value.filter(a => a.status === 'Assigned').length,  color: '#3b82f6' },
+    { label: labels.OnTheWay,   val: assignments.value.filter(a => a.status === 'OnTheWay').length,  color: '#f97316' },
+    { label: labels.Completed,  val: assignments.value.filter(a => a.status === 'Completed').length, color: '#10b981' },
+    { label: t('admin.status_pending'), val: pendingCancellations.value.length,                     color: '#ef4444' },
+  ]
+})
 
 const statusFilters = computed(() => {
+  const _ = locale.value
   const all = assignments.value
+  const labels = ASN_STATUS_LABEL.value
   const countOf = (s: AssignmentStatus) => all.filter(a => a.status === s).length
   return [
-    { key: 'all',       label: 'Tất cả',     dot: '#94a3b8', bg: '#f1f5f9', color: '#475569', count: all.length },
-    { key: 'Assigned',  label: 'Đã giao',    dot: '#3b82f6', bg: '#dbeafe', color: '#1d4ed8', count: countOf('Assigned') },
-    { key: 'Accepted',  label: 'Đã nhận',    dot: '#8b5cf6', bg: '#ede9fe', color: '#6d28d9', count: countOf('Accepted') },
-    { key: 'OnTheWay',  label: 'Đang đi',    dot: '#f97316', bg: '#ffedd5', color: '#9a3412', count: countOf('OnTheWay') },
-    { key: 'Completed', label: 'Hoàn thành', dot: '#10b981', bg: '#d1fae5', color: '#065f46', count: countOf('Completed') },
-    { key: 'Cancelled', label: 'Đã huỷ',     dot: '#94a3b8', bg: '#f3f4f6', color: '#4b5563', count: countOf('Cancelled') },
+    { key: 'all',       label: locale.value === 'vi' ? 'Tất cả' : 'All', dot: '#94a3b8', bg: '#f1f5f9', color: '#475569', count: all.length },
+    { key: 'Assigned',  label: labels.Assigned,  dot: '#3b82f6', bg: '#dbeafe', color: '#1d4ed8', count: countOf('Assigned') },
+    { key: 'Accepted',  label: labels.Accepted,  dot: '#8b5cf6', bg: '#ede9fe', color: '#6d28d9', count: countOf('Accepted') },
+    { key: 'OnTheWay',  label: labels.OnTheWay,  dot: '#f97316', bg: '#ffedd5', color: '#9a3412', count: countOf('OnTheWay') },
+    { key: 'Completed', label: labels.Completed, dot: '#10b981', bg: '#d1fae5', color: '#065f46', count: countOf('Completed') },
+    { key: 'Cancelled', label: labels.Cancelled, dot: '#94a3b8', bg: '#f3f4f6', color: '#4b5563', count: countOf('Cancelled') },
   ]
 })
 
@@ -587,11 +607,6 @@ function removePending(id: string) {
   pendingCancellations.value = pendingCancellations.value.filter(a => a.id !== id)
 }
 
-// ── Utils ─────────────────────────────────────────────────────
-function fmtDate(iso: string): string {
-  const d = new Date(iso)
-  return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-}
 </script>
 
 <style scoped>

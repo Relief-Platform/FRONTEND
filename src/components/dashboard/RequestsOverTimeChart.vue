@@ -2,10 +2,10 @@
   <div class="rot-panel">
     <div class="rot-header">
       <div>
-        <h2 class="rot-title">Yêu cầu cứu trợ theo thời gian</h2>
+        <h2 class="rot-title">{{ $t('admin.chart_title') }}</h2>
         <p class="rot-sub">
           <template v-if="!isLoading && data.length">
-            Tổng <strong>{{ total.toLocaleString('vi-VN') }}</strong> yêu cầu trong {{ days }} ngày qua
+            {{ locale === 'vi' ? 'Tổng' : 'Total' }} <strong>{{ total.toLocaleString(locale === 'vi' ? 'vi-VN' : 'en-US') }}</strong> {{ $t('admin.chart_sub', { days }) }}
           </template>
           <template v-else>&nbsp;</template>
         </p>
@@ -19,30 +19,30 @@
             :class="{ active: days === preset }"
             @click="days = preset"
           >
-            {{ preset }} ngày
+            {{ preset }} {{ $t('admin.days') }}
           </button>
         </div>
         <button class="rot-table-toggle" @click="showTable = !showTable">
-          {{ showTable ? 'Xem biểu đồ' : 'Xem dạng bảng' }}
+          {{ showTable ? $t('admin.btn_view_chart') : $t('admin.btn_view_table') }}
         </button>
       </div>
     </div>
 
     <div v-if="isLoading" class="rot-loading">
       <div class="loading-spinner" />
-      Đang tải dữ liệu...
+      {{ $t('common.loading') }}
     </div>
 
     <div v-else-if="data.length === 0" class="rot-empty">
       <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M3 3v18h18"/><path d="M18 8l-5 5-4-4-4 4"/></svg>
-      Chưa có dữ liệu yêu cầu trong khoảng thời gian này.
+      {{ $t('admin.no_chart_data') }}
     </div>
 
     <!-- Table view (fallback / accessibility) -->
     <div v-else-if="showTable" class="rot-table-wrap">
       <table class="rot-table">
         <thead>
-          <tr><th>Ngày</th><th>Số yêu cầu</th></tr>
+          <tr><th>{{ $t('admin.col_date') }}</th><th>{{ $t('admin.col_request_count') }}</th></tr>
         </thead>
         <tbody>
           <tr v-for="item in [...data].reverse()" :key="item.date">
@@ -109,7 +109,7 @@
         <div class="rot-tooltip-date">{{ formatDate(data[hoverIndex].date) }}</div>
         <div class="rot-tooltip-row">
           <span class="rot-tooltip-key" />
-          <span class="rot-tooltip-value">{{ data[hoverIndex].count }} yêu cầu</span>
+          <span class="rot-tooltip-value">{{ data[hoverIndex].count }} {{ $t('admin.requests_unit') }}</span>
         </div>
       </div>
     </div>
@@ -118,7 +118,10 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { getRequestsOverTime, type RequestsOverTimeItem } from '@/features/dashboard/dashboard.api'
+
+const { locale, t } = useI18n()
 
 const presets = [7, 30, 90] as const
 const days = ref<7 | 30 | 90>(30)
@@ -212,7 +215,7 @@ const tooltipStyle = computed(() => {
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
-  return d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })
+  return d.toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit' })
 }
 </script>
 

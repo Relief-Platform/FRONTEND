@@ -1,29 +1,29 @@
 <template>
   <el-dialog
     v-model="visible"
-    :title="editData ? 'Chỉnh sửa Kỹ năng' : 'Thêm Kỹ năng mới'"
+    :title="editData ? $t('admin.dialog_edit_skill') : $t('admin.dialog_add_skill')"
     width="440px"
     @close="resetForm"
   >
     <el-form label-position="top">
-      <el-form-item label="Tên kỹ năng" required>
-        <el-input v-model="form.name" placeholder="VD: Sơ cứu y tế" />
+      <el-form-item :label="$t('admin.skill_name_label')" required>
+        <el-input v-model="form.name" :placeholder="$t('admin.skill_name_placeholder')" />
       </el-form-item>
 
-      <el-form-item label="Mô tả">
+      <el-form-item :label="$t('admin.skill_desc_label')">
         <el-input
           v-model="form.description"
           type="textarea"
           :rows="3"
-          placeholder="Mô tả ngắn gọn yêu cầu/phạm vi của kỹ năng này"
+          :placeholder="$t('admin.skill_desc_placeholder')"
         />
       </el-form-item>
     </el-form>
 
     <template #footer>
-      <el-button @click="visible = false">Huỷ</el-button>
+      <el-button @click="visible = false">{{ $t('common.cancel') }}</el-button>
       <el-button type="primary" :loading="isLoading" @click="handleSubmit">
-        {{ editData ? 'Lưu thay đổi' : 'Tạo kỹ năng' }}
+        {{ editData ? $t('common.save') : $t('admin.btn_create_skill') }}
       </el-button>
     </template>
   </el-dialog>
@@ -31,9 +31,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { createSkill, updateSkill } from './skills.api'
 import type { Skill } from './skills.types'
+
+const { t } = useI18n()
 
 interface Props {
   modelValue: boolean

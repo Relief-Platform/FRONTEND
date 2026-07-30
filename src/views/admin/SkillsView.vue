@@ -4,12 +4,12 @@
       <!-- Header -->
       <div class="page-header">
         <div>
-          <h1 class="page-title">Quản lý Kỹ năng</h1>
-          <p class="page-sub">Danh mục kỹ năng cứu trợ để tình nguyện viên đăng ký hồ sơ.</p>
+          <h1 class="page-title">{{ $t('admin.skills_title') }}</h1>
+          <p class="page-sub">{{ $t('admin.skills_sub') }}</p>
         </div>
         <button class="btn-add" @click="openCreate">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Thêm kỹ năng
+          {{ $t('admin.btn_add_skill') }}
         </button>
       </div>
 
@@ -19,16 +19,16 @@
         </div>
 
         <div v-else-if="skills.length === 0" class="skills-empty">
-          <p>Chưa có kỹ năng nào trong hệ thống.</p>
+          <p>{{ $t('admin.no_skills') }}</p>
         </div>
 
         <table v-else class="skills-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Tên kỹ năng</th>
-              <th>Mô tả</th>
-              <th>Thao tác</th>
+              <th>{{ $t('admin.col_skill_name') }}</th>
+              <th>{{ $t('admin.col_skill_desc') }}</th>
+              <th>{{ $t('admin.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -37,8 +37,8 @@
               <td class="font-semibold">{{ skill.name }}</td>
               <td class="skills-desc-cell">{{ skill.description || '—' }}</td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--edit" @click="openEdit(skill)">Sửa</button>
-                <button class="action-btn action-btn--delete" @click="handleDelete(skill)">Xoá</button>
+                <button class="action-btn action-btn--edit" @click="openEdit(skill)">{{ $t('common.edit') }}</button>
+                <button class="action-btn action-btn--delete" @click="handleDelete(skill)">{{ $t('common.delete') }}</button>
               </td>
             </tr>
           </tbody>
