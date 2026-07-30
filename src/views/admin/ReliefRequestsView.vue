@@ -6,10 +6,10 @@
         <div>
           <div class="role-badge">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Quản lý Yêu cầu cứu trợ
+            {{ $t('admin.nav_requests') }}
           </div>
-          <h1 class="page-title">Danh sách Yêu cầu</h1>
-          <p class="page-sub">Xem, duyệt và quản lý trạng thái tất cả yêu cầu trong hệ thống</p>
+          <h1 class="page-title">{{ $t('admin.requests_title') }}</h1>
+          <p class="page-sub">{{ $t('admin.requests_sub') }}</p>
         </div>
         <div class="header-stats">
           <div class="hstat" v-for="s in headerStats" :key="s.label" :style="{ '--hs-color': s.color }">
@@ -26,7 +26,7 @@
           <input
             v-model="searchQuery"
             class="search-input"
-            placeholder="Tìm theo tiêu đề, địa chỉ..."
+            :placeholder="$t('admin.requests_search')"
           />
         </div>
         <div class="status-filters">
@@ -44,10 +44,10 @@
           </button>
         </div>
         <select v-model="sortBy" class="sort-select">
-          <option value="newest">Mới nhất</option>
-          <option value="oldest">Cũ nhất</option>
-          <option value="emergency-desc">Cấp độ ↓</option>
-          <option value="emergency-asc">Cấp độ ↑</option>
+          <option value="newest">{{ $t('admin.sort_newest') }}</option>
+          <option value="oldest">{{ $t('admin.sort_oldest') }}</option>
+          <option value="emergency-desc">{{ $t('admin.sort_emergency_desc') }}</option>
+          <option value="emergency-asc">{{ $t('admin.sort_emergency_asc') }}</option>
         </select>
       </div>
 
@@ -55,22 +55,22 @@
       <div class="table-card">
         <div v-if="isLoading" class="loading-state">
           <div class="spinner" />
-          Đang tải dữ liệu...
+          {{ $t('common.loading') }}
         </div>
         <div v-else-if="displayedRows.length === 0" class="empty-state">
           <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
-          <p>Không có yêu cầu nào</p>
+          <p>{{ $t('admin.no_requests') }}</p>
         </div>
         <table v-else class="data-table">
           <thead>
             <tr>
-              <th>Tiêu đề</th>
-              <th>Địa chỉ</th>
-              <th class="th-center">Cấp độ</th>
-              <th class="th-center">Nhu cầu</th>
-              <th class="th-center">Trạng thái</th>
-              <th>Ngày tạo</th>
-              <th class="th-center">Thao tác</th>
+              <th>{{ $t('admin.col_request_title') }}</th>
+              <th>{{ $t('admin.col_address') }}</th>
+              <th class="th-center">{{ $t('admin.col_level') }}</th>
+              <th class="th-center">{{ $t('admin.col_needs') }}</th>
+              <th class="th-center">{{ $t('admin.col_status') }}</th>
+              <th>{{ $t('admin.col_created') }}</th>
+              <th class="th-center">{{ $t('admin.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -82,7 +82,7 @@
             >
               <td class="td-title">
                 <span class="title-text">{{ req.title }}</span>
-                <span class="affect-info">{{ req.affectedPeople }} người</span>
+                <span class="affect-info">{{ $t('admin.people_count', { count: req.affectedPeople }) }}</span>
               </td>
               <td class="td-address">{{ req.address }}</td>
               <td class="th-center">
@@ -105,9 +105,9 @@
                   {{ STATUS_LABEL_FULL[req.status] }}
                 </span>
               </td>
-              <td class="td-date">{{ formatDateTimeVI(req.createdAt) }}</td>
+              <td class="td-date">{{ formatDate(req.createdAt) }}</td>
               <td class="th-center" @click.stop>
-                <button class="action-btn action-btn--details" @click="openDetail(req.id)">Chi tiết</button>
+                <button class="action-btn action-btn--details" @click="openDetail(req.id)">{{ $t('admin.btn_details') }}</button>
               </td>
             </tr>
           </tbody>
@@ -122,7 +122,7 @@
             <!-- Header -->
             <div class="modal-header">
               <div class="modal-header__inner">
-                <p class="modal-subtitle">Chi tiết yêu cầu cứu trợ</p>
+                <p class="modal-subtitle">{{ $t('admin.detail_request_title') }}</p>
                 <h2 class="modal-title">{{ detail?.title }}</h2>
               </div>
               <button class="modal-close" @click="closeDrawer">
@@ -133,7 +133,7 @@
             <!-- Loading -->
             <div v-if="isDetailLoading" class="modal-loading">
               <div class="spinner" />
-              Đang tải...
+              {{ $t('common.loading') }}
             </div>
 
             <div v-else-if="detail" class="modal-body">
@@ -154,13 +154,13 @@
                 <div class="info-card">
                   <div class="info-card__header">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    Thông tin
+                    {{ $t('admin.section_contact_info') }}
                   </div>
-                  <p class="info-card__sublabel">Số người bị ảnh hưởng</p>
-                  <p class="info-card__val">{{ detail.affectedPeople }} người</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">Số điện thoại</p>
+                  <p class="info-card__sublabel">{{ $t('admin.affected_people_label') }}</p>
+                  <p class="info-card__val">{{ $t('admin.people_count', { count: detail.affectedPeople }) }}</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.phone_label') }}</p>
                   <p class="info-card__val">{{ detail.contactPhone }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">Tọa độ</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.coords_label') }}</p>
                   <p class="info-card__val info-card__val--small">{{ detail.latitude.toFixed(5) }}, {{ detail.longitude.toFixed(5) }}</p>
                 </div>
 
@@ -168,37 +168,37 @@
                 <div class="info-card">
                   <div class="info-card__header">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    Địa điểm & Thời gian
+                    {{ $t('admin.section_location_time') }}
                   </div>
-                  <p class="info-card__sublabel">Địa chỉ</p>
+                  <p class="info-card__sublabel">{{ $t('admin.col_address') }}</p>
                   <p class="info-card__val">{{ detail.address }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">Ngày tạo</p>
-                  <div class="info-card__datebox">{{ formatDateTimeVI(detail.createdAt) }}</div>
+                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.created_date_label') }}</p>
+                  <div class="info-card__datebox">{{ formatDate(detail.createdAt) }}</div>
                 </div>
               </div>
 
               <!-- Mô tả -->
               <div class="modal-section">
-                <p class="modal-section__label">Mô tả</p>
+                <p class="modal-section__label">{{ $t('admin.section_desc') }}</p>
                 <p class="modal-section__text">{{ detail.description }}</p>
               </div>
 
               <!-- Nhu cầu -->
               <div class="modal-section">
-                <p class="modal-section__label">Nhu cầu cần hỗ trợ</p>
+                <p class="modal-section__label">{{ $t('admin.section_needs') }}</p>
                 <div class="needs-tags">
                   <span v-if="detail.needFood"     class="need-tag">🍚 Lương thực</span>
                   <span v-if="detail.needWater"    class="need-tag">💧 Nước sạch</span>
                   <span v-if="detail.needMedicine" class="need-tag">💊 Thuốc men</span>
                   <span v-if="detail.needBlanket"  class="need-tag">🛏 Chăn màn</span>
                   <span v-if="detail.needShelter"  class="need-tag">🏠 Nơi trú ẩn</span>
-                  <span v-if="!detail.needFood && !detail.needWater && !detail.needMedicine && !detail.needBlanket && !detail.needShelter" class="need-tag need-tag--none">Không có nhu cầu cụ thể</span>
+                  <span v-if="!detail.needFood && !detail.needWater && !detail.needMedicine && !detail.needBlanket && !detail.needShelter" class="need-tag need-tag--none">{{ $t('admin.no_specific_needs') }}</span>
                 </div>
               </div>
 
               <!-- Đổi trạng thái -->
               <div class="modal-section">
-                <p class="modal-section__label">Đổi trạng thái</p>
+                <p class="modal-section__label">{{ $t('admin.section_change_status') }}</p>
                 <div class="status-flow">
                   <button
                     v-for="s in STATUS_TRANSITIONS[detail.status] ?? []"
@@ -211,7 +211,7 @@
                     <svg v-if="isUpdating && pendingStatus === s" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                     {{ STATUS_LABEL_FULL[s] }}
                   </button>
-                  <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">Không có bước chuyển tiếp</span>
+                  <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">{{ $t('admin.no_status_transition') }}</span>
                 </div>
                 <p v-if="statusMsg" class="status-msg" :class="statusMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ statusMsg }}</p>
               </div>
@@ -219,14 +219,14 @@
               <!-- Gợi ý TNV (chỉ khi Approved) -->
               <div v-if="detail.status === 'Approved'" class="modal-section">
                 <div class="suggested-header">
-                  <p class="modal-section__label" style="margin-bottom:0">Tình nguyện viên gợi ý gần nhất</p>
+                  <p class="modal-section__label" style="margin-bottom:0">{{ $t('admin.suggested_volunteers') }}</p>
                   <button class="btn-refresh" @click="loadSuggested" :disabled="isSuggestLoading">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" :class="{ 'spin-icon': isSuggestLoading }"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/><path d="M21 3v4h-4"/></svg>
-                    Làm mới
+                    {{ $t('admin.btn_refresh') }}
                   </button>
                 </div>
-                <div v-if="isSuggestLoading" class="suggest-loading"><div class="spinner" /> Đang tìm...</div>
-                <div v-else-if="suggestedVolunteers.length === 0" class="suggest-empty">Không có tình nguyện viên phù hợp trong khu vực.</div>
+                <div v-if="isSuggestLoading" class="suggest-loading"><div class="spinner" /> {{ $t('admin.suggest_searching') }}</div>
+                <div v-else-if="suggestedVolunteers.length === 0" class="suggest-empty">{{ $t('admin.no_suggested_volunteers') }}</div>
                 <div v-else class="volunteer-cards" style="margin-top:10px">
                   <div v-for="vol in suggestedVolunteers" :key="vol.volunteerProfileId" class="vol-card">
                     <div class="vol-card__avatar">{{ vol.fullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
@@ -238,7 +238,7 @@
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           {{ vol.distanceKm.toFixed(1) }} km
                         </span>
-                        <span class="vol-tag">{{ vol.experienceYears }} năm KN</span>
+                        <span class="vol-tag">{{ $t('admin.years_exp_short', { years: vol.experienceYears }) }}</span>
                         <span v-for="sk in vol.skills.slice(0, 2)" :key="sk" class="vol-tag">{{ sk }}</span>
                         <span v-if="vol.skills.length > 2" class="vol-tag vol-tag--more">+{{ vol.skills.length - 2 }}</span>
                       </div>
@@ -246,7 +246,7 @@
                     <button class="btn-assign" :disabled="isAssigning && assigningId === vol.volunteerProfileId" @click="assignVolunteer(vol)">
                       <svg v-if="isAssigning && assigningId === vol.volunteerProfileId" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                      Phân công
+                      {{ $t('admin.btn_assign') }}
                     </button>
                   </div>
                 </div>
@@ -263,6 +263,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import {
   getReliefRequests,
@@ -273,28 +274,42 @@ import { getSuggestedVolunteers, createAssignment } from '@/features/requests/ad
 import {
   badgeStyle,
   dotStyle,
-  formatDateTimeVI,
 } from '@/features/requests/requests.helpers'
 import type { ReliefRequestResponse, ReliefRequestStatus } from '@/features/requests/requests.types'
 import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.types'
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
 
-// ── Const maps ───────────────────────────────────────────────
-const EMERGENCY_LABELS: Record<number, string> = {
-  1: 'Thấp',
-  2: 'Trung bình',
-  3: 'Cao',
-  4: 'Nguy cấp',
+const { locale, t } = useI18n()
+const route = useRoute()
+const router = useRouter()
+
+const formatDate = (dateStr: string) => {
+  const _ = locale.value
+  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
 }
 
-const STATUS_LABEL_FULL: Record<ReliefRequestStatus, string> = {
-  Pending:    'Đang chờ',
-  Approved:   'Đã duyệt',
-  Assigned:   'Đã giao',
-  InProgress: 'Đang xử lý',
-  Completed:  'Hoàn thành',
-  Cancelled:  'Đã hủy',
-}
+// ── Const maps ───────────────────────────────────────────────
+const EMERGENCY_LABELS = computed<Record<number, string>>(() => {
+  const _ = locale.value
+  return {
+    1: t('coordinator.emergency_low'),
+    2: t('coordinator.emergency_medium'),
+    3: t('coordinator.emergency_high'),
+    4: t('coordinator.emergency_critical'),
+  }
+})
+
+const STATUS_LABEL_FULL = computed<Record<ReliefRequestStatus, string>>(() => {
+  const _ = locale.value
+  return {
+    Pending:    t('admin.status_pending'),
+    Approved:   t('admin.status_approved'),
+    Assigned:   locale.value === 'vi' ? 'Đã giao' : 'Assigned',
+    InProgress: locale.value === 'vi' ? 'Đang xử lý' : 'In Progress',
+    Completed:  locale.value === 'vi' ? 'Hoàn thành' : 'Completed',
+    Cancelled:  locale.value === 'vi' ? 'Đã hủy' : 'Cancelled',
+  }
+})
 
 // State machine: Admin có thể đổi theo đúng flow
 const STATUS_TRANSITIONS: Partial<Record<ReliefRequestStatus, ReliefRequestStatus[]>> = {
@@ -303,9 +318,6 @@ const STATUS_TRANSITIONS: Partial<Record<ReliefRequestStatus, ReliefRequestStatu
   Assigned:   ['Cancelled'],
   InProgress: ['Completed', 'Cancelled'],
 }
-
-const route = useRoute()
-const router = useRouter()
 
 // ── State ────────────────────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -334,25 +346,29 @@ const assignMsgType = ref<'ok' | 'error'>('ok')
 
 // ── Computed ─────────────────────────────────────────────────
 const statusFilters = computed(() => {
+  const _ = locale.value
   const all = allRequests.value
   const countOf = (s: ReliefRequestStatus) => all.filter(r => r.status === s).length
   return [
-    { key: 'all',        label: 'Tất cả',       dot: '#94a3b8', bg: '#f1f5f9', color: '#475569', count: all.length },
-    { key: 'Pending',    label: 'Đang chờ',      dot: '#f59e0b', bg: '#fef3c7', color: '#b45309', count: countOf('Pending') },
-    { key: 'Approved',   label: 'Đã duyệt',      dot: '#22c55e', bg: '#dcfce7', color: '#15803d', count: countOf('Approved') },
-    { key: 'Assigned',   label: 'Đã giao',        dot: '#3b82f6', bg: '#dbeafe', color: '#1d4ed8', count: countOf('Assigned') },
-    { key: 'InProgress', label: 'Đang xử lý',    dot: '#8b5cf6', bg: '#ede9fe', color: '#6d28d9', count: countOf('InProgress') },
-    { key: 'Completed',  label: 'Hoàn thành',    dot: '#10b981', bg: '#d1fae5', color: '#065f46', count: countOf('Completed') },
-    { key: 'Cancelled',  label: 'Đã hủy',        dot: '#9ca3af', bg: '#f3f4f6', color: '#4b5563', count: countOf('Cancelled') },
+    { key: 'all',        label: locale.value === 'vi' ? 'Tất cả' : 'All', dot: '#94a3b8', bg: '#f1f5f9', color: '#475569', count: all.length },
+    { key: 'Pending',    label: t('admin.status_pending'),  dot: '#f59e0b', bg: '#fef3c7', color: '#b45309', count: countOf('Pending') },
+    { key: 'Approved',   label: t('admin.status_approved'), dot: '#22c55e', bg: '#dcfce7', color: '#15803d', count: countOf('Approved') },
+    { key: 'Assigned',   label: STATUS_LABEL_FULL.value.Assigned,   dot: '#3b82f6', bg: '#dbeafe', color: '#1d4ed8', count: countOf('Assigned') },
+    { key: 'InProgress', label: STATUS_LABEL_FULL.value.InProgress, dot: '#8b5cf6', bg: '#ede9fe', color: '#6d28d9', count: countOf('InProgress') },
+    { key: 'Completed',  label: STATUS_LABEL_FULL.value.Completed,  dot: '#10b981', bg: '#d1fae5', color: '#065f46', count: countOf('Completed') },
+    { key: 'Cancelled',  label: STATUS_LABEL_FULL.value.Cancelled,  dot: '#9ca3af', bg: '#f3f4f6', color: '#4b5563', count: countOf('Cancelled') },
   ]
 })
 
-const headerStats = computed(() => [
-  { label: 'Chờ duyệt',  val: allRequests.value.filter(r => r.status === 'Pending').length,    color: '#f59e0b' },
-  { label: 'Đã duyệt',   val: allRequests.value.filter(r => r.status === 'Approved').length,   color: '#22c55e' },
-  { label: 'Đang xử lý', val: allRequests.value.filter(r => r.status === 'InProgress').length, color: '#8b5cf6' },
-  { label: 'Hoàn thành', val: allRequests.value.filter(r => r.status === 'Completed').length,  color: '#10b981' },
-])
+const headerStats = computed(() => {
+  const _ = locale.value
+  return [
+    { label: t('admin.status_pending'),  val: allRequests.value.filter(r => r.status === 'Pending').length,    color: '#f59e0b' },
+    { label: t('admin.status_approved'),   val: allRequests.value.filter(r => r.status === 'Approved').length,   color: '#22c55e' },
+    { label: STATUS_LABEL_FULL.value.InProgress, val: allRequests.value.filter(r => r.status === 'InProgress').length, color: '#8b5cf6' },
+    { label: STATUS_LABEL_FULL.value.Completed, val: allRequests.value.filter(r => r.status === 'Completed').length,  color: '#10b981' },
+  ]
+})
 
 const filteredRequests = computed(() => {
   let list = allRequests.value

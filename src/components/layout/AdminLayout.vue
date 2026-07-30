@@ -42,7 +42,7 @@
         </router-link>
       </nav>
 
-      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Mở rộng' : 'Thu gọn'">
+      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? $t('common.expand') : $t('common.collapse')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path :d="sidebarCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'" />
         </svg>
@@ -53,7 +53,7 @@
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="sidebar-user-info">
             <span class="sidebar-user-name">{{ auth.user?.fullName }}</span>
-            <span class="sidebar-user-role">Quản trị viên</span>
+            <span class="sidebar-user-role">{{ roleLabel }}</span>
           </div>
         </Transition>
       </div>
@@ -73,6 +73,27 @@
           </div>
         </div>
         <div class="topbar-right">
+          <!-- Language Switcher -->
+          <div class="lang-switch">
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'vi' }"
+              @click="changeLang('vi')"
+              title="Tiếng Việt"
+            >
+              VI
+            </button>
+            <span class="lang-divider">|</span>
+            <button
+              class="lang-btn"
+              :class="{ active: currentLang === 'en' }"
+              @click="changeLang('en')"
+              title="English"
+            >
+              EN
+            </button>
+          </div>
+
           <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
             <div class="topbar-avatar">{{ initials }}</div>
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
@@ -91,12 +112,12 @@
                 <div class="dropdown-divider" />
                 <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Hồ sơ cá nhân
+                  {{ $t('nav.profile') }}
                 </router-link>
                 <div class="dropdown-divider" />
                 <button class="dropdown-item dropdown-item--danger" @click="handleLogout">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                  Đăng xuất
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </Transition>
@@ -115,50 +136,69 @@
 <script setup lang="ts">
 import { ref, computed } from "vue"
 import { useRouter } from "vue-router"
+import { useI18n } from "vue-i18n"
 import { useAuthStore } from "@/stores/auth"
+import { ROLE_LABELS } from "@/features/auth/auth.types"
 
 const router = useRouter()
 const auth = useAuthStore()
+const { locale, t } = useI18n()
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
+
+const currentLang = computed(() => locale.value)
+function changeLang(lang: 'vi' | 'en'): void {
+  locale.value = lang
+  localStorage.setItem('app_lang', lang)
+}
 
 const initials = computed(() =>
   auth.user?.fullName.split(" ").slice(-2).map((w) => w[0]).join("").toUpperCase() ?? "?"
 )
 
 const greeting = computed(() => {
+  const _ = locale.value
   const h = new Date().getHours()
-  if (h < 12) return 'Chào buổi sáng'
-  if (h < 18) return 'Chào buổi chiều'
-  return 'Chào buổi tối'
+  if (h < 12) return t('common.greeting_morning')
+  if (h < 18) return t('common.greeting_afternoon')
+  return t('common.greeting_evening')
 })
 
-const navItems = [
-  {
-    name: "dashboard", routeName: "admin-dashboard", to: "/admin",    label: 'Dashboard',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
-  },
-  {
-    name: "users", routeName: "users", to: "/users",    label: 'Quản lý người dùng',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  },
-  {
-    name: "requests", routeName: "admin-relief-requests", to: "/admin/relief-requests",    label: 'Quản lý Yêu cầu cứu trợ',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
-  },
-  {
-    name: "coordinator", routeName: "admin-assignments", to: "/admin/assignments",    label: 'Điều phối',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
-  },
-  {
-    name: "volunteers", routeName: "admin-volunteers", to: "/admin/volunteers",    label: 'Quản lý Tình nguyện viên',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
-  },
-  {
-    name: "skills", routeName: "admin-skills", to: "/admin/skills",    label: 'Quản lý Kỹ năng',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
-  },
-]
+const roleLabel = computed(() => {
+  const _ = locale.value
+  if (!auth.user?.role) return ''
+  return t(`roles.${auth.user.role}`, ROLE_LABELS[auth.user.role] ?? auth.user.role)
+})
+
+const navItems = computed(() => {
+  const _ = locale.value
+  return [
+    {
+      name: "dashboard", routeName: "admin-dashboard", to: "/admin", label: t('admin.nav_dashboard'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>`,
+    },
+    {
+      name: "users", routeName: "users", to: "/users", label: t('admin.nav_users'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    },
+    {
+      name: "requests", routeName: "admin-relief-requests", to: "/admin/relief-requests", label: t('admin.nav_requests'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>`,
+    },
+    {
+      name: "coordinator", routeName: "admin-assignments", to: "/admin/assignments", label: t('admin.nav_coordination'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>`,
+    },
+    {
+      name: "volunteers", routeName: "admin-volunteers", to: "/admin/volunteers", label: t('admin.nav_volunteers'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
+    },
+    {
+      name: "skills", routeName: "admin-skills", to: "/admin/skills", label: t('admin.nav_skills'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`,
+    },
+  ]
+})
 
 async function handleLogout() {
   showUserMenu.value = false
@@ -231,6 +271,11 @@ const vClickOutside = {
 .topbar-greeting { color: #718096; font-weight: 400; }
 .topbar-name { color: #1a3b5c; font-weight: 700; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
+.lang-switch { display: flex; align-items: center; gap: 4px; padding: 4px 8px; border-radius: 8px; border: 1px solid #e9ecef; background: #f8fafc; }
+.lang-btn { background: none; border: none; font-size: 12px; font-weight: 600; color: #718096; cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: all 0.15s ease; }
+.lang-btn:hover { color: #2d3748; }
+.lang-btn.active { background: #e2e8f0; color: #1a202c; font-weight: 700; }
+.lang-divider { color: #cbd5e0; font-size: 11px; }
 .topbar-user-menu { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid #e9ecef; background: #f8fafc; position: relative; user-select: none; transition: all 0.15s ease; }
 .topbar-user-menu:hover { background: #f0f4f8; }
 .topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }

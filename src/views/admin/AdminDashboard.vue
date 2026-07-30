@@ -6,10 +6,10 @@
         <div>
           <div class="role-badge">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            Quản trị viên hệ thống
+            {{ $t('admin.system_admin') }}
           </div>
-          <h1 class="dash-title">Tổng quan hệ thống</h1>
-          <p class="dash-sub">Theo dõi dữ liệu và hoạt động toàn cầu</p>
+          <h1 class="dash-title">{{ $t('admin.dash_title') }}</h1>
+          <p class="dash-sub">{{ $t('admin.dash_sub') }}</p>
         </div>
         <div class="dash-date">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
@@ -57,16 +57,16 @@
         <!-- Recent activity -->
         <div class="dash-panel">
           <div class="panel-header">
-            <h2 class="panel-title">Hoạt động hệ thống gần đây</h2>
-            <span class="panel-badge">{{ auditLogs.length }} gần nhất</span>
+            <h2 class="panel-title">{{ $t('admin.recent_activity') }}</h2>
+            <span class="panel-badge">{{ $t('admin.recent_count', { count: auditLogs.length }) }}</span>
           </div>
           <div v-if="isLoadingLogs" class="loading-state">
             <div class="loading-spinner" />
-            Đang tải dữ liệu...
+            {{ $t('common.loading') }}
           </div>
           <div v-else-if="auditLogs.length === 0" class="empty-state">
             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#d1d5db" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-            Chưa có hoạt động nào.
+            {{ $t('admin.no_activity') }}
           </div>
           <div v-else class="activity-list">
             <div
@@ -79,57 +79,60 @@
                 <p class="activity-title">
                   <span>{{ act.userEmail }}</span> {{ act.details || act.action }}
                 </p>
-                <p class="activity-meta">{{ new Date(act.timestamp).toLocaleString('vi-VN') }}</p>
+                <p class="activity-meta">{{ formatDate(act.timestamp) }}</p>
               </div>
               <span class="activity-tag" :class="getLogTagColor(act.action)">{{ act.entityName }}</span>
             </div>
           </div>
         </div>
 
-        <!-- Quick actions -->
-        <div class="dash-panel">
-          <div class="panel-header">
-            <h2 class="panel-title">Hành động nhanh</h2>
-          </div>
-          <div class="quick-actions">
-            <router-link
-              v-for="qa in quickActions"
-              :key="qa.label"
-              :to="qa.to"
-              class="quick-action-btn"
-              :style="{ '--qa-color': qa.color }"
-            >
-              <div class="qa-icon" v-html="qa.icon" />
-              <span>{{ qa.label }}</span>
-            </router-link>
+        <!-- Right side column: Quick actions & System Distribution -->
+        <div class="dash-side-col">
+          <!-- Quick actions -->
+          <div class="dash-panel">
+            <div class="panel-header">
+              <h2 class="panel-title">{{ $t('admin.quick_actions') }}</h2>
+            </div>
+            <div class="quick-actions">
+              <router-link
+                v-for="qa in quickActions"
+                :key="qa.label"
+                :to="qa.to"
+                class="quick-action-btn"
+                :style="{ '--qa-color': qa.color }"
+              >
+                <div class="qa-icon" v-html="qa.icon" />
+                <span>{{ qa.label }}</span>
+              </router-link>
+            </div>
           </div>
 
-          <!-- System overview mini chart -->
-          <div class="overview-section">
-            <div class="overview-bars">
+          <!-- System Distribution Panel -->
+          <div class="dash-panel dist-panel">
+            <div class="panel-header">
+              <h2 class="panel-title">{{ $t('admin.system_distribution') }}</h2>
+            </div>
+            <p class="dist-desc">{{ $t('admin.system_distribution_sub') }}</p>
+
+            <div class="dist-bars">
               <div
                 v-for="bar in overviewBars"
                 :key="bar.label"
-                class="overview-bar-wrap"
+                class="dist-bar-item"
               >
-                <div class="overview-bar-track">
+                <div class="dist-bar-header">
+                  <span class="dist-bar-label">
+                    <span class="dist-dot" :style="{ background: bar.color }" />
+                    {{ bar.label }}
+                  </span>
+                  <span class="dist-bar-val">{{ bar.value }}</span>
+                </div>
+                <div class="dist-bar-track">
                   <div
-                    class="overview-bar-fill"
-                    :style="{ height: bar.pct + '%', background: bar.color }"
+                    class="dist-bar-fill"
+                    :style="{ width: Math.max(bar.pct, 4) + '%', background: bar.color }"
                   />
                 </div>
-                <span class="overview-bar-val">{{ bar.value }}</span>
-                <span class="overview-bar-label">{{ bar.label }}</span>
-              </div>
-            </div>
-            <div class="overview-info">
-              <p class="overview-title">Phân bổ hệ thống</p>
-              <p class="overview-desc">Tổng quan phân bổ người dùng, yêu cầu và kho hàng trong hệ thống</p>
-              <div class="overview-legend">
-                <span v-for="bar in overviewBars" :key="bar.label" class="legend-item">
-                  <span class="legend-dot" :style="{ background: bar.color }" />
-                  <span>{{ bar.label }}: {{ bar.value }}</span>
-                </span>
               </div>
             </div>
           </div>
@@ -141,19 +144,27 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import RequestsOverTimeChart from '@/components/dashboard/RequestsOverTimeChart.vue'
 import DashboardMapPanel from '@/components/dashboard/DashboardMapPanel.vue'
 import { getDashboardSummary, getAuditLogs, type DashboardSummary, type AuditLog } from '@/features/dashboard/dashboard.api'
 import { getAllWarehouses } from '@/features/warehouses/warehouses.api'
 
+const { locale, t } = useI18n()
 const summary = ref<DashboardSummary | null>(null)
 const auditLogs = ref<AuditLog[]>([])
 const isLoadingLogs = ref(true)
 const totalWarehouses = ref(0)
 
+const formatDate = (dateStr: string) => {
+  const _ = locale.value
+  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
+}
+
 const currentDate = computed(() => {
-  return new Date().toLocaleDateString('vi-VN', {
+  const _ = locale.value
+  return new Date().toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -188,6 +199,7 @@ onMounted(async () => {
 })
 
 const statCards = computed(() => {
+  const _ = locale.value
   const sum = summary.value
 
   const usersCount = sum && sum.usersByRole
@@ -204,10 +216,10 @@ const statCards = computed(() => {
 
   return [
     {
-      label: 'Tổng người dùng',
+      label: t('admin.stat_total_users'),
       value: usersCount,
-      unit: 'người dùng',
-      trend: 'Tất cả thời gian',
+      unit: locale.value === 'vi' ? 'người dùng' : 'users',
+      trend: locale.value === 'vi' ? 'Tất cả thời gian' : 'All time',
       trendUp: false,
       progress: 60,
       color: '#3182ce',
@@ -215,10 +227,10 @@ const statCards = computed(() => {
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#3182ce" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
     },
     {
-      label: 'Yêu cầu cứu trợ',
+      label: t('admin.stat_total_requests'),
       value: requestsCount,
-      unit: 'yêu cầu',
-      trend: 'Tất cả thời gian',
+      unit: locale.value === 'vi' ? 'yêu cầu' : 'requests',
+      trend: locale.value === 'vi' ? 'Tất cả thời gian' : 'All time',
       trendUp: false,
       progress: 75,
       color: '#e27d24',
@@ -226,10 +238,10 @@ const statCards = computed(() => {
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#e27d24" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
     },
     {
-      label: 'Tình nguyện viên',
+      label: t('admin.stat_total_volunteers'),
       value: volunteersCount,
-      unit: 'tình nguyện viên',
-      trend: 'Tất cả thời gian',
+      unit: locale.value === 'vi' ? 'tình nguyện viên' : 'volunteers',
+      trend: locale.value === 'vi' ? 'Tất cả thời gian' : 'All time',
       trendUp: false,
       progress: 50,
       color: '#276749',
@@ -237,10 +249,10 @@ const statCards = computed(() => {
       icon: `<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#276749" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>`,
     },
     {
-      label: 'Kho hàng & Vật tư',
+      label: t('nav.warehouse'),
       value: totalWarehouses.value,
-      unit: 'kho hàng',
-      trend: 'Tất cả thời gian',
+      unit: locale.value === 'vi' ? 'kho hàng' : 'warehouses',
+      trend: locale.value === 'vi' ? 'Tất cả thời gian' : 'All time',
       trendUp: false,
       progress: 40,
       color: '#6b46c1',
@@ -251,6 +263,7 @@ const statCards = computed(() => {
 })
 
 const overviewBars = computed(() => {
+  const _ = locale.value
   const sum = summary.value
 
   const usersCount = sum && sum.usersByRole
@@ -270,10 +283,10 @@ const overviewBars = computed(() => {
   const max = Math.max(usersCount, requestsCount, volunteersCount, warehousesCount, 1)
 
   return [
-    { label: 'Người dùng', value: usersCount,      pct: Math.round((usersCount      / max) * 100), color: '#3182ce' },
-    { label: 'Yêu cầu',   value: requestsCount,  pct: Math.round((requestsCount  / max) * 100), color: '#e27d24' },
-    { label: 'TNV',       value: volunteersCount, pct: Math.round((volunteersCount / max) * 100), color: '#276749' },
-    { label: 'Kho',       value: warehousesCount, pct: Math.round((warehousesCount / max) * 100), color: '#6b46c1' },
+    { label: t('common.user'), value: usersCount,      pct: Math.round((usersCount      / max) * 100), color: '#3182ce' },
+    { label: t('nav.requests'),   value: requestsCount,  pct: Math.round((requestsCount  / max) * 100), color: '#e27d24' },
+    { label: t('nav.volunteer'),  value: volunteersCount, pct: Math.round((volunteersCount / max) * 100), color: '#276749' },
+    { label: t('nav.warehouse'),  value: warehousesCount, pct: Math.round((warehousesCount / max) * 100), color: '#6b46c1' },
   ]
 })
 
@@ -291,32 +304,35 @@ function getLogTagColor(action: string) {
   return 'tag--warning'
 }
 
-const quickActions = [
-  {
-    label: 'Quản lý người dùng',
-    to: '/users',
-    color: '#3182ce',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  },
-  {
-    label: 'Danh sách Yêu cầu',
-    to: '#', // placeholder cho tính năng tương lai
-    color: '#e27d24',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
-  },
-  {
-    label: 'Duyệt tình nguyện viên',
-    to: '#', // placeholder
-    color: '#276749',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
-  },
-  {
-    label: 'Hệ thống kho hàng',
-    to: '#', // placeholder
-    color: '#6b46c1',
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
-  },
-]
+const quickActions = computed(() => {
+  const _ = locale.value
+  return [
+    {
+      label: t('admin.action_create_user'),
+      to: '/users',
+      color: '#3182ce',
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    },
+    {
+      label: t('admin.action_dispatch'),
+      to: '/admin/assignments',
+      color: '#e27d24',
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>`,
+    },
+    {
+      label: t('admin.action_approve_volunteers'),
+      to: '/admin/volunteers',
+      color: '#276749',
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>`,
+    },
+    {
+      label: t('admin.action_add_skill'),
+      to: '/admin/skills',
+      color: '#6b46c1',
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>`,
+    },
+  ]
+})
 </script>
 
 <style scoped>
@@ -573,12 +589,17 @@ const quickActions = [
 
 
 
+.dash-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
 /* Quick actions */
 .quick-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 10px;
-  margin-bottom: 22px;
 }
 .quick-action-btn {
   display: flex;
@@ -610,77 +631,62 @@ const quickActions = [
   flex-shrink: 0;
 }
 
-/* Overview bar chart */
-.overview-section {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 16px;
-  background: linear-gradient(135deg, #fff5f5, #fee2e2);
-  border-radius: 12px;
-  border: 1px solid rgba(197,48,48,0.12);
+/* System Distribution Card */
+.dist-panel {
+  background: #fff;
 }
-.overview-bars {
-  display: flex;
-  align-items: flex-end;
-  gap: 10px;
-  height: 80px;
-  flex-shrink: 0;
-}
-.overview-bar-wrap {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 4px;
-}
-.overview-bar-track {
-  width: 18px;
-  height: 60px;
-  background: rgba(255,255,255,0.6);
-  border-radius: 6px;
-  overflow: hidden;
-  display: flex;
-  align-items: flex-end;
-}
-.overview-bar-fill {
-  width: 100%;
-  border-radius: 6px;
-  min-height: 4px;
-  transition: height 1s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.overview-bar-val {
-  font-size: 10px;
-  font-weight: 700;
-  color: #1a3b5c;
-}
-.overview-bar-label {
-  font-size: 9px;
+.dist-desc {
+  font-size: 12.5px;
   color: #718096;
-  font-weight: 600;
-  white-space: nowrap;
+  line-height: 1.5;
+  margin-top: -6px;
+  margin-bottom: 18px;
 }
-.overview-info { flex: 1; min-width: 0; }
-.overview-title { font-size: 13.5px; font-weight: 700; color: #1a3b5c; margin-bottom: 6px; }
-.overview-desc  { font-size: 12px; color: #718096; line-height: 1.5; margin-bottom: 10px; }
-.overview-legend {
+.dist-bars {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  font-size: 11.5px;
-  color: #4a5568;
-  font-weight: 500;
+  gap: 14px;
 }
-.legend-item {
+.dist-bar-item {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 6px;
 }
-.legend-dot {
-  width: 8px;
-  height: 8px;
+.dist-bar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 12.5px;
+}
+.dist-bar-label {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #4a5568;
+  font-weight: 600;
+}
+.dist-dot {
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
   flex-shrink: 0;
   display: inline-block;
+}
+.dist-bar-val {
+  color: #1a3b5c;
+  font-size: 13px;
+  font-weight: 800;
+}
+.dist-bar-track {
+  height: 8px;
+  background: #f1f5f9;
+  border-radius: 99px;
+  overflow: hidden;
+}
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* ── Responsive ─────────────────────────────────────────── */

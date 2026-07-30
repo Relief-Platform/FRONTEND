@@ -3,9 +3,9 @@
     <div class="page-container">
       <!-- Header -->
       <div class="page-header">
-        <h1 class="page-title">Quản lý tình nguyện viên</h1>
+        <h1 class="page-title">{{ $t('admin.volunteers_title') }}</h1>
         <div class="stats-badge" v-if="pendingCount > 0">
-          {{ pendingCount }} đơn đang chờ duyệt
+          {{ $t('admin.pending_volunteers_count', { count: pendingCount }) }}
         </div>
       </div>
 
@@ -14,7 +14,7 @@
         <BaseInput
           id="search-volunteers"
           v-model="searchQuery"
-          placeholder="Tìm kiếm theo tên, email..."
+          :placeholder="$t('admin.volunteers_search')"
           style="max-width: 340px"
         >
           <template #prefix>
@@ -26,9 +26,9 @@
         </BaseInput>
 
         <select v-model="statusFilter" class="status-filter">
-          <option value="">Tất cả trạng thái</option>
-          <option value="Pending">Chờ duyệt</option>
-          <option value="Approved">Đã duyệt</option>
+          <option value="">{{ $t('admin.all_statuses') }}</option>
+          <option value="Pending">{{ $t('admin.status_pending') }}</option>
+          <option value="Approved">{{ $t('admin.status_approved') }}</option>
         </select>
       </div>
 
@@ -39,19 +39,19 @@
         </div>
 
         <div v-else-if="filteredVolunteers.length === 0" class="volunteers-empty">
-          <p>Không tìm thấy hồ sơ tình nguyện viên nào.</p>
+          <p>{{ $t('admin.no_volunteers_found') }}</p>
         </div>
 
         <table v-else class="volunteers-table">
           <thead>
             <tr>
               <th>#</th>
-              <th>Họ và tên</th>
-              <th>Email</th>
-              <th>Điện thoại</th>
-              <th>Kinh nghiệm</th>
-              <th>Trạng thái</th>
-              <th>Thao tác</th>
+              <th>{{ $t('admin.col_name') }}</th>
+              <th>{{ $t('admin.col_email') }}</th>
+              <th>{{ $t('admin.col_phone') }}</th>
+              <th>{{ $t('admin.col_exp') }}</th>
+              <th>{{ $t('admin.col_status') }}</th>
+              <th>{{ $t('admin.col_actions') }}</th>
             </tr>
           </thead>
           <tbody>
@@ -60,27 +60,27 @@
               <td class="font-semibold">{{ vol.fullName }}</td>
               <td>{{ vol.email }}</td>
               <td>{{ vol.phoneNumber || '—' }}</td>
-              <td>{{ vol.experienceYears }} năm</td>
+              <td>{{ $t('admin.years_unit', { years: vol.experienceYears }) }}</td>
               <td>
                 <span class="status-badge" :class="`status--${vol.status.toLowerCase()}`">
-                  {{ vol.status === 'Pending' ? 'Chờ duyệt' : 'Đã duyệt' }}
+                  {{ vol.status === 'Pending' ? $t('admin.status_pending') : $t('admin.status_approved') }}
                 </span>
               </td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--details" @click="openDetails(vol.id)">Chi tiết</button>
+                <button class="action-btn action-btn--details" @click="openDetails(vol.id)">{{ $t('admin.btn_details') }}</button>
                 <button
                   v-if="vol.status === 'Pending'"
                   class="action-btn action-btn--approve"
                   @click="handleApprove(vol)"
                 >
-                  Duyệt
+                  {{ $t('admin.btn_approve') }}
                 </button>
                 <button
                   v-if="vol.status === 'Pending'"
                   class="action-btn action-btn--reject"
                   @click="handleReject(vol)"
                 >
-                  Từ chối
+                  {{ $t('admin.btn_reject') }}
                 </button>
               </td>
             </tr>
@@ -92,13 +92,13 @@
     <!-- Details Dialog -->
     <el-dialog
       v-model="isDetailsVisible"
-      title="Chi tiết Hồ sơ Tình nguyện viên"
+      :title="$t('admin.volunteer_detail_dialog_title')"
       width="600px"
       destroy-on-close
     >
       <div v-if="isDetailsLoading" class="details-loading">
         <BaseSpinner size="md" class="spinner-dark" />
-        <p>Đang tải chi tiết hồ sơ...</p>
+        <p>{{ $t('common.loading') }}</p>
       </div>
       <div v-else-if="selectedVolunteer" class="details-container">
         <!-- Section: Profile Header Card -->
@@ -113,7 +113,7 @@
             <h3 class="detail-name">{{ selectedVolunteer.fullName }}</h3>
             <div class="status-badge-container">
               <span class="status-badge-inline" :class="`status--${selectedVolunteer.status.toLowerCase()}`">
-                {{ selectedVolunteer.status === 'Pending' ? '⏳ Chờ duyệt hồ sơ' : '✓ Đã phê duyệt' }}
+                {{ selectedVolunteer.status === 'Pending' ? `⏳ ${$t('admin.status_pending')}` : `✓ ${$t('admin.status_approved')}` }}
               </span>
             </div>
           </div>
@@ -125,7 +125,7 @@
           <div class="info-card">
             <h4 class="info-card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-              Thông tin cá nhân
+              {{ $t('admin.section_contact_info') }}
             </h4>
             <div class="info-card-body">
               <div class="info-row">
@@ -138,16 +138,16 @@
               <div class="info-row">
                 <span class="info-label">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
-                  Số điện thoại
+                  {{ $t('admin.phone_label') }}
                 </span>
                 <span class="info-value">{{ selectedVolunteer.phoneNumber || '—' }}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                  Kinh nghiệm
+                  {{ $t('admin.col_exp') }}
                 </span>
-                <span class="info-value text-highlight font-semibold">{{ selectedVolunteer.experienceYears }} năm thực tế</span>
+                <span class="info-value text-highlight font-semibold">{{ $t('admin.years_unit', { years: selectedVolunteer.experienceYears }) }}</span>
               </div>
             </div>
           </div>
@@ -156,23 +156,23 @@
           <div class="info-card">
             <h4 class="info-card-title">
               <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-              Địa điểm làm việc
+              {{ $t('admin.section_location_time') }}
             </h4>
             <div class="info-card-body">
               <div class="info-row">
                 <span class="info-label">
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                  Địa chỉ đăng ký
+                  {{ $t('admin.col_address') }}
                 </span>
                 <span class="info-value text-wrap">{{ selectedVolunteer.address || '—' }}</span>
               </div>
               <div class="info-row inline-coords">
                 <div>
-                  <span class="info-label">Vĩ độ (Lat)</span>
+                  <span class="info-label">Lat</span>
                   <code class="coord-tag">{{ selectedVolunteer.latitude }}</code>
                 </div>
                 <div>
-                  <span class="info-label">Kinh độ (Lng)</span>
+                  <span class="info-label">Lng</span>
                   <code class="coord-tag">{{ selectedVolunteer.longitude }}</code>
                 </div>
               </div>
@@ -184,14 +184,14 @@
         <div class="info-card">
           <h4 class="info-card-title">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
-            Giới thiệu bản thân
+            {{ $t('admin.section_desc') }}
           </h4>
           <div class="bio-content">
             <p v-if="selectedVolunteer.bio" class="bio-text">
               “{{ selectedVolunteer.bio }}”
             </p>
             <p v-else class="bio-text text-muted italic">
-              Chưa cung cấp thông tin giới thiệu bản thân.
+              —
             </p>
           </div>
         </div>
@@ -200,7 +200,7 @@
         <div class="info-card">
           <h4 class="info-card-title">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-            Kỹ năng chuyên môn
+            {{ $t('admin.nav_skills') }}
           </h4>
           <div class="skills-wrapper">
             <div v-if="selectedVolunteer.skills && selectedVolunteer.skills.length > 0" class="skills-tags">
@@ -213,28 +213,28 @@
                 {{ typeof skill === 'object' ? (skill as any).name : skill }}
               </span>
             </div>
-            <p v-else class="text-muted text-sm italic">Tình nguyện viên chưa đăng ký kỹ năng chuyên môn nào.</p>
+            <p v-else class="text-muted text-sm italic">—</p>
           </div>
         </div>
       </div>
 
       <template #footer>
         <div class="dialog-footer" v-if="selectedVolunteer">
-          <el-button @click="isDetailsVisible = false">Đóng</el-button>
+          <el-button @click="isDetailsVisible = false">{{ $t('common.cancel') }}</el-button>
           <template v-if="selectedVolunteer.status === 'Pending'">
             <el-button
               type="danger"
               :loading="isActionPending"
               @click="handleReject(selectedVolunteer)"
             >
-              Từ chối
+              {{ $t('admin.btn_reject') }}
             </el-button>
             <el-button
               type="primary"
               :loading="isActionPending"
               @click="handleApprove(selectedVolunteer)"
             >
-              Phê duyệt
+              {{ $t('admin.btn_approve') }}
             </el-button>
           </template>
         </div>
@@ -245,6 +245,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
@@ -258,6 +259,8 @@ import {
   rejectVolunteer,
 } from '@/features/volunteers/volunteers.api'
 import type { AdminVolunteerSummary, VolunteerProfile } from '@/features/volunteers/volunteers.types'
+
+const { t } = useI18n()
 
 const { confirm } = useConfirm()
 

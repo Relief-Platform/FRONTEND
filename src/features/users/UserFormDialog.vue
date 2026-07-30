@@ -1,17 +1,17 @@
 <template>
   <el-dialog
     v-model="visible"
-    title="Đổi Vai Trò Người Dùng"
+    :title="$t('admin.change_role_dialog_title')"
     width="400px"
     @close="resetForm"
   >
     <el-form label-position="top">
-      <el-form-item label="Người dùng">
+      <el-form-item :label="$t('common.user')">
         <el-input :value="editData?.fullName || ''" disabled />
       </el-form-item>
       
-      <el-form-item label="Vai trò mới" required>
-        <el-select v-model="selectedRole" placeholder="Chọn vai trò mới" style="width: 100%">
+      <el-form-item :label="$t('admin.new_role_label')" required>
+        <el-select v-model="selectedRole" :placeholder="$t('admin.new_role_placeholder')" style="width: 100%">
           <el-option
             v-for="role in roles"
             :key="role.value"
@@ -21,14 +21,14 @@
         </el-select>
       </el-form-item>
       <p style="font-size: 12px; color: #718096; line-height: 1.4; margin-top: -10px;">
-        Lưu ý: User cần đăng xuất và đăng nhập lại để nhận quyền của vai trò mới.
+        {{ $t('admin.role_change_note') }}
       </p>
     </el-form>
 
     <template #footer>
-      <el-button @click="visible = false">Huỷ</el-button>
+      <el-button @click="visible = false">{{ $t('common.cancel') }}</el-button>
       <el-button type="primary" :loading="isLoading" @click="handleSubmit">
-        Cập nhật Role
+        {{ $t('admin.btn_update_role') }}
       </el-button>
     </template>
   </el-dialog>
@@ -36,6 +36,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUsersStore } from '@/stores/users'
 import type { User } from './users.types'
@@ -52,6 +53,7 @@ const emit = defineEmits<{
 }>()
 
 // ── State ────────────────────────────────────────────────────
+const { locale, t } = useI18n()
 const store = useUsersStore()
 const isLoading = ref(false)
 const visible = computed({
@@ -61,13 +63,16 @@ const visible = computed({
 
 const selectedRole = ref<string>('')
 
-const roles = [
-  { value: 'Admin', label: 'Quản trị viên (Admin)' },
-  { value: 'Volunteer', label: 'Tình nguyện viên (Volunteer)' },
-  { value: 'Requester', label: 'Người yêu cầu (Requester)' },
-  { value: 'Coordinator', label: 'Quản lý kho (Coordinator)' },
-  { value: 'Organization', label: 'Tổ chức (Organization)' },
-]
+const roles = computed(() => {
+  const _ = locale.value
+  return [
+    { value: 'Admin', label: `${t('roles.Admin')} (Admin)` },
+    { value: 'Volunteer', label: `${t('roles.Volunteer')} (Volunteer)` },
+    { value: 'Requester', label: `${t('roles.Requester')} (Requester)` },
+    { value: 'Coordinator', label: `${t('roles.Coordinator')} (Coordinator)` },
+    { value: 'Organization', label: `${t('roles.Organization')} (Organization)` },
+  ]
+})
 
 watch(
   () => props.editData,
