@@ -176,7 +176,7 @@
             <template #header>
               <div class="card-header-flex">
                 <span>{{ $t('volunteer.profile_skills_title') }}</span>
-                <span class="skills-count" v-if="profile">{{ $t('volunteer.profile_skills_count', { count: profile.skills.length }) }}</span>
+                <span class="skills-count" v-if="profile && profile.skills">{{ $t('volunteer.profile_skills_count', { count: profile.skills.length }) }}</span>
               </div>
             </template>
  
@@ -189,7 +189,7 @@
             </div>
  
             <div v-else class="skills-manager">
-              <div v-if="profile.skills.length === 0" class="no-skills-state">
+              <div v-if="!profile.skills || profile.skills.length === 0" class="no-skills-state">
                 {{ $t('volunteer.profile_no_skills') }}
               </div>
 
@@ -338,9 +338,8 @@ const statusClass = computed(() => ({
 // Filter available skills that the user hasn't registered yet
 const registerableSkills = computed(() => {
   if (!profile.value) return availableSkills.value
-  return availableSkills.value.filter(
-    (skill) => !profile.value!.skills.includes(skill.name)
-  )
+  const registeredIds = new Set(profile.value.skills.map((s) => s.id))
+  return availableSkills.value.filter((skill) => !registeredIds.has(skill.id))
 })
 
 const selectedSkillDescription = computed(() => {
@@ -372,7 +371,11 @@ const loadProfile = async () => {
   errorMessage.value = ''
   try {
     const [data] = await Promise.all([getVolunteerProfile(), loadAvailableSkills()])
-    profile.value = data
+    // Guard: BE có thể trả về skills: null thay vì [] khi chưa có kỹ năng nào
+    profile.value = {
+      ...data,
+      skills: Array.isArray(data.skills) ? data.skills : [],
+    }
     // Map data to form
     form.address = data.address
     form.latitude = data.latitude
