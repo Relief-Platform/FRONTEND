@@ -3,24 +3,24 @@
     <div class="wh-page">
       <div class="page-header">
         <div>
-          <h2>Quản lý kho</h2>
-          <p class="subtitle">Danh sách kho vật tư cứu trợ trên hệ thống</p>
+          <h2>{{ $t('warehouse.page_title') }}</h2>
+          <p class="subtitle">{{ $t('warehouse.page_sub') }}</p>
         </div>
-        <button class="btn-primary" @click="openCreateModal">+ Tạo kho mới</button>
+        <button class="btn-primary" @click="openCreateModal">{{ $t('warehouse.create_new') }}</button>
       </div>
 
       <div class="card">
-        <div v-if="isLoading" class="empty-state">Đang tải...</div>
+        <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
         <div v-else-if="loadError" class="empty-state error-state">{{ loadError }}</div>
-        <div v-else-if="warehouses.length === 0" class="empty-state">Chưa có kho nào.</div>
+        <div v-else-if="warehouses.length === 0" class="empty-state">{{ $t('warehouse.no_warehouses') }}</div>
 
         <table v-else class="wh-table">
           <thead>
             <tr>
-              <th>Tên kho</th>
-              <th>Địa chỉ</th>
-              <th>SĐT liên hệ</th>
-              <th>Trạng thái</th>
+              <th>{{ $t('warehouse.col_name') }}</th>
+              <th>{{ $t('warehouse.col_address') }}</th>
+              <th>{{ $t('warehouse.col_phone') }}</th>
+              <th>{{ $t('warehouse.col_status') }}</th>
               <th class="col-actions"></th>
             </tr>
           </thead>
@@ -31,16 +31,16 @@
               <td class="cell-muted">{{ w.contactPhone }}</td>
               <td>
                 <span class="badge" :class="w.isActive ? 'badge--active' : 'badge--inactive'">
-                  {{ w.isActive ? 'Hoạt động' : 'Ngưng hoạt động' }}
+                  {{ w.isActive ? $t('warehouse.status_active') : $t('warehouse.status_inactive') }}
                 </span>
               </td>
               <td class="col-actions">
-                <button class="btn-outline" @click="openEditModal(w)">Sửa</button>
+                <button class="btn-outline" @click="openEditModal(w)">{{ $t('warehouse.edit_btn') }}</button>
                 <button
                   v-if="w.isActive"
                   class="btn-outline btn-outline--danger"
                   @click="handleDeactivate(w)"
-                >Ngưng</button>
+                >{{ $t('warehouse.deactivate_btn') }}</button>
               </td>
             </tr>
           </tbody>
@@ -48,9 +48,9 @@
 
         <!-- Pagination -->
         <div class="pagination" v-if="totalPages > 1">
-          <button class="btn-outline" :disabled="pageNumber <= 1" @click="changePage(pageNumber - 1)">← Trước</button>
-          <span class="page-info">Trang {{ pageNumber }} / {{ totalPages }}</span>
-          <button class="btn-outline" :disabled="pageNumber >= totalPages" @click="changePage(pageNumber + 1)">Sau →</button>
+          <button class="btn-outline" :disabled="pageNumber <= 1" @click="changePage(pageNumber - 1)">{{ $t('warehouse.prev_page') }}</button>
+          <span class="page-info">{{ $t('warehouse.page_info', { current: pageNumber, total: totalPages }) }}</span>
+          <button class="btn-outline" :disabled="pageNumber >= totalPages" @click="changePage(pageNumber + 1)">{{ $t('warehouse.next_page') }}</button>
         </div>
       </div>
 
@@ -58,51 +58,51 @@
       <div v-if="showModal" class="modal-overlay" @click.self="closeModal">
         <div class="modal-box">
           <div class="modal-header">
-            <h3>{{ editingId ? 'Cập nhật kho' : 'Tạo kho mới' }}</h3>
+            <h3>{{ editingId ? $t('warehouse.modal_edit_title') : $t('warehouse.modal_create_title') }}</h3>
             <button class="modal-close" @click="closeModal">✕</button>
           </div>
 
           <form class="modal-body" @submit.prevent="handleSubmit">
             <div class="form-group">
-              <label>Tên kho <span class="required">*</span></label>
-              <input v-model="form.name" type="text" placeholder="VD: Kho trung tâm Đà Nẵng" required />
+              <label>{{ $t('warehouse.form_name') }} <span class="required">*</span></label>
+              <input v-model="form.name" type="text" :placeholder="$t('warehouse.form_name_placeholder')" required />
             </div>
 
             <div class="form-group">
-              <label>Địa chỉ <span class="required">*</span></label>
-              <input v-model="form.address" type="text" placeholder="Số nhà, đường, phường/xã..." required />
+              <label>{{ $t('warehouse.form_address') }} <span class="required">*</span></label>
+              <input v-model="form.address" type="text" :placeholder="$t('warehouse.form_address_placeholder')" required />
             </div>
 
             <div class="form-row">
               <div class="form-group half">
-                <label>Vĩ độ <span class="required">*</span></label>
+                <label>{{ $t('warehouse.form_lat') }} <span class="required">*</span></label>
                 <input v-model.number="form.latitude" type="number" step="any" required />
               </div>
               <div class="form-group half">
-                <label>Kinh độ <span class="required">*</span></label>
+                <label>{{ $t('warehouse.form_lng') }} <span class="required">*</span></label>
                 <input v-model.number="form.longitude" type="number" step="any" required />
               </div>
             </div>
-            <button type="button" class="btn-geo" @click="useCurrentLocation">📍 Dùng vị trí hiện tại</button>
+            <button type="button" class="btn-geo" @click="useCurrentLocation">{{ $t('requester.use_current_location') }}</button>
 
             <div class="form-group">
-              <label>SĐT liên hệ <span class="required">*</span></label>
+              <label>{{ $t('warehouse.form_phone') }} <span class="required">*</span></label>
               <input v-model="form.contactPhone" type="tel" required />
             </div>
 
             <div class="form-group" v-if="editingId">
               <label class="checkbox-label">
                 <input type="checkbox" v-model="form.isActive" />
-                Kho đang hoạt động
+                {{ $t('warehouse.form_active_checkbox') }}
               </label>
             </div>
 
             <p v-if="formError" class="error-text">{{ formError }}</p>
 
             <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeModal">Hủy</button>
+              <button type="button" class="btn-outline" @click="closeModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="isSubmitting">
-                {{ isSubmitting ? 'Đang lưu...' : (editingId ? 'Lưu thay đổi' : 'Tạo kho') }}
+                {{ isSubmitting ? $t('warehouse.saving') : (editingId ? $t('common.save') : $t('warehouse.create_btn')) }}
               </button>
             </div>
           </form>
@@ -114,6 +114,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import WarehouseLayout from '@/components/layout/WarehouseLayout.vue'
 import {
   getWarehouses,
@@ -125,6 +126,8 @@ import type {
   WarehouseResponse,
   UpdateWarehousePayload,
 } from '@/features/warehouses/warehouses.types'
+
+const { t } = useI18n()
 
 // ── Danh sách + phân trang ────────────────────────────────
 const warehouses = ref<WarehouseResponse[]>([])
@@ -141,7 +144,7 @@ const loadWarehouses = async () => {
     warehouses.value = paged.items ?? []
     totalPages.value = paged.totalPages || 1
   } catch (err) {
-    loadError.value = (err as Error).message || 'Không tải được danh sách kho.'
+    loadError.value = (err as Error).message || t('warehouse.load_failed')
   } finally {
     isLoading.value = false
   }
@@ -196,7 +199,7 @@ const closeModal = () => { showModal.value = false }
 
 const useCurrentLocation = () => {
   if (!navigator.geolocation) {
-    alert('Trình duyệt không hỗ trợ định vị.')
+    alert(t('requester.geolocation_unsupported'))
     return
   }
   navigator.geolocation.getCurrentPosition(
@@ -204,7 +207,7 @@ const useCurrentLocation = () => {
       form.value.latitude = pos.coords.latitude
       form.value.longitude = pos.coords.longitude
     },
-    () => alert('Không thể lấy vị trí hiện tại. Vui lòng nhập tay.'),
+    () => alert(t('requester.geolocation_failed')),
   )
 }
 
@@ -221,7 +224,7 @@ const handleSubmit = async () => {
     closeModal()
     await loadWarehouses()
   } catch (err) {
-    formError.value = (err as Error).message || 'Lưu thất bại. Vui lòng thử lại!'
+    formError.value = (err as Error).message || t('warehouse.save_failed')
   } finally {
     isSubmitting.value = false
   }
@@ -229,12 +232,12 @@ const handleSubmit = async () => {
 
 // ── Ngưng hoạt động ───────────────────────────────────────
 const handleDeactivate = async (w: WarehouseResponse) => {
-  if (!confirm(`Ngưng hoạt động kho "${w.name}"? Kho sẽ không nhận vật tư mới.`)) return
+  if (!confirm(t('warehouse.deactivate_confirm', { name: w.name }))) return
   try {
     await deactivateWarehouse(w.id)
     await loadWarehouses()
   } catch (err) {
-    alert((err as Error).message || 'Thao tác thất bại.')
+    alert((err as Error).message || t('warehouse.deactivate_failed'))
   }
 }
 </script>

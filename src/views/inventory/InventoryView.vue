@@ -3,43 +3,43 @@
     <div class="inv-page">
       <div class="page-header">
         <div>
-          <h2>Vật tư &amp; tồn kho</h2>
-          <p class="subtitle">Nhập / xuất vật tư và theo dõi tồn kho theo từng kho</p>
+          <h2>{{ $t('inventory.page_title') }}</h2>
+          <p class="subtitle">{{ $t('inventory.page_sub') }}</p>
         </div>
         <button class="btn-primary" :disabled="!selectedWarehouseId" @click="openCreateModal">
-          + Thêm vật tư
+          {{ $t('inventory.add_item') }}
         </button>
       </div>
 
       <!-- Chọn kho -->
       <div class="filter-bar">
-        <label class="wh-select-label">Kho:</label>
+        <label class="wh-select-label">{{ $t('inventory.select_warehouse_label') }}</label>
         <select v-model="selectedWarehouseId" class="wh-select">
-          <option value="" disabled>-- Chọn kho --</option>
+          <option value="" disabled>{{ $t('inventory.select_warehouse_placeholder') }}</option>
           <option v-for="w in warehouseOptions" :key="w.id" :value="w.id">
-            {{ w.name }}{{ w.isActive ? '' : ' (ngưng hoạt động)' }}
+            {{ w.name }}{{ w.isActive ? '' : $t('inventory.inactive_suffix') }}
           </option>
         </select>
         <span v-if="lowStockCount > 0" class="low-stock-summary">
-          ⚠️ {{ lowStockCount }} vật tư sắp hết
+          {{ $t('inventory.low_stock_summary', { count: lowStockCount }) }}
         </span>
       </div>
 
       <div class="card">
-        <div v-if="!selectedWarehouseId" class="empty-state">Chọn kho để xem vật tư.</div>
-        <div v-else-if="isLoading" class="empty-state">Đang tải...</div>
+        <div v-if="!selectedWarehouseId" class="empty-state">{{ $t('inventory.select_warehouse_prompt') }}</div>
+        <div v-else-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
         <div v-else-if="loadError" class="empty-state error-state">{{ loadError }}</div>
         <div v-else-if="items.length === 0" class="empty-state">
-          Kho này chưa có vật tư nào — bấm "+ Thêm vật tư" để tạo.
+          {{ $t('inventory.no_items') }}
         </div>
 
         <table v-else class="inv-table">
           <thead>
             <tr>
-              <th>Vật tư</th>
-              <th>Đơn vị</th>
-              <th class="col-num">Tồn kho</th>
-              <th class="col-num">Ngưỡng cảnh báo</th>
+              <th>{{ $t('inventory.col_item') }}</th>
+              <th>{{ $t('inventory.col_unit') }}</th>
+              <th class="col-num">{{ $t('inventory.col_stock') }}</th>
+              <th class="col-num">{{ $t('inventory.col_threshold') }}</th>
               <th></th>
               <th class="col-actions"></th>
             </tr>
@@ -51,22 +51,22 @@
               <td class="col-num cell-qty">{{ formatNumber(item.quantity) }}</td>
               <td class="col-num cell-muted">{{ formatNumber(item.minimumQuantity) }}</td>
               <td>
-                <span v-if="item.isLowStock" class="badge badge--low">Sắp hết</span>
+                <span v-if="item.isLowStock" class="badge badge--low">{{ $t('inventory.low_stock_badge') }}</span>
               </td>
               <td class="col-actions">
-                <button class="btn-outline btn-in" @click="openStockModal(item, 'in')">+ Nhập</button>
-                <button class="btn-outline btn-out" @click="openStockModal(item, 'out')">− Xuất</button>
-                <button class="btn-outline" @click="openEditModal(item)">Sửa</button>
-                <button class="btn-outline" @click="openHistoryModal(item)">Lịch sử</button>
+                <button class="btn-outline btn-in" @click="openStockModal(item, 'in')">{{ $t('inventory.btn_stock_in') }}</button>
+                <button class="btn-outline btn-out" @click="openStockModal(item, 'out')">{{ $t('inventory.btn_stock_out') }}</button>
+                <button class="btn-outline" @click="openEditModal(item)">{{ $t('warehouse.edit_btn') }}</button>
+                <button class="btn-outline" @click="openHistoryModal(item)">{{ $t('inventory.btn_history') }}</button>
               </td>
             </tr>
           </tbody>
         </table>
 
         <div class="pagination" v-if="totalPages > 1">
-          <button class="btn-outline" :disabled="pageNumber <= 1" @click="changePage(pageNumber - 1)">← Trước</button>
-          <span class="page-info">Trang {{ pageNumber }} / {{ totalPages }}</span>
-          <button class="btn-outline" :disabled="pageNumber >= totalPages" @click="changePage(pageNumber + 1)">Sau →</button>
+          <button class="btn-outline" :disabled="pageNumber <= 1" @click="changePage(pageNumber - 1)">{{ $t('warehouse.prev_page') }}</button>
+          <span class="page-info">{{ $t('warehouse.page_info', { current: pageNumber, total: totalPages }) }}</span>
+          <button class="btn-outline" :disabled="pageNumber >= totalPages" @click="changePage(pageNumber + 1)">{{ $t('warehouse.next_page') }}</button>
         </div>
       </div>
 
@@ -74,35 +74,35 @@
       <div v-if="showItemModal" class="modal-overlay" @click.self="closeItemModal">
         <div class="modal-box">
           <div class="modal-header">
-            <h3>{{ editingId ? 'Sửa vật tư' : 'Thêm vật tư mới' }}</h3>
+            <h3>{{ editingId ? $t('inventory.modal_edit_item_title') : $t('inventory.modal_create_item_title') }}</h3>
             <button class="modal-close" @click="closeItemModal">✕</button>
           </div>
           <form class="modal-body" @submit.prevent="handleItemSubmit">
             <div class="form-group">
-              <label>Tên vật tư <span class="required">*</span></label>
-              <input v-model="itemForm.itemName" type="text" placeholder="VD: Nước uống đóng chai" required />
+              <label>{{ $t('inventory.form_item_name') }} <span class="required">*</span></label>
+              <input v-model="itemForm.itemName" type="text" :placeholder="$t('inventory.form_item_name_placeholder')" required />
             </div>
             <div class="form-row">
               <div class="form-group half">
-                <label>Đơn vị <span class="required">*</span></label>
-                <input v-model="itemForm.unit" type="text" placeholder="thùng / chai / kg..." required />
+                <label>{{ $t('inventory.form_unit') }} <span class="required">*</span></label>
+                <input v-model="itemForm.unit" type="text" :placeholder="$t('inventory.form_unit_placeholder')" required />
               </div>
               <div class="form-group half">
-                <label>Ngưỡng cảnh báo <span class="required">*</span></label>
+                <label>{{ $t('inventory.form_threshold') }} <span class="required">*</span></label>
                 <input v-model.number="itemForm.minimumQuantity" type="number" min="0" step="any" required />
               </div>
             </div>
 
             <p v-if="!editingId" class="hint-text">
-              💡 Tồn kho khởi tạo = 0. Sau khi tạo, dùng nút "+ Nhập" để đưa hàng vào kho.
+              {{ $t('inventory.create_hint') }}
             </p>
 
             <p v-if="itemFormError" class="error-text">{{ itemFormError }}</p>
 
             <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeItemModal">Hủy</button>
+              <button type="button" class="btn-outline" @click="closeItemModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="isSubmitting">
-                {{ isSubmitting ? 'Đang lưu...' : (editingId ? 'Lưu thay đổi' : 'Thêm vật tư') }}
+                {{ isSubmitting ? $t('warehouse.saving') : (editingId ? $t('common.save') : $t('inventory.add_item_btn')) }}
               </button>
             </div>
           </form>
@@ -113,38 +113,38 @@
       <div v-if="showStockModal" class="modal-overlay" @click.self="closeStockModal">
         <div class="modal-box" v-if="stockTarget">
           <div class="modal-header">
-            <h3>{{ stockMode === 'in' ? 'Nhập kho' : 'Xuất kho' }}: {{ stockTarget.itemName }}</h3>
+            <h3>{{ stockMode === 'in' ? $t('inventory.stock_in_title') : $t('inventory.stock_out_title') }}: {{ stockTarget.itemName }}</h3>
             <button class="modal-close" @click="closeStockModal">✕</button>
           </div>
           <form class="modal-body" @submit.prevent="handleStockSubmit">
             <p class="stock-current">
-              Tồn hiện tại: <strong>{{ formatNumber(stockTarget.quantity) }} {{ stockTarget.unit }}</strong>
+              {{ $t('inventory.current_stock') }} <strong>{{ formatNumber(stockTarget.quantity) }} {{ stockTarget.unit }}</strong>
             </p>
 
             <div class="form-group">
-              <label>Số lượng {{ stockMode === 'in' ? 'nhập' : 'xuất' }} <span class="required">*</span></label>
+              <label>{{ stockMode === 'in' ? $t('inventory.quantity_in_label') : $t('inventory.quantity_out_label') }} <span class="required">*</span></label>
               <input v-model.number="stockForm.quantity" type="number" min="0.01" step="any" required autofocus />
             </div>
             <div class="form-group">
-              <label>Số chứng từ</label>
-              <input v-model="stockForm.referenceNo" type="text" placeholder="VD: PN-2026-001 (không bắt buộc)" />
+              <label>{{ $t('inventory.form_reference') }}</label>
+              <input v-model="stockForm.referenceNo" type="text" :placeholder="$t('inventory.form_reference_placeholder')" />
             </div>
             <div class="form-group">
-              <label>Ghi chú</label>
-              <textarea v-model="stockForm.note" rows="2" placeholder="Không bắt buộc"></textarea>
+              <label>{{ $t('inventory.form_note') }}</label>
+              <textarea v-model="stockForm.note" rows="2" :placeholder="$t('inventory.form_note_placeholder')"></textarea>
             </div>
 
             <p v-if="stockError" class="error-text">{{ stockError }}</p>
 
             <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeStockModal">Hủy</button>
+              <button type="button" class="btn-outline" @click="closeStockModal">{{ $t('common.cancel') }}</button>
               <button
                 type="submit"
                 class="btn-primary"
                 :class="{ 'btn-danger': stockMode === 'out' }"
                 :disabled="isSubmitting"
               >
-                {{ isSubmitting ? 'Đang xử lý...' : (stockMode === 'in' ? 'Xác nhận nhập' : 'Xác nhận xuất') }}
+                {{ isSubmitting ? $t('inventory.processing') : (stockMode === 'in' ? $t('inventory.confirm_stock_in') : $t('inventory.confirm_stock_out')) }}
               </button>
             </div>
           </form>
@@ -155,12 +155,12 @@
       <div v-if="showHistoryModal" class="modal-overlay" @click.self="closeHistoryModal">
         <div class="modal-box" v-if="historyTarget">
           <div class="modal-header">
-            <h3>Lịch sử: {{ historyTarget.itemName }}</h3>
+            <h3>{{ $t('inventory.history_title', { name: historyTarget.itemName }) }}</h3>
             <button class="modal-close" @click="closeHistoryModal">✕</button>
           </div>
           <div class="modal-body">
-            <div v-if="historyLoading" class="empty-state">Đang tải...</div>
-            <div v-else-if="transactions.length === 0" class="empty-state">Chưa có giao dịch nào.</div>
+            <div v-if="historyLoading" class="empty-state">{{ $t('common.loading') }}</div>
+            <div v-else-if="transactions.length === 0" class="empty-state">{{ $t('inventory.no_transactions') }}</div>
             <div v-else class="tx-list">
               <div class="tx-item" v-for="tx in transactions" :key="tx.id">
                 <div class="tx-icon" :class="isStockIn(tx) ? 'tx-icon--in' : 'tx-icon--out'">
@@ -168,14 +168,14 @@
                 </div>
                 <div class="tx-info">
                   <p class="tx-title">
-                    {{ isStockIn(tx) ? 'Nhập kho' : 'Xuất kho' }}
+                    {{ isStockIn(tx) ? $t('inventory.tx_in') : $t('inventory.tx_out') }}
                     <strong :class="isStockIn(tx) ? 't-green' : 't-red'">
                       {{ isStockIn(tx) ? '+' : '−' }}{{ formatNumber(tx.quantity) }} {{ historyTarget.unit }}
                     </strong>
                   </p>
                   <p class="tx-meta">
                     {{ formatDateTimeVI(tx.createdAt) }}
-                    <template v-if="tx.referenceNo"> · CT: {{ tx.referenceNo }}</template>
+                    <template v-if="tx.referenceNo"> · {{ $t('inventory.tx_reference_prefix') }} {{ tx.referenceNo }}</template>
                   </p>
                   <p class="tx-note" v-if="tx.note">{{ tx.note }}</p>
                 </div>
@@ -190,6 +190,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue'
+import { useI18n } from 'vue-i18n'
 import WarehouseLayout from '@/components/layout/WarehouseLayout.vue'
 import { ApiError } from '@/lib/api/http'
 import { getAllWarehouses } from '@/features/warehouses/warehouses.api'
@@ -210,6 +211,8 @@ import type {
 } from '@/features/inventory/inventory.types'
 import { formatDateTimeVI } from '@/features/requests/requests.helpers'
 
+const { t } = useI18n()
+
 const formatNumber = (n: number) => n.toLocaleString('vi-VN')
 
 // ── Chọn kho ──────────────────────────────────────────────
@@ -223,7 +226,7 @@ onMounted(async () => {
       selectedWarehouseId.value = warehouseOptions.value[0].id
     }
   } catch (err) {
-    loadError.value = (err as Error).message || 'Không tải được danh sách kho.'
+    loadError.value = (err as Error).message || t('inventory.load_warehouses_failed')
   }
 })
 
@@ -249,7 +252,7 @@ const loadItems = async () => {
     items.value = paged.items ?? []
     totalPages.value = paged.totalPages || 1
   } catch (err) {
-    loadError.value = (err as Error).message || 'Không tải được vật tư.'
+    loadError.value = (err as Error).message || t('inventory.load_items_failed')
   } finally {
     isLoading.value = false
   }
@@ -312,7 +315,7 @@ const handleItemSubmit = async () => {
     closeItemModal()
     await loadItems()
   } catch (err) {
-    itemFormError.value = (err as Error).message || 'Lưu thất bại. Vui lòng thử lại!'
+    itemFormError.value = (err as Error).message || t('inventory.save_failed')
     // 409: người khác vừa sửa cùng lúc → reload cho dữ liệu mới nhất
     if (err instanceof ApiError && err.status === 409) await loadItems()
   } finally {
@@ -354,7 +357,7 @@ const handleStockSubmit = async () => {
     closeStockModal()
   } catch (err) {
     // Xuất vượt tồn → 400; 2 người cùng thao tác → 409 (RowVersion)
-    stockError.value = (err as Error).message || 'Thao tác thất bại. Vui lòng thử lại!'
+    stockError.value = (err as Error).message || t('inventory.stock_action_failed')
     if (err instanceof ApiError && err.status === 409) await loadItems()
   } finally {
     isSubmitting.value = false
