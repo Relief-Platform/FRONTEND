@@ -4,11 +4,11 @@
 
       <div class="page-header">
         <div>
-          <h2>Yêu cầu của tôi</h2>
-          <p class="subtitle">Danh sách tất cả yêu cầu cứu trợ bạn đã gửi</p>
+          <h2>{{ $t('requester.my_requests_title') }}</h2>
+          <p class="subtitle">{{ $t('requester.my_requests_sub') }}</p>
         </div>
         <button class="btn-primary" @click="openCreateModal">
-          + Tạo yêu cầu mới
+          {{ $t('requester.create_new') }}
         </button>
       </div>
 
@@ -27,9 +27,9 @@
 
       <!-- Danh sách -->
       <div class="card">
-        <div v-if="isLoading" class="empty-state">Đang tải...</div>
+        <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
         <div v-else-if="filteredRequests.length === 0" class="empty-state">
-          Không có yêu cầu nào phù hợp.
+          {{ $t('requester.no_matching_requests') }}
         </div>
 
         <div class="request-list" v-else>
@@ -44,8 +44,8 @@
               </div>
             </div>
             <div class="req-actions">
-              <span class="badge" :style="badgeStyle(item.status)">{{ STATUS_LABEL_VI[item.status] }}</span>
-              <button class="btn-outline" @click="openDetailModal(item)">Xem chi tiết</button>
+              <span class="badge" :style="badgeStyle(item.status)">{{ statusLabel(item.status) }}</span>
+              <button class="btn-outline" @click="openDetailModal(item)">{{ $t('requester.view_detail') }}</button>
             </div>
           </div>
         </div>
@@ -55,75 +55,75 @@
       <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
         <div class="modal-box">
           <div class="modal-header">
-            <h3>Tạo yêu cầu cứu trợ mới</h3>
+            <h3>{{ $t('requester.modal_create_title') }}</h3>
             <button class="modal-close" @click="closeCreateModal">✕</button>
           </div>
 
           <form class="modal-body" @submit.prevent="handleCreateSubmit">
             <div class="form-group">
-              <label>Tiêu đề yêu cầu <span class="required">*</span></label>
-              <input v-model="form.title" type="text" placeholder="VD: Cần hỗ trợ lương thực khẩn cấp..." required />
+              <label>{{ $t('requester.form_title_label') }} <span class="required">*</span></label>
+              <input v-model="form.title" type="text" :placeholder="$t('requester.form_title_placeholder')" required />
             </div>
 
             <div class="form-row">
               <div class="form-group half">
-                <label>Mức độ khẩn cấp <span class="required">*</span></label>
+                <label>{{ $t('requester.form_emergency_level') }} <span class="required">*</span></label>
                 <select v-model.number="form.emergencyLevel">
-                  <option :value="2">Trung bình</option>
-                  <option :value="3">Cao</option>
-                  <option :value="4">Khẩn cấp</option>
+                  <option :value="2">{{ $t('requester.level_medium') }}</option>
+                  <option :value="3">{{ $t('requester.level_high') }}</option>
+                  <option :value="4">{{ $t('requester.level_urgent') }}</option>
                 </select>
               </div>
               <div class="form-group half">
-                <label>Số người bị ảnh hưởng <span class="required">*</span></label>
+                <label>{{ $t('requester.form_affected_people') }} <span class="required">*</span></label>
                 <input v-model.number="form.affectedPeople" type="number" min="1" required />
               </div>
             </div>
 
             <div class="form-group">
-              <label>Địa chỉ cụ thể <span class="required">*</span></label>
-              <input v-model="form.address" type="text" placeholder="Số nhà, thôn/xóm, phường/xã..." required />
+              <label>{{ $t('requester.form_address') }} <span class="required">*</span></label>
+              <input v-model="form.address" type="text" :placeholder="$t('requester.form_address_placeholder')" required />
             </div>
 
             <div class="form-row">
               <div class="form-group half">
-                <label>Vĩ độ <span class="required">*</span></label>
+                <label>{{ $t('requester.form_latitude') }} <span class="required">*</span></label>
                 <input v-model.number="form.latitude" type="number" step="any" required />
               </div>
               <div class="form-group half">
-                <label>Kinh độ <span class="required">*</span></label>
+                <label>{{ $t('requester.form_longitude') }} <span class="required">*</span></label>
                 <input v-model.number="form.longitude" type="number" step="any" required />
               </div>
             </div>
-            <button type="button" class="btn-geo" @click="useCurrentLocation">📍 Dùng vị trí hiện tại</button>
+            <button type="button" class="btn-geo" @click="useCurrentLocation">{{ $t('requester.use_current_location') }}</button>
 
             <div class="form-group">
-              <label>Số điện thoại liên hệ <span class="required">*</span></label>
+              <label>{{ $t('requester.form_contact_phone') }} <span class="required">*</span></label>
               <input v-model="form.contactPhone" type="tel" required />
             </div>
 
             <div class="form-group">
-              <label>Mô tả tình trạng <span class="required">*</span></label>
+              <label>{{ $t('requester.form_description') }} <span class="required">*</span></label>
               <textarea v-model="form.description" rows="3" required></textarea>
             </div>
 
             <div class="form-group">
-              <label>Nhu cầu cần hỗ trợ</label>
+              <label>{{ $t('requester.form_needs') }}</label>
               <div class="needs-grid">
-                <label class="need-item"><input type="checkbox" v-model="form.needFood" /> Lương thực</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needWater" /> Nước sạch</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needMedicine" /> Thuốc men</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needBlanket" /> Chăn màn</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needShelter" /> Nơi trú ẩn</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needFood" /> {{ $t('requester.need_food') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needWater" /> {{ $t('requester.need_water') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needMedicine" /> {{ $t('requester.need_medicine') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needBlanket" /> {{ $t('requester.need_blanket') }}</label>
+                <label class="need-item"><input type="checkbox" v-model="form.needShelter" /> {{ $t('requester.need_shelter') }}</label>
               </div>
             </div>
 
             <p v-if="createError" class="error-text">{{ createError }}</p>
 
             <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeCreateModal">Hủy</button>
+              <button type="button" class="btn-outline" @click="closeCreateModal">{{ $t('common.cancel') }}</button>
               <button type="submit" class="btn-primary" :disabled="isSubmitting">
-                {{ isSubmitting ? 'Đang gửi...' : 'Gửi yêu cầu' }}
+                {{ isSubmitting ? $t('requester.submitting') : $t('requester.btn_submit_request') }}
               </button>
             </div>
           </form>
@@ -132,24 +132,71 @@
 
       <!-- ══════════ MODAL: XEM CHI TIẾT ══════════ -->
       <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
-        <div class="modal-box" v-if="selectedRequest">
-          <div class="modal-header">
-            <h3>{{ selectedRequest.title }}</h3>
+        <div class="modal-box detail-modal" v-if="selectedRequest">
+          <div class="modal-header detail-header">
+            <div class="detail-header-info">
+              <span class="badge" :style="badgeStyle(selectedRequest.status)">
+                {{ statusLabel(selectedRequest.status) }}
+              </span>
+              <h3>{{ selectedRequest.title }}</h3>
+            </div>
             <button class="modal-close" @click="closeDetailModal">✕</button>
           </div>
-          <div class="modal-body detail-body">
-            <span class="badge" :style="badgeStyle(selectedRequest.status)">
-              {{ STATUS_LABEL_VI[selectedRequest.status] }}
-            </span>
 
-            <div class="detail-row"><strong>Địa chỉ:</strong> {{ selectedRequest.address }}</div>
-            <div class="detail-row"><strong>Số người ảnh hưởng:</strong> {{ selectedRequest.affectedPeople }}</div>
-            <div class="detail-row"><strong>SĐT liên hệ:</strong> {{ selectedRequest.contactPhone }}</div>
-            <div class="detail-row"><strong>Ngày tạo:</strong> {{ formatDateTimeVI(selectedRequest.createdAt) }}</div>
-            <div class="detail-row"><strong>Mô tả:</strong> {{ selectedRequest.description }}</div>
-            <div class="detail-row">
-              <strong>Nhu cầu:</strong>
-              {{ needsSummary(selectedRequest) }}
+          <div class="modal-body detail-body">
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0 5.4 5.4 0 0 0 0 7.65l8.42 8.42 8.42-8.42a5.4 5.4 0 0 0 0-7.65z" opacity="0" /><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_address') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.address }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_affected') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.affectedPeople }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_phone') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.contactPhone || '—' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_created') }}</span>
+                  <span class="detail-field__value">{{ formatDateTimeVI(selectedRequest.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <span class="detail-section__label">{{ $t('requester.detail_description') }}</span>
+              <p class="detail-section__text">{{ selectedRequest.description || '—' }}</p>
+            </div>
+
+            <div class="detail-section">
+              <span class="detail-section__label">{{ $t('requester.detail_needs') }}</span>
+              <div class="needs-chips">
+                <span v-for="need in selectedNeeds" :key="need" class="need-chip">{{ need }}</span>
+                <span v-if="selectedNeeds.length === 0" class="need-chip need-chip--empty">{{ $t('requester.need_none') }}</span>
+              </div>
             </div>
 
             <p v-if="cancelError" class="error-text">{{ cancelError }}</p>
@@ -161,7 +208,7 @@
                 :disabled="isCancelling"
                 @click="handleCancelRequest(selectedRequest)"
               >
-                {{ isCancelling ? 'Đang hủy...' : 'Hủy yêu cầu' }}
+                {{ isCancelling ? $t('requester.cancelling') : $t('requester.cancel_request_btn') }}
               </button>
             </div>
           </div>
@@ -175,6 +222,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   createReliefRequest,
@@ -182,7 +230,6 @@ import {
   cancelReliefRequest,
 } from '@/features/requests/requests.api'
 import {
-  STATUS_LABEL_VI,
   STATUS_GROUP_COLOR,
   type CreateReliefRequestPayload,
   type ReliefRequestResponse,
@@ -191,13 +238,24 @@ import {
 import {
   badgeStyle,
   formatDateTimeVI,
-  needsSummary,
   matchesRequesterFilterGroup,
   type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
 
 const route = useRoute()
 const router = useRouter()
+const { t } = useI18n()
+
+// Nhãn trạng thái dịch trên FE, gộp theo cùng nhóm với STATUS_LABEL_VI cũ
+const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
+  Pending: 'requester.status_processing',
+  Approved: 'requester.status_processing',
+  Assigned: 'requester.status_received',
+  InProgress: 'requester.status_received',
+  Completed: 'requester.status_completed',
+  Cancelled: 'requester.status_cancelled',
+}
+const statusLabel = (status: ReliefRequestStatus) => t(STATUS_LABEL_KEY[status])
 
 // ── Danh sách yêu cầu ─────────────────────────────────────
 const allRequests = ref<ReliefRequestResponse[]>([])
@@ -232,10 +290,10 @@ onMounted(async () => {
 // ── Filter ────────────────────────────────────────────────
 // Tab active đổi màu theo đúng nhóm trạng thái:
 // đang xử lý = vàng, đã tiếp nhận = xanh dương, hoàn thành = xanh lá
-const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeStyle?: Record<string, string> }[] = [
-  { label: 'Tất cả', value: 'all', activeStyle: undefined },
+const filterTabs = computed<{ label: string; value: 'all' | RequesterFilterGroup; activeStyle?: Record<string, string> }[]>(() => [
+  { label: t('requester.filter_all'), value: 'all', activeStyle: undefined },
   {
-    label: 'Đang xử lý',
+    label: t('requester.filter_processing'),
     value: 'processing',
     activeStyle: {
       background: STATUS_GROUP_COLOR.pending.bg,
@@ -244,7 +302,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
     },
   },
   {
-    label: 'Đã tiếp nhận',
+    label: t('requester.filter_received'),
     value: 'received',
     activeStyle: {
       background: STATUS_GROUP_COLOR.assigned.bg,
@@ -253,7 +311,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
     },
   },
   {
-    label: 'Đã hoàn thành',
+    label: t('requester.filter_completed'),
     value: 'completed',
     activeStyle: {
       background: STATUS_GROUP_COLOR.completed.bg,
@@ -261,7 +319,7 @@ const filterTabs: { label: string; value: 'all' | RequesterFilterGroup; activeSt
       color: STATUS_GROUP_COLOR.completed.color,
     },
   },
-]
+])
 const activeFilter = ref<'all' | RequesterFilterGroup>('all')
 
 const filteredRequests = computed(() => {
@@ -301,7 +359,7 @@ const closeCreateModal = () => { showCreateModal.value = false }
 
 const useCurrentLocation = () => {
   if (!navigator.geolocation) {
-    alert('Trình duyệt không hỗ trợ định vị.')
+    alert(t('requester.geolocation_unsupported'))
     return
   }
   navigator.geolocation.getCurrentPosition(
@@ -309,7 +367,7 @@ const useCurrentLocation = () => {
       form.value.latitude = pos.coords.latitude
       form.value.longitude = pos.coords.longitude
     },
-    () => alert('Không thể lấy vị trí hiện tại. Vui lòng nhập tay.'),
+    () => alert(t('requester.geolocation_failed')),
   )
 }
 
@@ -321,7 +379,7 @@ const handleCreateSubmit = async () => {
     closeCreateModal()
     await loadRequests()
   } catch (err) {
-    createError.value = (err as Error).message || 'Gửi yêu cầu thất bại. Vui lòng thử lại!'
+    createError.value = (err as Error).message || t('requester.create_failed')
   } finally {
     isSubmitting.value = false
   }
@@ -338,6 +396,18 @@ const openDetailModal = (item: ReliefRequestResponse) => {
 }
 const closeDetailModal = () => { showDetailModal.value = false }
 
+const selectedNeeds = computed(() => {
+  const r = selectedRequest.value
+  if (!r) return []
+  const list: string[] = []
+  if (r.needFood) list.push(t('requester.need_food'))
+  if (r.needWater) list.push(t('requester.need_water'))
+  if (r.needMedicine) list.push(t('requester.need_medicine'))
+  if (r.needBlanket) list.push(t('requester.need_blanket'))
+  if (r.needShelter) list.push(t('requester.need_shelter'))
+  return list
+})
+
 // ── Hủy yêu cầu ───────────────────────────────────────────
 // Theo state machine BE: chủ sở hữu chỉ hủy được khi request chưa
 // Completed/Cancelled (Pending/Approved/Assigned/InProgress đều hủy được).
@@ -351,7 +421,7 @@ const isCancelling = ref(false)
 const cancelError = ref('')
 
 const handleCancelRequest = async (item: ReliefRequestResponse) => {
-  if (!confirm(`Bạn có chắc chắn muốn hủy yêu cầu "${item.title}"? Hành động này không thể hoàn tác.`)) {
+  if (!confirm(t('requester.cancel_confirm', { title: item.title }))) {
     return
   }
 
@@ -362,7 +432,7 @@ const handleCancelRequest = async (item: ReliefRequestResponse) => {
     closeDetailModal()
     await loadRequests()
   } catch (err) {
-    cancelError.value = (err as Error).message || 'Hủy yêu cầu thất bại. Vui lòng thử lại!'
+    cancelError.value = (err as Error).message || t('requester.cancel_failed')
   } finally {
     isCancelling.value = false
   }
@@ -442,10 +512,52 @@ textarea { resize: vertical; }
 
 .error-text { color: #e53e3e; font-size: 12.5px; margin: 8px 0 0 0; }
 
-.detail-body { display: flex; flex-direction: column; gap: 4px; }
-.detail-row { font-size: 13.5px; color: #334155; padding: 6px 0; border-bottom: 1px solid #f8fafc; line-height: 1.5; }
+.detail-header { align-items: flex-start; gap: 16px; }
+.detail-header-info { display: flex; flex-direction: column; gap: 8px; }
+.detail-header-info .badge { align-self: flex-start; }
+.detail-header-info h3 { font-size: 18px; }
 
-.detail-actions { margin-top: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9; justify-content: flex-start; }
+.detail-body { display: flex; flex-direction: column; gap: 20px; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.detail-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.detail-field__icon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #ea580c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-field__icon svg { width: 15px; height: 15px; }
+.detail-field__label { display: block; font-size: 11.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; }
+.detail-field__value { display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 2px; word-break: break-word; }
+
+.detail-section { display: flex; flex-direction: column; gap: 8px; }
+.detail-section__label { font-size: 11.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; }
+.detail-section__text { margin: 0; font-size: 13.5px; color: #334155; line-height: 1.6; }
+
+.needs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.need-chip { background: #fff1eb; color: #ea580c; border: 1px solid #fed7aa; padding: 5px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
+.need-chip--empty { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
+
+.detail-actions { margin-top: 4px; padding-top: 16px; border-top: 1px solid #f1f5f9; justify-content: flex-start; }
 .btn-cancel-request {
   background: transparent;
   border: 1px solid #e11d48;
@@ -465,5 +577,6 @@ textarea { resize: vertical; }
   .request-item { flex-direction: column; align-items: flex-start; gap: 12px; }
   .req-actions { width: 100%; justify-content: space-between; }
   .form-row { flex-direction: column; gap: 16px; }
+  .detail-grid { grid-template-columns: 1fr; }
 }
 </style>

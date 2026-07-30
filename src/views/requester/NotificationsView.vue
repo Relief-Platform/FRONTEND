@@ -2,15 +2,15 @@
   <RequesterLayout>
     <div class="notifications-page">
       <div class="page-header">
-        <h2>Thông báo của bạn</h2>
+        <h2>{{ $t('requester.notifications_title') }}</h2>
         <button class="btn-mark-read" @click="handleMarkAllAsRead" :disabled="isMarking">
-          {{ isMarking ? 'Đang cập nhật...' : 'Đánh dấu tất cả đã đọc' }}
+          {{ isMarking ? $t('requester.updating') : $t('requester.mark_all_read') }}
         </button>
       </div>
 
-      <div v-if="isLoading" class="empty-state">Đang tải...</div>
+      <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
       <div v-else-if="notifications.length === 0" class="empty-state">
-        Bạn chưa có thông báo nào.
+        {{ $t('requester.no_notifications') }}
       </div>
 
       <div class="notifications-list" v-else>
