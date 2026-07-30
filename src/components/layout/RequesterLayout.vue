@@ -46,7 +46,7 @@
       </nav>
 
       <!-- Collapse toggle -->
-      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? 'Mở rộng' : 'Thu gọn'">
+      <button class="sidebar-collapse-btn" @click="sidebarCollapsed = !sidebarCollapsed" :title="sidebarCollapsed ? $t('common.expand') : $t('common.collapse')">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
           <path :d="sidebarCollapsed ? 'M9 18l6-6-6-6' : 'M15 18l-6-6 6-6'" />
         </svg>
@@ -57,7 +57,7 @@
         <div class="sidebar-avatar">{{ initials }}</div>
         <Transition name="fade-label">
           <div v-if="!sidebarCollapsed" class="sidebar-user-info">
-            <span class="sidebar-user-name">{{ auth.user?.fullName ?? 'Người dùng' }}</span>
+            <span class="sidebar-user-name">{{ auth.user?.fullName ?? $t('common.user') }}</span>
             <span class="sidebar-user-role">{{ roleLabel }}</span>
           </div>
         </Transition>
@@ -105,7 +105,7 @@
           </div>
 
           <!-- Notification Button -->
-          <button class="topbar-icon-btn" title="Thông báo" @click="router.push('/requester/notifications')">
+          <button class="topbar-icon-btn" :title="$t('nav.notifications')" @click="router.push('/requester/notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
@@ -121,12 +121,12 @@
               <div v-if="showUserMenu" class="topbar-dropdown">
                 <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
-                  Hồ sơ cá nhân
+                  {{ $t('nav.profile') }}
                 </router-link>
                 <div class="dropdown-divider" />
                 <button class="dropdown-item dropdown-item--danger" @click="handleLogout">
                   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                  Đăng xuất
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </Transition>
@@ -151,7 +151,7 @@ import { useAuthStore } from '@/stores/auth'
 const router = useRouter()
 const route = useRoute()
 const auth = useAuthStore()
-const { locale } = useI18n()
+const { locale, t } = useI18n()
 
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
@@ -163,7 +163,7 @@ function changeLang(lang: 'vi' | 'en'): void {
   localStorage.setItem('app_lang', lang)
 }
 
-const roleLabel = computed(() => (auth.role === 'requester' ? 'Người yêu cầu hỗ trợ' : auth.role ?? ''))
+const roleLabel = computed(() => (auth.role === 'requester' ? t('requester.role_badge') : auth.role ?? ''))
 
 const initials = computed(() =>
   auth.user?.fullName
@@ -176,38 +176,38 @@ const initials = computed(() =>
 
 const greeting = computed(() => {
   const h = new Date().getHours()
-  if (h < 12) return 'Chào buổi sáng'
-  if (h < 18) return 'Chào buổi chiều'
-  return 'Chào buổi tối'
+  if (h < 12) return t('common.greeting_morning')
+  if (h < 18) return t('common.greeting_afternoon')
+  return t('common.greeting_evening')
 })
 
-const navItems = [
+const navItems = computed(() => [
   {
     name: 'dashboard',
     routeName: 'requester-dashboard',
     to: '/requester',
-    label: 'Trang chủ',
+    label: t('nav.home'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
   },
   {
     name: 'my-requests',
     routeName: 'requester-my-requests',
     to: '/requester/my-requests',
-    label: 'Yêu cầu của tôi',
+    label: t('requester.my_requests_title'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
   },
   {
     name: 'tracking',
     routeName: 'requester-tracking',
     to: '/requester/tracking',
-    label: 'Theo dõi hỗ trợ',
+    label: t('requester.tracking_title'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
   },
   {
     name: 'notifications',
     routeName: 'requester-notifications',
     to: '/requester/notifications',
-    label: 'Thông báo',
+    label: t('nav.notifications'),
     badge: '1',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
   },
@@ -215,17 +215,17 @@ const navItems = [
     name: 'guide',
     routeName: 'requester-guide',
     to: '/requester/guide',
-    label: 'Hướng dẫn',
+    label: t('nav.guide'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
   },
   {
     name: 'become-volunteer',
     routeName: 'become-volunteer',
     to: '/requester/become-volunteer',
-    label: 'Trở thành TNV',
+    label: t('requester.qa_become_volunteer'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
   },
-]
+])
 
 async function handleLogout(): Promise<void> {
   showUserMenu.value = false

@@ -5,14 +5,14 @@
       <!-- Địa chỉ -->
       <div class="form-group span-full">
         <label for="reg-address" class="form-label">
-          Địa chỉ thường trú <span class="required">*</span>
+          {{ $t('requester.vol_form_address') }} <span class="required">*</span>
         </label>
         <input
           id="reg-address"
           v-model="form.address"
           type="text"
           class="form-input"
-          placeholder="VD: 123 Đường X, Quận Y, TP. Hồ Chí Minh"
+          :placeholder="$t('requester.vol_form_address_placeholder')"
           required
         />
       </div>
@@ -20,7 +20,7 @@
       <!-- Vĩ độ & Kinh độ -->
       <div class="form-group">
         <label for="reg-lat" class="form-label">
-          Vĩ độ (Latitude) <span class="required">*</span>
+          {{ $t('requester.vol_form_lat') }} <span class="required">*</span>
         </label>
         <input
           id="reg-lat"
@@ -31,12 +31,12 @@
           placeholder="VD: 21.0285"
           required
         />
-        <p class="form-hint">Tìm tọa độ tại <a href="https://maps.google.com" target="_blank">maps.google.com</a></p>
+        <p class="form-hint">{{ $t('requester.vol_form_lat_hint_prefix') }} <a href="https://maps.google.com" target="_blank">maps.google.com</a></p>
       </div>
 
       <div class="form-group">
         <label for="reg-lng" class="form-label">
-          Kinh độ (Longitude) <span class="required">*</span>
+          {{ $t('requester.vol_form_lng') }} <span class="required">*</span>
         </label>
         <input
           id="reg-lng"
@@ -52,7 +52,7 @@
       <!-- Số năm kinh nghiệm -->
       <div class="form-group span-full">
         <label for="reg-exp" class="form-label">
-          Số năm kinh nghiệm cứu trợ <span class="required">*</span>
+          {{ $t('requester.vol_form_experience') }} <span class="required">*</span>
         </label>
         <input
           id="reg-exp"
@@ -68,13 +68,13 @@
 
       <!-- Giới thiệu bản thân -->
       <div class="form-group span-full">
-        <label for="reg-bio" class="form-label">Giới thiệu bản thân (tuỳ chọn)</label>
+        <label for="reg-bio" class="form-label">{{ $t('requester.vol_form_bio') }}</label>
         <textarea
           id="reg-bio"
           v-model="form.bio"
           class="form-textarea"
           rows="4"
-          placeholder="Mô tả ngắn gọn về bản thân, kinh nghiệm, các tổ chức từng tham gia..."
+          :placeholder="$t('requester.vol_form_bio_placeholder')"
         />
       </div>
     </div>
@@ -93,13 +93,13 @@
     <!-- Actions -->
     <div class="form-actions">
       <button
-        v-if="props.submitLabel !== 'Gửi đăng ký'"
+        v-if="showCancel"
         type="button"
         class="btn-cancel"
         @click="emit('cancel')"
         :disabled="isSaving"
       >
-        Hủy
+        {{ $t('requester.vol_form_cancel') }}
       </button>
       <button
         type="submit"
@@ -109,14 +109,14 @@
         <svg v-if="isSaving" class="spin-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
           <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
         </svg>
-        {{ isSaving ? 'Đang xử lý...' : submitLabel }}
+        {{ isSaving ? $t('requester.vol_form_processing') : submitLabel }}
       </button>
     </div>
   </form>
 </template>
 
 <script setup lang="ts">
-import { reactive, watch } from 'vue'
+import { reactive, computed, watch } from 'vue'
 import type { VolunteerProfile, VolunteerProfilePayload } from '@/features/volunteers/volunteers.types'
 
 const props = withDefaults(defineProps<{
@@ -126,7 +126,7 @@ const props = withDefaults(defineProps<{
   errorMessage?: string
 }>(), {
   initialData:  null,
-  submitLabel:  'Gửi đăng ký',
+  submitLabel:  '',
   isSaving:     false,
   errorMessage: '',
 })
@@ -135,6 +135,8 @@ const emit = defineEmits<{
   (e: 'submit', payload: VolunteerProfilePayload): void
   (e: 'cancel'): void
 }>()
+
+const showCancel = computed(() => !!props.initialData)
 
 const form = reactive({
   address:         props.initialData?.address         ?? '',

@@ -132,24 +132,71 @@
 
       <!-- ══════════ MODAL: XEM CHI TIẾT ══════════ -->
       <div v-if="showDetailModal" class="modal-overlay" @click.self="closeDetailModal">
-        <div class="modal-box" v-if="selectedRequest">
-          <div class="modal-header">
-            <h3>{{ selectedRequest.title }}</h3>
+        <div class="modal-box detail-modal" v-if="selectedRequest">
+          <div class="modal-header detail-header">
+            <div class="detail-header-info">
+              <span class="badge" :style="badgeStyle(selectedRequest.status)">
+                {{ statusLabel(selectedRequest.status) }}
+              </span>
+              <h3>{{ selectedRequest.title }}</h3>
+            </div>
             <button class="modal-close" @click="closeDetailModal">✕</button>
           </div>
-          <div class="modal-body detail-body">
-            <span class="badge" :style="badgeStyle(selectedRequest.status)">
-              {{ statusLabel(selectedRequest.status) }}
-            </span>
 
-            <div class="detail-row"><strong>{{ $t('requester.detail_address') }}</strong> {{ selectedRequest.address }}</div>
-            <div class="detail-row"><strong>{{ $t('requester.detail_affected') }}</strong> {{ selectedRequest.affectedPeople }}</div>
-            <div class="detail-row"><strong>{{ $t('requester.detail_phone') }}</strong> {{ selectedRequest.contactPhone }}</div>
-            <div class="detail-row"><strong>{{ $t('requester.detail_created') }}</strong> {{ formatDateTimeVI(selectedRequest.createdAt) }}</div>
-            <div class="detail-row"><strong>{{ $t('requester.detail_description') }}</strong> {{ selectedRequest.description }}</div>
-            <div class="detail-row">
-              <strong>{{ $t('requester.detail_needs') }}</strong>
-              {{ needsSummary(selectedRequest) }}
+          <div class="modal-body detail-body">
+            <div class="detail-grid">
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0l-.77.78-.77-.78a5.4 5.4 0 0 0-7.65 0 5.4 5.4 0 0 0 0 7.65l8.42 8.42 8.42-8.42a5.4 5.4 0 0 0 0-7.65z" opacity="0" /><path stroke-linecap="round" stroke-linejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 0 1-2.827 0l-4.244-4.243a8 8 0 1 1 11.314 0z"/><circle cx="12" cy="11" r="3"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_address') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.address }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_affected') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.affectedPeople }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_phone') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.contactPhone || '—' }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_created') }}</span>
+                  <span class="detail-field__value">{{ formatDateTimeVI(selectedRequest.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="detail-section">
+              <span class="detail-section__label">{{ $t('requester.detail_description') }}</span>
+              <p class="detail-section__text">{{ selectedRequest.description || '—' }}</p>
+            </div>
+
+            <div class="detail-section">
+              <span class="detail-section__label">{{ $t('requester.detail_needs') }}</span>
+              <div class="needs-chips">
+                <span v-for="need in selectedNeeds" :key="need" class="need-chip">{{ need }}</span>
+                <span v-if="selectedNeeds.length === 0" class="need-chip need-chip--empty">{{ $t('requester.need_none') }}</span>
+              </div>
             </div>
 
             <p v-if="cancelError" class="error-text">{{ cancelError }}</p>
@@ -191,7 +238,6 @@ import {
 import {
   badgeStyle,
   formatDateTimeVI,
-  needsSummary,
   matchesRequesterFilterGroup,
   type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
@@ -350,6 +396,18 @@ const openDetailModal = (item: ReliefRequestResponse) => {
 }
 const closeDetailModal = () => { showDetailModal.value = false }
 
+const selectedNeeds = computed(() => {
+  const r = selectedRequest.value
+  if (!r) return []
+  const list: string[] = []
+  if (r.needFood) list.push(t('requester.need_food'))
+  if (r.needWater) list.push(t('requester.need_water'))
+  if (r.needMedicine) list.push(t('requester.need_medicine'))
+  if (r.needBlanket) list.push(t('requester.need_blanket'))
+  if (r.needShelter) list.push(t('requester.need_shelter'))
+  return list
+})
+
 // ── Hủy yêu cầu ───────────────────────────────────────────
 // Theo state machine BE: chủ sở hữu chỉ hủy được khi request chưa
 // Completed/Cancelled (Pending/Approved/Assigned/InProgress đều hủy được).
@@ -454,10 +512,52 @@ textarea { resize: vertical; }
 
 .error-text { color: #e53e3e; font-size: 12.5px; margin: 8px 0 0 0; }
 
-.detail-body { display: flex; flex-direction: column; gap: 4px; }
-.detail-row { font-size: 13.5px; color: #334155; padding: 6px 0; border-bottom: 1px solid #f8fafc; line-height: 1.5; }
+.detail-header { align-items: flex-start; gap: 16px; }
+.detail-header-info { display: flex; flex-direction: column; gap: 8px; }
+.detail-header-info .badge { align-self: flex-start; }
+.detail-header-info h3 { font-size: 18px; }
 
-.detail-actions { margin-top: 12px; padding-top: 16px; border-top: 1px solid #f1f5f9; justify-content: flex-start; }
+.detail-body { display: flex; flex-direction: column; gap: 20px; }
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+.detail-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f8fafc;
+  border: 1px solid #eef2f7;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.detail-field__icon {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  color: #ea580c;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.detail-field__icon svg { width: 15px; height: 15px; }
+.detail-field__label { display: block; font-size: 11.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; }
+.detail-field__value { display: block; font-size: 13.5px; font-weight: 600; color: #1e293b; margin-top: 2px; word-break: break-word; }
+
+.detail-section { display: flex; flex-direction: column; gap: 8px; }
+.detail-section__label { font-size: 11.5px; font-weight: 600; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.4px; }
+.detail-section__text { margin: 0; font-size: 13.5px; color: #334155; line-height: 1.6; }
+
+.needs-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.need-chip { background: #fff1eb; color: #ea580c; border: 1px solid #fed7aa; padding: 5px 12px; border-radius: 20px; font-size: 12.5px; font-weight: 600; }
+.need-chip--empty { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
+
+.detail-actions { margin-top: 4px; padding-top: 16px; border-top: 1px solid #f1f5f9; justify-content: flex-start; }
 .btn-cancel-request {
   background: transparent;
   border: 1px solid #e11d48;
@@ -477,5 +577,6 @@ textarea { resize: vertical; }
   .request-item { flex-direction: column; align-items: flex-start; gap: 12px; }
   .req-actions { width: 100%; justify-content: space-between; }
   .form-row { flex-direction: column; gap: 16px; }
+  .detail-grid { grid-template-columns: 1fr; }
 }
 </style>

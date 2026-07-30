@@ -19,6 +19,7 @@ export default {
     register: 'Đăng ký',
     profile: 'Hồ sơ cá nhân',
     logout: 'Đăng xuất',
+    notifications: 'Thông báo',
   },
 
   common: {
@@ -40,6 +41,12 @@ export default {
     normal: 'Bình thường',
     high: 'Cao',
     step: 'Bước',
+    expand: 'Mở rộng',
+    collapse: 'Thu gọn',
+    user: 'Người dùng',
+    greeting_morning: 'Chào buổi sáng',
+    greeting_afternoon: 'Chào buổi chiều',
+    greeting_evening: 'Chào buổi tối',
   },
 
   home: {
@@ -302,6 +309,7 @@ export default {
     need_medicine: 'Thuốc men',
     need_blanket: 'Chăn màn',
     need_shelter: 'Nơi trú ẩn',
+    need_none: 'Không có',
     btn_submit_request: 'Gửi yêu cầu',
     submitting: 'Đang gửi...',
     geolocation_unsupported: 'Trình duyệt không hỗ trợ định vị.',

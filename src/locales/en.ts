@@ -19,6 +19,7 @@ export default {
     register: 'Register',
     profile: 'Profile',
     logout: 'Log Out',
+    notifications: 'Notifications',
   },
 
   common: {
@@ -40,6 +41,12 @@ export default {
     normal: 'Normal',
     high: 'High',
     step: 'Step',
+    expand: 'Expand',
+    collapse: 'Collapse',
+    user: 'User',
+    greeting_morning: 'Good morning',
+    greeting_afternoon: 'Good afternoon',
+    greeting_evening: 'Good evening',
   },
 
   home: {
@@ -302,6 +309,7 @@ export default {
     need_medicine: 'Medicine',
     need_blanket: 'Blankets',
     need_shelter: 'Shelter',
+    need_none: 'None',
     btn_submit_request: 'Submit Request',
     submitting: 'Submitting...',
     geolocation_unsupported: 'Your browser does not support geolocation.',

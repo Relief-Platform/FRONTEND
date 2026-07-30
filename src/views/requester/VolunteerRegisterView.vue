@@ -5,7 +5,7 @@
       <!-- ── Trạng thái: đang tải ───────────────────────────── -->
       <div v-if="isLoading" class="status-screen loading-screen">
         <div class="spinner-ring" />
-        <p>Đang kiểm tra hồ sơ của bạn...</p>
+        <p>{{ $t('requester.vol_checking') }}</p>
       </div>
 
       <!-- ── Trạng thái: Pending (đang chờ duyệt) ────────────── -->
@@ -16,46 +16,44 @@
             <polyline points="12 6 12 12 16 14"/>
           </svg>
         </div>
-        <h1 class="status-title">Hồ sơ đang được xem xét</h1>
+        <h1 class="status-title">{{ $t('requester.vol_pending_title') }}</h1>
         <p class="status-desc">
-          Cảm ơn bạn đã đăng ký trở thành Tình nguyện viên!<br/>
-          Chúng tôi đang xem xét hồ sơ của bạn và sẽ phản hồi sớm nhất có thể.
+          {{ $t('requester.vol_pending_desc') }}
         </p>
 
         <div class="info-card pending-card">
           <div class="info-card__row">
-            <span class="info-label">Họ tên:</span>
+            <span class="info-label">{{ $t('requester.vol_full_name') }}</span>
             <span class="info-value">{{ profile?.fullName }}</span>
           </div>
           <div class="info-card__row">
-            <span class="info-label">Email:</span>
+            <span class="info-label">{{ $t('requester.vol_email') }}</span>
             <span class="info-value">{{ profile?.email }}</span>
           </div>
           <div class="info-card__row">
-            <span class="info-label">Địa chỉ:</span>
+            <span class="info-label">{{ $t('requester.vol_address') }}</span>
             <span class="info-value">{{ profile?.address }}</span>
           </div>
           <div class="info-card__row">
-            <span class="info-label">Kinh nghiệm:</span>
-            <span class="info-value">{{ profile?.experienceYears }} năm</span>
+            <span class="info-label">{{ $t('requester.vol_experience') }}</span>
+            <span class="info-value">{{ profile?.experienceYears }} {{ $t('requester.vol_years') }}</span>
           </div>
           <div class="info-card__row" v-if="profile?.bio">
-            <span class="info-label">Giới thiệu:</span>
+            <span class="info-label">{{ $t('requester.vol_bio') }}</span>
             <span class="info-value">{{ profile?.bio }}</span>
           </div>
           <div class="info-card__row">
-            <span class="info-label">Trạng thái:</span>
-            <span class="status-badge status-badge--pending">⏳ Đang chờ duyệt</span>
+            <span class="info-label">{{ $t('requester.vol_status') }}</span>
+            <span class="status-badge status-badge--pending">{{ $t('requester.vol_status_pending_badge') }}</span>
           </div>
         </div>
 
         <p class="hint-text">
-          Hồ sơ thường được duyệt trong vòng <strong>1–3 ngày làm việc</strong>.<br/>
-          Bạn sẽ nhận được thông báo khi có kết quả.
+          {{ $t('requester.vol_hint', { days: $t('requester.vol_hint_days') }) }}
         </p>
 
         <button class="btn-secondary" @click="router.push('/requester')">
-          ← Quay về trang chủ
+          {{ $t('requester.vol_back_home') }}
         </button>
       </div>
 
@@ -68,34 +66,33 @@
             <line x1="9" y1="9" x2="15" y2="15"/>
           </svg>
         </div>
-        <h1 class="status-title">Hồ sơ chưa được chấp thuận</h1>
+        <h1 class="status-title">{{ $t('requester.vol_rejected_title') }}</h1>
         <p class="status-desc">
-          Rất tiếc, hồ sơ đăng ký Tình nguyện viên của bạn chưa đáp ứng các yêu cầu hiện tại.<br/>
-          Bạn có thể cập nhật thông tin và nộp lại hồ sơ.
+          {{ $t('requester.vol_rejected_desc') }}
         </p>
 
         <div class="info-card rejected-card">
           <div class="info-card__row">
-            <span class="info-label">Trạng thái:</span>
-            <span class="status-badge status-badge--rejected">✗ Bị từ chối</span>
+            <span class="info-label">{{ $t('requester.vol_status') }}</span>
+            <span class="status-badge status-badge--rejected">{{ $t('requester.vol_status_rejected_badge') }}</span>
           </div>
         </div>
 
         <div class="action-group">
           <button class="btn-primary" @click="showReapplyForm = true" v-if="!showReapplyForm">
-            Nộp lại hồ sơ
+            {{ $t('requester.vol_reapply_btn') }}
           </button>
           <button class="btn-secondary" @click="router.push('/requester')">
-            ← Quay về trang chủ
+            {{ $t('requester.vol_back_home') }}
           </button>
         </div>
 
         <!-- Form nộp lại -->
         <div v-if="showReapplyForm" class="register-form-wrap">
-          <h2 class="form-title">Cập nhật & Nộp lại hồ sơ</h2>
+          <h2 class="form-title">{{ $t('requester.vol_reapply_form_title') }}</h2>
           <VolunteerRegisterForm
             :initial-data="profile"
-            submit-label="Nộp lại hồ sơ"
+            :submit-label="$t('requester.vol_reapply_btn')"
             @submit="handleUpdate"
             @cancel="showReapplyForm = false"
             :is-saving="isSaving"
@@ -112,17 +109,17 @@
             <polyline points="22 4 12 14.01 9 11.01"/>
           </svg>
         </div>
-        <h1 class="status-title">Chúc mừng! Bạn đã là Tình nguyện viên</h1>
+        <h1 class="status-title">{{ $t('requester.vol_approved_title') }}</h1>
         <p class="status-desc">
-          Hồ sơ của bạn đã được phê duyệt. Bạn có thể truy cập Dashboard Tình nguyện viên để nhận nhiệm vụ.
+          {{ $t('requester.vol_approved_desc') }}
         </p>
 
         <div class="action-group">
           <button class="btn-primary" @click="router.push('/volunteer')">
-            Vào Dashboard Tình nguyện viên →
+            {{ $t('requester.vol_go_dashboard') }}
           </button>
           <button class="btn-secondary" @click="router.push('/requester')">
-            ← Quay về trang chủ
+            {{ $t('requester.vol_back_home') }}
           </button>
         </div>
       </div>
@@ -140,8 +137,8 @@
             </svg>
           </div>
           <div>
-            <h1 class="register-title">Đăng ký Tình nguyện viên</h1>
-            <p class="register-sub">Điền thông tin bên dưới để gửi hồ sơ xin tham gia đội ngũ tình nguyện cứu trợ.</p>
+            <h1 class="register-title">{{ $t('requester.vol_register_title') }}</h1>
+            <p class="register-sub">{{ $t('requester.vol_register_sub') }}</p>
           </div>
         </div>
 
@@ -152,7 +149,7 @@
             <line x1="12" y1="16" x2="12" y2="12"/>
             <line x1="12" y1="8" x2="12.01" y2="8"/>
           </svg>
-          <p>Sau khi đăng ký, hồ sơ sẽ ở trạng thái <strong>Chờ duyệt</strong>. Admin sẽ xem xét và thông báo kết quả trong 1–3 ngày làm việc.</p>
+          <p>{{ $t('requester.vol_info_banner', { status: $t('requester.vol_info_banner_status') }) }}</p>
         </div>
 
         <!-- Error banner -->
@@ -170,7 +167,7 @@
         <VolunteerRegisterForm
           :is-saving="isSaving"
           :error-message="errorMessage"
-          submit-label="Gửi đăng ký"
+          :submit-label="$t('requester.vol_submit_register')"
           @submit="handleCreate"
         />
       </div>
@@ -182,6 +179,7 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import VolunteerRegisterForm from '@/components/volunteer/VolunteerRegisterForm.vue'
@@ -194,6 +192,7 @@ import type { VolunteerProfile, VolunteerProfilePayload } from '@/features/volun
 
 const router = useRouter()
 const authStore = useAuthStore()
+const { t } = useI18n()
 
 // ── State ──────────────────────────────────────────────────────
 const profile       = ref<VolunteerProfile | null>(null)
@@ -243,7 +242,7 @@ async function handleCreate(payload: VolunteerProfilePayload): Promise<void> {
       skills:          []
     }
   } catch (err) {
-    errorMessage.value = (err as Error).message || 'Đăng ký thất bại. Vui lòng thử lại.'
+    errorMessage.value = (err as Error).message || t('requester.vol_create_failed')
   } finally {
     isSaving.value = false
   }
@@ -265,7 +264,7 @@ async function handleUpdate(payload: VolunteerProfilePayload): Promise<void> {
     }
     showReapplyForm.value = false
   } catch (err) {
-    errorMessage.value = (err as Error).message || 'Cập nhật thất bại. Vui lòng thử lại.'
+    errorMessage.value = (err as Error).message || t('requester.vol_update_failed')
   } finally {
     isSaving.value = false
   }
