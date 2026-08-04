@@ -308,6 +308,8 @@ export default {
     form_affected_people: 'Number of People Affected',
     form_address: 'Specific Address',
     form_address_placeholder: 'House number, hamlet, ward/commune...',
+    form_region: 'Region / Province',
+    form_region_placeholder: 'E.g.: Ha Noi, Quang Ninh, Yen Bai...',
     form_latitude: 'Latitude',
     form_longitude: 'Longitude',
     use_current_location: '📍 Use Current Location',

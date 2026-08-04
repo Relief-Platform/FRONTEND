@@ -85,6 +85,11 @@
               <input v-model="form.address" type="text" :placeholder="$t('requester.form_address_placeholder')" required />
             </div>
 
+            <div class="form-group">
+              <label>{{ $t('requester.form_region') }} <span class="required">*</span></label>
+              <input v-model="form.region" type="text" :placeholder="$t('requester.form_region_placeholder')" required />
+            </div>
+
             <div class="form-row">
               <div class="form-group half">
                 <label>{{ $t('requester.form_latitude') }} <span class="required">*</span></label>
@@ -336,6 +341,7 @@ const emptyForm = (): CreateReliefRequestPayload => ({
   title: '',
   description: '',
   address: '',
+  region: 'Hà Nội',
   latitude: 0,
   longitude: 0,
   emergencyLevel: 4,
@@ -374,6 +380,7 @@ const useCurrentLocation = () => {
 const handleCreateSubmit = async () => {
   createError.value = ''
   isSubmitting.value = true
+  console.log('[MyRequestsView] Submitting form data:', form.value)
   try {
     await createReliefRequest(form.value)
     closeCreateModal()

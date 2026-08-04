@@ -85,12 +85,16 @@ export const http = axios.create({
   timeout: 30_000,
 })
 
-// ── Request interceptor: gắn Authorization header ───────────
+// ── Request interceptor: gắn Authorization header & LOG payload ───────────
 http.interceptors.request.use((config) => {
   const token = tokenStorage.get()
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
+  console.log(`[HTTP Request] ${config.method?.toUpperCase()} ${config.url}`, {
+    params: config.params,
+    payload: config.data,
+  })
   return config
 })
 
@@ -115,6 +119,7 @@ http.interceptors.response.use(
 
       // HTTP 200 nhưng isSuccess=false → vẫn coi là lỗi
       if (envelope.isSuccess === false) {
+        console.error(`[HTTP Response Error 200/isSuccess=false] ${response.config.method?.toUpperCase()} ${response.config.url}:`, envelope)
         const msg = envelope.errorMessages?.[0] ?? 'Yêu cầu thất bại'
         return Promise.reject(
           new ApiError(envelope.statusCode || response.status, msg, envelope),
@@ -129,6 +134,13 @@ http.interceptors.response.use(
     const status = error.response?.status ?? 0
     const body = error.response?.data
     const originalRequest = error.config as RetryableConfig | undefined
+
+    console.error(`[HTTP Response Error ${status}] ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url}:`, {
+      status,
+      errorMessages: body?.errorMessages,
+      errors: body?.errors,
+      body,
+    })
 
     // ── Thử refresh accessToken 1 lần trước khi chấp nhận thua ──
     const isAuthEndpoint =
