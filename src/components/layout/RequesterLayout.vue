@@ -181,51 +181,86 @@ const greeting = computed(() => {
   return t('common.greeting_evening')
 })
 
-const navItems = computed(() => [
-  {
-    name: 'dashboard',
-    routeName: 'requester-dashboard',
-    to: '/requester',
-    label: t('nav.home'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
-  },
-  {
-    name: 'my-requests',
-    routeName: 'requester-my-requests',
-    to: '/requester/my-requests',
-    label: t('requester.my_requests_title'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
-  },
-  {
-    name: 'tracking',
-    routeName: 'requester-tracking',
-    to: '/requester/tracking',
-    label: t('requester.tracking_title'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
-  },
-  {
+interface NavItem {
+  name: string
+  routeName: string
+  to: string
+  label: string
+  icon: string
+  badge?: string
+}
+
+const navItems = computed(() => {
+  const items: NavItem[] = [
+    {
+      name: 'dashboard',
+      routeName: auth.isOrganization ? 'donations' : 'requester-dashboard',
+      to: auth.isOrganization ? '/donations' : '/requester',
+      label: t('nav.home'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>`,
+    },
+  ]
+
+  // Requester + Admin: các mục nghiệp vụ yêu cầu cứu trợ
+  if (!auth.isOrganization) {
+    items.push(
+      {
+        name: 'my-requests',
+        routeName: 'requester-my-requests',
+        to: '/requester/my-requests',
+        label: t('requester.my_requests_title'),
+        icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>`,
+      },
+      {
+        name: 'tracking',
+        routeName: 'requester-tracking',
+        to: '/requester/tracking',
+        label: t('requester.tracking_title'),
+        icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/></svg>`,
+      },
+    )
+  }
+
+  // Admin: quyên góp vật tư (Organization đã có sẵn ở mục "Trang chủ" phía trên)
+  if (auth.isAdmin) {
+    items.push({
+      name: 'donations',
+      routeName: 'donations',
+      to: '/donations',
+      label: t('donations.nav_label'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20.42 4.58a5.4 5.4 0 0 0-7.65 0L12 5.34l-.77-.76a5.4 5.4 0 0 0-7.65 7.65l.77.76L12 21l7.65-7.99.77-.76a5.4 5.4 0 0 0 0-7.67z"/></svg>`,
+    })
+  }
+
+  items.push({
     name: 'notifications',
     routeName: 'requester-notifications',
     to: '/requester/notifications',
     label: t('nav.notifications'),
     badge: '1',
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>`,
-  },
-  {
+  })
+
+  items.push({
     name: 'guide',
     routeName: 'requester-guide',
     to: '/requester/guide',
     label: t('nav.guide'),
     icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>`,
-  },
-  {
-    name: 'become-volunteer',
-    routeName: 'become-volunteer',
-    to: '/requester/become-volunteer',
-    label: t('requester.qa_become_volunteer'),
-    icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
-  },
-])
+  })
+
+  if (!auth.isOrganization) {
+    items.push({
+      name: 'become-volunteer',
+      routeName: 'become-volunteer',
+      to: '/requester/become-volunteer',
+      label: t('requester.qa_become_volunteer'),
+      icon: `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>`,
+    })
+  }
+
+  return items
+})
 
 async function handleLogout(): Promise<void> {
   showUserMenu.value = false

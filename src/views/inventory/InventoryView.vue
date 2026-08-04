@@ -125,6 +125,44 @@
               <label>{{ stockMode === 'in' ? $t('inventory.quantity_in_label') : $t('inventory.quantity_out_label') }} <span class="required">*</span></label>
               <input v-model.number="stockForm.quantity" type="number" min="0.01" step="any" required autofocus />
             </div>
+
+            <div v-if="stockMode === 'out'" class="guideline-box">
+              <p class="guideline-box__title">{{ $t('inventory.guideline_title') }}</p>
+              <div class="guideline-box__levels">
+                <button
+                  type="button"
+                  v-for="lv in [1, 2, 3] as const"
+                  :key="lv"
+                  class="guideline-level-btn"
+                  :class="{ active: guidelineLevel === lv }"
+                  @click="loadGuideline(lv)"
+                >
+                  {{ lv === 1 ? $t('coordinator.emergency_low') : lv === 2 ? $t('coordinator.emergency_large_scale') : $t('coordinator.emergency_severe') }}
+                </button>
+              </div>
+
+              <div v-if="isGuidelineLoading" class="guideline-box__loading">{{ $t('common.loading') }}</div>
+              <p v-else-if="guidelineError" class="error-text">{{ guidelineError }}</p>
+              <template v-else-if="guidelineLevel">
+                <p v-if="guidelineMatch && guidelineMatch.suggestedQuantity != null" class="guideline-box__suggestion">
+                  {{ $t('inventory.guideline_suggested_for_item', { qty: formatNumber(guidelineMatch.suggestedQuantity), unit: guidelineMatch.unit }) }}
+                  <button type="button" class="guideline-apply-btn" @click="stockForm.quantity = guidelineMatch!.suggestedQuantity!">
+                    {{ $t('inventory.guideline_apply') }}
+                  </button>
+                </p>
+                <p v-else class="guideline-box__no-match">{{ $t('inventory.guideline_no_match') }}</p>
+
+                <details class="guideline-box__all">
+                  <summary>{{ $t('inventory.guideline_see_all') }}</summary>
+                  <ul>
+                    <li v-for="g in guidelineItems" :key="g.itemName">
+                      {{ g.itemName }}: {{ g.suggestedQuantity != null ? `${formatNumber(g.suggestedQuantity)} ${g.unit}` : $t('inventory.guideline_no_standard') }}
+                    </li>
+                  </ul>
+                </details>
+              </template>
+            </div>
+
             <div class="form-group">
               <label>{{ $t('inventory.form_reference') }}</label>
               <input v-model="stockForm.referenceNo" type="text" :placeholder="$t('inventory.form_reference_placeholder')" />
@@ -203,6 +241,7 @@ import {
   stockOut,
   getInventoryTransactions,
 } from '@/features/inventory/inventory.api'
+import { getSeverityGuideline, type SeverityGuidelineItem } from '@/features/inventory/severity-guideline.api'
 import type {
   InventoryItemResponse,
   UpdateInventoryItemPayload,
@@ -336,10 +375,39 @@ const openStockModal = (item: InventoryItemResponse, mode: 'in' | 'out') => {
   stockMode.value = mode
   stockForm.value = { quantity: 0, referenceNo: '', note: '' }
   stockError.value = ''
+  guidelineLevel.value = null
+  guidelineItems.value = []
+  guidelineError.value = ''
   showStockModal.value = true
 }
 
 const closeStockModal = () => { showStockModal.value = false }
+
+// ── Gợi ý định lượng theo mức độ khẩn cấp (chỉ khi xuất kho) ──
+const guidelineLevel = ref<1 | 2 | 3 | null>(null)
+const guidelineItems = ref<SeverityGuidelineItem[]>([])
+const isGuidelineLoading = ref(false)
+const guidelineError = ref('')
+
+const guidelineMatch = computed<SeverityGuidelineItem | null>(() => {
+  if (!stockTarget.value) return null
+  const name = stockTarget.value.itemName?.trim().toLowerCase()
+  return guidelineItems.value.find((g) => g.itemName.trim().toLowerCase() === name) ?? null
+})
+
+async function loadGuideline(level: 1 | 2 | 3) {
+  guidelineLevel.value = level
+  isGuidelineLoading.value = true
+  guidelineError.value = ''
+  try {
+    const result = await getSeverityGuideline(level)
+    guidelineItems.value = result.items
+  } catch (err) {
+    guidelineError.value = (err as Error).message || t('inventory.guideline_load_failed')
+  } finally {
+    isGuidelineLoading.value = false
+  }
+}
 
 const handleStockSubmit = async () => {
   if (!stockTarget.value) return
@@ -482,6 +550,20 @@ textarea { resize: vertical; }
 .hint-text { font-size: 12.5px; color: #64748b; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; line-height: 1.5; }
 .stock-current { font-size: 13.5px; color: #334155; background: #f0f7ff; border-radius: 8px; padding: 10px 12px; margin: 0 0 16px; }
 .error-text { color: #e53e3e; font-size: 12.5px; margin: 8px 0 0 0; }
+
+.guideline-box { background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px; padding: 12px 14px; margin-bottom: 16px; }
+.guideline-box__title { font-size: 12.5px; font-weight: 700; color: #92400e; margin: 0 0 8px; }
+.guideline-box__levels { display: flex; gap: 6px; margin-bottom: 10px; }
+.guideline-level-btn { background: #fff; border: 1px solid #fde68a; color: #92400e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.guideline-level-btn.active { background: #f59e0b; border-color: #f59e0b; color: #fff; }
+.guideline-box__loading { font-size: 12.5px; color: #92400e; }
+.guideline-box__suggestion { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: 13px; color: #1e293b; margin: 0; }
+.guideline-apply-btn { background: #f59e0b; color: #fff; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer; }
+.guideline-apply-btn:hover { background: #d97706; }
+.guideline-box__no-match { font-size: 12.5px; color: #92400e; margin: 0; font-style: italic; }
+.guideline-box__all { margin-top: 8px; font-size: 12px; color: #78350f; }
+.guideline-box__all summary { cursor: pointer; font-weight: 600; }
+.guideline-box__all ul { margin: 6px 0 0; padding-left: 18px; }
 
 /* ── Transaction list ── */
 .tx-list { display: flex; flex-direction: column; gap: 4px; }

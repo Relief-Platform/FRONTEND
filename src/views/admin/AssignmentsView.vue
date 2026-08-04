@@ -97,6 +97,7 @@
                   <div class="vol-mini">
                     <div class="vol-mini__avatar">{{ row.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
                     <span class="vol-mini__name">{{ row.volunteerFullName }}</span>
+                    <svg v-if="row.isTeamLead" class="vol-mini__lead-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" :title="$t('admin.team_lead_badge')"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
                   </div>
                 </td>
                 <td class="td-req">{{ row.reliefRequestTitle }}</td>
@@ -147,6 +148,7 @@
                   <div class="vol-mini">
                     <div class="vol-mini__avatar">{{ row.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
                     <span class="vol-mini__name">{{ row.volunteerFullName }}</span>
+                    <svg v-if="row.isTeamLead" class="vol-mini__lead-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" :title="$t('admin.team_lead_badge')"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
                   </div>
                 </td>
                 <td class="td-req">{{ row.reliefRequestTitle }}</td>
@@ -206,6 +208,10 @@
                   <span class="status-badge" :style="asnBadgeStyle(selected.status)">
                     <span class="status-dot" :style="asnDotStyle(selected.status)" />
                     {{ ASN_STATUS_LABEL[selected.status] }}
+                  </span>
+                  <span v-if="selected.isTeamLead" class="team-lead-badge">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
+                    {{ $t('admin.team_lead_badge') }}
                   </span>
                 </div>
               </div>
@@ -314,6 +320,31 @@
                   </div>
                 </template>
 
+                <!-- Team lead -->
+                <template v-if="selected.status === 'Accepted' || selected.status === 'OnTheWay'">
+                  <div class="team-lead-block">
+                    <p class="fc-title">{{ $t('admin.team_lead_section_title') }}</p>
+                    <button
+                      v-if="!selected.isTeamLead"
+                      class="btn-team-lead"
+                      :disabled="isActioning"
+                      @click="handleSetTeamLead"
+                    >
+                      <svg v-if="isActioning && actionType === 'team-lead'" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+                      {{ $t('admin.btn_set_team_lead') }}
+                    </button>
+                    <button
+                      v-else
+                      class="btn-remove-team-lead"
+                      :disabled="isActioning"
+                      @click="handleRemoveTeamLead"
+                    >
+                      <svg v-if="isActioning && actionType === 'remove-team-lead'" class="spin-icon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+                      {{ $t('admin.btn_remove_team_lead') }}
+                    </button>
+                  </div>
+                </template>
+
                 <p v-if="drawerMsg" class="status-msg" :class="drawerMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ drawerMsg }}</p>
               </div>
             </template>
@@ -334,9 +365,11 @@ import {
   approveCancellation,
   rejectCancellation,
   adminCancelAssignment,
+  setTeamLead,
   type Assignment,
   type AssignmentStatus,
 } from '@/features/tasks/assignments.api'
+import { removeTeamLead } from '@/features/requests/requests.api'
 
 const { locale, t } = useI18n()
 
@@ -403,7 +436,7 @@ const drawerMsgType   = ref<'ok' | 'error'>('ok')
 const forceCancelReason = ref('')
 
 const isActioning  = ref(false)
-const actionType   = ref<'approve' | 'reject' | 'force' | null>(null)
+const actionType   = ref<'approve' | 'reject' | 'force' | 'team-lead' | 'remove-team-lead' | null>(null)
 
 // For pending tab inline actions
 const processingId     = ref<string | null>(null)
@@ -594,6 +627,48 @@ async function handleForceCancel() {
   }
 }
 
+async function handleSetTeamLead() {
+  if (!selected.value) return
+  isActioning.value = true
+  actionType.value = 'team-lead'
+  drawerMsg.value = ''
+  try {
+    await setTeamLead(selected.value.id)
+    await loadAll()
+    const refreshed = assignments.value.find(a => a.id === selected.value!.id)
+    if (refreshed) selected.value = refreshed
+    drawerMsg.value = t('admin.team_lead_set_success')
+    drawerMsgType.value = 'ok'
+  } catch (e: unknown) {
+    drawerMsg.value = e instanceof Error ? e.message : t('admin.team_lead_action_failed')
+    drawerMsgType.value = 'error'
+  } finally {
+    isActioning.value = false
+    actionType.value = null
+  }
+}
+
+async function handleRemoveTeamLead() {
+  if (!selected.value) return
+  isActioning.value = true
+  actionType.value = 'remove-team-lead'
+  drawerMsg.value = ''
+  try {
+    await removeTeamLead(selected.value.reliefRequestId)
+    await loadAll()
+    const refreshed = assignments.value.find(a => a.id === selected.value!.id)
+    if (refreshed) selected.value = refreshed
+    drawerMsg.value = t('admin.team_lead_removed_success')
+    drawerMsgType.value = 'ok'
+  } catch (e: unknown) {
+    drawerMsg.value = e instanceof Error ? e.message : t('admin.team_lead_action_failed')
+    drawerMsgType.value = 'error'
+  } finally {
+    isActioning.value = false
+    actionType.value = null
+  }
+}
+
 // Local state helpers
 function updateLocalStatus(id: string, status: AssignmentStatus) {
   const idx = assignments.value.findIndex(a => a.id === id)
@@ -661,6 +736,7 @@ function removePending(id: string) {
 .vol-mini { display: flex; align-items: center; gap: 10px; }
 .vol-mini__avatar { width: 34px; height: 34px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; flex-shrink: 0; }
 .vol-mini__name { font-weight: 600; color: #1a3b5c; }
+.vol-mini__lead-icon { color: #eab308; flex-shrink: 0; }
 
 .td-req    { max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .td-reason { max-width: 240px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: #718096; }
@@ -839,6 +915,23 @@ function removePending(id: string) {
 .btn-force-cancel { display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 9px; background: #fee2e2; color: #991b1b; border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease; white-space: nowrap; }
 .btn-force-cancel:hover:not(:disabled) { background: #c53030; color: #fff; }
 .btn-force-cancel:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.team-lead-badge {
+  display: inline-flex; align-items: center; gap: 4px; margin-top: 6px;
+  padding: 3px 10px; border-radius: 20px; background: #fef9c3; color: #854d0e;
+  font-size: 11.5px; font-weight: 700; width: fit-content;
+}
+.team-lead-block { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e9ecef; }
+.btn-team-lead, .btn-remove-team-lead {
+  display: inline-flex; align-items: center; gap: 5px; padding: 9px 15px; border-radius: 9px;
+  border: none; font-size: 13px; font-weight: 700; cursor: pointer; transition: all 0.15s ease;
+}
+.btn-team-lead { background: #fef9c3; color: #854d0e; }
+.btn-team-lead:hover:not(:disabled) { background: #eab308; color: #fff; }
+.btn-team-lead:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-remove-team-lead { background: #f1f5f9; color: #475569; }
+.btn-remove-team-lead:hover:not(:disabled) { background: #e2e8f0; }
+.btn-remove-team-lead:disabled { opacity: 0.45; cursor: not-allowed; }
 
 .status-msg { font-size: 12.5px; padding: 8px 12px; border-radius: 8px; margin-top: 12px; }
 .spin-icon  { animation: spin 0.7s linear infinite; }

@@ -87,8 +87,18 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/requester/RequesterDashboard.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['Requester', 'Admin'],
+      roles: ['Requester', 'Organization', 'Admin'],
       title: 'Dashboard – Yêu cầu hỗ trợ',
+    },
+  },
+  {
+    path: '/donations',
+    name: 'donations',
+    component: () => import('@/views/donations/MyDonationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Organization', 'Admin'],
+      title: 'Quyên góp vật tư',
     },
   },
   {
@@ -97,7 +107,7 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/requester/NotificationsView.vue'),
     meta: {
       requiresAuth: true,
-      roles: ['Requester', 'Admin'],
+      roles: ['Requester', 'Organization', 'Admin'],
       title: 'Thông báo',
     },
   },
@@ -137,7 +147,7 @@ const routes: RouteRecordRaw[] = [
   component: () => import('@/views/requester/GuideView.vue'),
   meta: {
     requiresAuth: true,
-    roles: ['Requester', 'Admin'],
+    roles: ['Requester', 'Organization', 'Admin'],
     title: 'Hướng dẫn',
   },
 },
@@ -162,6 +172,16 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['Volunteer', 'Admin'],
       title: 'Nhiệm vụ của tôi',
+    },
+  },
+  {
+    path: '/volunteer/open-tasks',
+    name: 'volunteer-open-tasks',
+    component: () => import('@/views/volunteer/OpenTasksView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Volunteer', 'Admin'],
+      title: 'Bảng nhiệm vụ mở',
     },
   },
   {
@@ -297,6 +317,26 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['Admin'],
       title: 'Quản lý tình nguyện viên',
+    },
+  },
+  {
+    path: '/admin/donations',
+    name: 'admin-donations',
+    component: () => import('@/views/admin/DonationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Duyệt quyên góp',
+    },
+  },
+  {
+    path: '/admin/role-requests',
+    name: 'admin-role-requests',
+    component: () => import('@/views/admin/RoleRequestsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Duyệt nguyện vọng nâng quyền',
     },
   },
 

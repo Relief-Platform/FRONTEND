@@ -87,9 +87,8 @@ const { t } = useI18n()
 
 const EMERGENCY_LABEL_KEY: Record<number, string> = {
   1: 'coordinator.emergency_low',
-  2: 'coordinator.emergency_medium',
-  3: 'coordinator.emergency_high',
-  4: 'coordinator.emergency_critical',
+  2: 'coordinator.emergency_large_scale',
+  3: 'coordinator.emergency_severe',
 }
 const emergencyLabel = (level: number) => t(EMERGENCY_LABEL_KEY[level] ?? 'coordinator.emergency_low')
 
@@ -153,7 +152,7 @@ const completedToday = computed(() => {
 })
 
 const needsAttention = computed(() => {
-  const urgentPending = allRequests.value.filter((r) => r.status === 'Pending' && r.emergencyLevel === 4).length
+  const urgentPending = allRequests.value.filter((r) => r.status === 'Pending' && r.emergencyLevel === 3).length
   return pendingCancellations.value.length + urgentPending
 })
 

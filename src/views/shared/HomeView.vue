@@ -35,6 +35,21 @@
       </div>
     </div>
 
+    <!-- ══════════ TÌNH HUỐNG CẦN HỖ TRỢ (public highlights, ẩn danh) ══════════ -->
+    <div v-if="urgentRequests.length > 0" class="urgent-band">
+      <div class="page-container">
+        <h2 class="urgent-title">{{ $t('home.urgent_title') }}</h2>
+        <div class="urgent-scroll">
+          <div class="urgent-card" v-for="(u, i) in urgentRequests" :key="i">
+            <span class="urgent-card__level" :class="`elv-${u.emergencyLevel}`">{{ emergencyLabel(u.emergencyLevel) }}</span>
+            <p class="urgent-card__region">{{ u.region }}</p>
+            <p class="urgent-card__needs">{{ u.needLabels.join(', ') || $t('home.urgent_no_needs') }}</p>
+            <span class="urgent-card__time">{{ u.relativeTime }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- ══════════ QUY TRÌNH 4 BƯỚC ══════════ -->
     <div class="page-container">
       <section class="section">
@@ -86,16 +101,16 @@
           </div>
           <div class="about-home-stats">
             <div class="home-stat-item">
-              <span class="num">10k+</span>
+              <span class="num">{{ stats ? stats.completedRequestCount : '—' }}</span>
               <span class="lbl">{{ $t('about.stat_success') }}</span>
             </div>
             <div class="home-stat-item">
-              <span class="num">5k+</span>
+              <span class="num">{{ stats ? stats.approvedVolunteerCount : '—' }}</span>
               <span class="lbl">{{ $t('about.stat_volunteers') }}</span>
             </div>
             <div class="home-stat-item">
-              <span class="num">100%</span>
-              <span class="lbl">{{ $t('about.val_transparency') }}</span>
+              <span class="num">{{ stats ? stats.provincesCoveredCount : '—' }}</span>
+              <span class="lbl">{{ $t('home.stat_provinces') }}</span>
             </div>
           </div>
         </div>
@@ -159,11 +174,32 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import { useAuthStore } from '@/stores/auth'
+import { getPublicHighlights, type PublicStats, type PublicUrgentRequest } from '@/features/public/public.api'
 
 const auth = useAuthStore()
+
+// ── Public highlights (ẩn danh, không cần đăng nhập) ───────────
+const stats = ref<PublicStats | null>(null)
+const urgentRequests = ref<PublicUrgentRequest[]>([])
+
+onMounted(async () => {
+  try {
+    const highlights = await getPublicHighlights()
+    stats.value = highlights.stats
+    urgentRequests.value = highlights.urgentRequests
+  } catch (e) {
+    console.error('Không tải được public highlights:', e)
+  }
+})
+
+function emergencyLabel(level: number): string {
+  if (level >= 3) return t('coordinator.emergency_severe')
+  if (level === 2) return t('coordinator.emergency_large_scale')
+  return t('coordinator.emergency_low')
+}
 
 // BE trả role viết hoa ("Requester", "Admin"...) còn mock cũ viết thường
 // → so sánh lowercase để chạy đúng cả 2 (fix bug bấm "Vào Dashboard" quay về /home)
@@ -178,7 +214,7 @@ const dashboardRoute = computed(() => {
     case 'coordinator': return '/warehouses'
     case 'volunteer':   return '/volunteer'
     case 'requester':   return '/requester'
-    // Organization: chưa có khu riêng trên FE → tạm về home
+    case 'organization': return '/donations'
     default:            return '/home'
   }
 })
@@ -288,6 +324,26 @@ const roles = computed(() => [
 .hero-login-hint { margin-top: 18px; font-size: 13.5px; color: rgba(255,255,255,0.7); }
 .hero-login-link { color: #fbbf24; font-weight: 700; text-decoration: none; }
 .hero-login-link:hover { text-decoration: underline; }
+
+/* ── Urgent highlights band ── */
+.urgent-band { background: #fef2f2; border-bottom: 1px solid #fecaca; padding: 20px 0; }
+.urgent-title { font-size: 15px; font-weight: 800; color: #991b1b; margin: 0 0 12px; }
+.urgent-scroll { display: flex; gap: 14px; overflow-x: auto; padding-bottom: 4px; }
+.urgent-card {
+  flex: 0 0 220px; background: #fff; border: 1px solid #fecaca; border-radius: 12px;
+  padding: 14px; display: flex; flex-direction: column; gap: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.urgent-card__level {
+  align-self: flex-start; font-size: 11px; font-weight: 700; padding: 3px 10px;
+  border-radius: 20px; margin-bottom: 4px;
+}
+.urgent-card__level.elv-1 { background: #dcfce7; color: #15803d; }
+.urgent-card__level.elv-2 { background: #fef9c3; color: #854d0e; }
+.urgent-card__level.elv-3 { background: #fee2e2; color: #991b1b; }
+.urgent-card__region { font-size: 14.5px; font-weight: 700; color: #1a3b5c; margin: 0; }
+.urgent-card__needs { font-size: 12.5px; color: #718096; margin: 0; }
+.urgent-card__time { font-size: 11.5px; color: #a0aec0; margin-top: 4px; }
 
 /* ── Sections ── */
 .section { padding: var(--space-10) 0 var(--space-6); }

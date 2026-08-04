@@ -10,19 +10,19 @@ import { http } from '@/lib/api/http'
 
 export interface SuggestedVolunteer {
   volunteerProfileId: string
-  userId: string
   fullName: string
-  email: string
-  phoneNumber: string
-  address: string
-  latitude: number
-  longitude: number
-  experienceYears: number
-  bio: string | null
-  isApproved: boolean
-  skills: string[]
   /** Khoảng cách tính theo km từ điểm yêu cầu đến volunteer */
   distanceKm: number
+  /** [M11] Chưa có mapping request→skill ở BE, luôn 0/rỗng đợt này */
+  matchedSkillsCount: number
+  matchedSkillNames: string[]
+  /** Tham khảo cho Admin chọn tay — không dùng để sắp xếp */
+  completedAssignmentsCount: number
+}
+
+export interface SuggestedVolunteersResponse {
+  candidates: SuggestedVolunteer[]
+  totalEligibleCount: number
 }
 
 // ── API calls ────────────────────────────────────────────────
@@ -35,10 +35,10 @@ export interface SuggestedVolunteer {
 export async function getSuggestedVolunteers(
   reliefRequestId: string,
 ): Promise<SuggestedVolunteer[]> {
-  const { data } = await http.get<SuggestedVolunteer[]>(
+  const { data } = await http.get<SuggestedVolunteersResponse>(
     `/relief-requests/${reliefRequestId}/suggested-volunteers`,
   )
-  return Array.isArray(data) ? data : []
+  return Array.isArray(data?.candidates) ? data.candidates : []
 }
 
 /**

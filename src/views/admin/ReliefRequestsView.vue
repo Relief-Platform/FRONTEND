@@ -172,6 +172,8 @@
                   </div>
                   <p class="info-card__sublabel">{{ $t('admin.col_address') }}</p>
                   <p class="info-card__val">{{ detail.address }}</p>
+                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_region') }}</p>
+                  <p class="info-card__val">{{ detail.region || '—' }}</p>
                   <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.created_date_label') }}</p>
                   <div class="info-card__datebox">{{ formatDate(detail.createdAt) }}</div>
                 </div>
@@ -199,6 +201,24 @@
               <!-- Đổi trạng thái -->
               <div class="modal-section">
                 <p class="modal-section__label">{{ $t('admin.section_change_status') }}</p>
+                <div v-if="STATUS_TRANSITIONS[detail.status]?.length" class="status-inputs">
+                  <label class="status-input-field">
+                    {{ $t('admin.target_headcount_label') }}
+                    <span v-if="detail.suggestedHeadcountMin != null" class="status-input-hint">
+                      {{ $t('admin.suggested_headcount_hint', { min: detail.suggestedHeadcountMin, max: detail.suggestedHeadcountMax }) }}
+                    </span>
+                    <input
+                      v-model.number="targetHeadcountInput"
+                      type="number"
+                      min="0"
+                      :placeholder="detail.targetHeadcount != null ? String(detail.targetHeadcount) : ''"
+                    />
+                  </label>
+                  <label class="status-input-field">
+                    {{ $t('admin.status_note_label') }}
+                    <textarea v-model="statusNoteInput" rows="2" />
+                  </label>
+                </div>
                 <div class="status-flow">
                   <button
                     v-for="s in STATUS_TRANSITIONS[detail.status] ?? []"
@@ -232,15 +252,14 @@
                     <div class="vol-card__avatar">{{ vol.fullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
                     <div class="vol-card__info">
                       <p class="vol-card__name">{{ vol.fullName }}</p>
-                      <p class="vol-card__email">{{ vol.email }}</p>
                       <div class="vol-card__tags">
                         <span class="vol-tag vol-tag--dist">
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           {{ vol.distanceKm.toFixed(1) }} km
                         </span>
-                        <span class="vol-tag">{{ $t('admin.years_exp_short', { years: vol.experienceYears }) }}</span>
-                        <span v-for="sk in vol.skills.slice(0, 2)" :key="sk" class="vol-tag">{{ sk }}</span>
-                        <span v-if="vol.skills.length > 2" class="vol-tag vol-tag--more">+{{ vol.skills.length - 2 }}</span>
+                        <span class="vol-tag">{{ $t('admin.completed_assignments_short', { count: vol.completedAssignmentsCount }) }}</span>
+                        <span v-for="sk in vol.matchedSkillNames.slice(0, 2)" :key="sk" class="vol-tag">{{ sk }}</span>
+                        <span v-if="vol.matchedSkillNames.length > 2" class="vol-tag vol-tag--more">+{{ vol.matchedSkillNames.length - 2 }}</span>
                       </div>
                     </div>
                     <button class="btn-assign" :disabled="isAssigning && assigningId === vol.volunteerProfileId" @click="assignVolunteer(vol)">
@@ -293,9 +312,8 @@ const EMERGENCY_LABELS = computed<Record<number, string>>(() => {
   const _ = locale.value
   return {
     1: t('coordinator.emergency_low'),
-    2: t('coordinator.emergency_medium'),
-    3: t('coordinator.emergency_high'),
-    4: t('coordinator.emergency_critical'),
+    2: t('coordinator.emergency_large_scale'),
+    3: t('coordinator.emergency_severe'),
   }
 })
 
@@ -335,6 +353,8 @@ const isUpdating   = ref(false)
 const pendingStatus = ref<ReliefRequestStatus | null>(null)
 const statusMsg    = ref('')
 const statusMsgType = ref<'ok' | 'error'>('ok')
+const targetHeadcountInput = ref<number | null>(null)
+const statusNoteInput = ref('')
 
 const suggestedVolunteers = ref<SuggestedVolunteer[]>([])
 const isSuggestLoading    = ref(false)
@@ -420,6 +440,8 @@ async function openDetail(id: string) {
   suggestedVolunteers.value = []
   statusMsg.value = ''
   assignMsg.value = ''
+  targetHeadcountInput.value = null
+  statusNoteInput.value = ''
   isDetailLoading.value = true
   try {
     detail.value = await getReliefRequestById(id)
@@ -457,13 +479,21 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
   pendingStatus.value = newStatus
   statusMsg.value = ''
   try {
-    await updateReliefRequestStatus(detail.value.id, newStatus)
+    await updateReliefRequestStatus(
+      detail.value.id,
+      newStatus,
+      statusNoteInput.value,
+      targetHeadcountInput.value ?? undefined,
+    )
     // cập nhật local
+    const newTargetHeadcount = targetHeadcountInput.value ?? detail.value.targetHeadcount
     const idx = allRequests.value.findIndex(r => r.id === detail.value!.id)
-    if (idx !== -1) allRequests.value[idx] = { ...allRequests.value[idx], status: newStatus }
-    detail.value = { ...detail.value, status: newStatus }
+    if (idx !== -1) allRequests.value[idx] = { ...allRequests.value[idx], status: newStatus, targetHeadcount: newTargetHeadcount }
+    detail.value = { ...detail.value, status: newStatus, targetHeadcount: newTargetHeadcount }
     statusMsg.value = `Đã chuyển sang "${STATUS_LABEL_FULL[newStatus]}" thành công.`
     statusMsgType.value = 'ok'
+    targetHeadcountInput.value = null
+    statusNoteInput.value = ''
     // nếu vừa Approved → tải suggested volunteers
     if (newStatus === 'Approved') loadSuggested()
     else suggestedVolunteers.value = []
@@ -843,6 +873,21 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   font-weight: 600;
 }
 .need-tag--none { background: #f8fafc; border-color: #e9ecef; color: #a0aec0; }
+
+/* Status inputs (note / target headcount) */
+.status-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.status-input-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 600; color: #4a5568; }
+.status-input-hint { font-size: 11.5px; font-weight: 500; color: #a0aec0; }
+.status-input-field input,
+.status-input-field textarea {
+  font: inherit;
+  font-weight: 400;
+  padding: 7px 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  resize: vertical;
+}
+.status-input-field input { width: 140px; }
 
 /* Status flow */
 .status-flow { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 8px; }
