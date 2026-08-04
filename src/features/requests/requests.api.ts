@@ -75,8 +75,16 @@ function buildOfflineResponse(payload: CreateReliefRequestPayload): ReliefReques
 export async function createReliefRequest(
   payload: CreateReliefRequestPayload,
 ): Promise<ReliefRequestActionResult> {
+  const finalPayload = {
+    ...payload,
+    // BE bắt buộc có trường region (Region)
+    region: payload.region?.trim() || payload.address?.trim() || 'Hà Nội',
+  }
+
+  console.log('[requests.api] createReliefRequest final payload sent to backend:', finalPayload)
+
   try {
-    const { data } = await http.post<ReliefRequestActionResult>('/relief-requests', payload)
+    const { data } = await http.post<ReliefRequestActionResult>('/relief-requests', finalPayload)
     return data
   } catch (err) {
     // Server từ chối (400/401/403/...) → ném ra, KHÔNG giả vờ thành công
@@ -84,7 +92,7 @@ export async function createReliefRequest(
 
     // Mất mạng thật sự → lưu tạm để không mất dữ liệu người dân đã nhập
     console.warn('[requests.api] Mất kết nối, lưu tạm vào localStorage:', err)
-    const offlineItem = buildOfflineResponse(payload)
+    const offlineItem = buildOfflineResponse(finalPayload)
     const list = readOfflineRequests()
     list.unshift(offlineItem)
     writeOfflineRequests(list)

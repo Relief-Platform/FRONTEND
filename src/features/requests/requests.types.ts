@@ -9,6 +9,7 @@ export interface CreateReliefRequestPayload {
   title: string
   description: string
   address: string
+  region?: string
   latitude: number
   longitude: number
   emergencyLevel: 1 | 2 | 3 | 4 // Low, Medium, High, Critical
