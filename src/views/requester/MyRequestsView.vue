@@ -351,7 +351,7 @@ const emptyForm = (): CreateReliefRequestPayload => ({
   title: '',
   description: '',
   address: '',
-  region: '',
+  region: 'Hà Nội',
   latitude: 0,
   longitude: 0,
   emergencyLevel: 2,
@@ -390,6 +390,7 @@ const useCurrentLocation = () => {
 const handleCreateSubmit = async () => {
   createError.value = ''
   isSubmitting.value = true
+  console.log('[MyRequestsView] Submitting form data:', form.value)
   try {
     await createReliefRequest(form.value)
     closeCreateModal()
