@@ -77,6 +77,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/auth/ForgotPasswordView.vue'),
     meta: { guestOnly: true, title: 'Quên mật khẩu' },
   },
+  {
+    path: '/reset-password',
+    name: 'reset-password',
+    component: () => import('@/views/auth/ResetPasswordView.vue'),
+    meta: { guestOnly: true, title: 'Đặt lại mật khẩu' },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  REQUESTER – requester | coordinator | admin

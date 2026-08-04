@@ -1,5 +1,5 @@
 <template>
-  <div class="forgot-wrapper">
+  <div class="reset-wrapper">
     <!-- Logo Header -->
     <router-link to="/" class="header-logo">
       <h2 class="brand-name">
@@ -8,34 +8,63 @@
       <p class="slogan">Kết nối trái tim - Vẹn tròn cứu trợ</p>
     </router-link>
 
-    <!-- Forgot Password Card -->
-    <div class="forgot-card">
-      <div v-if="!isEmailSent">
-        <h2 class="form-title">KHÔI PHỤC MẬT KHẨU</h2>
-        <p class="form-subtitle">Nhập email liên kết với tài khoản của bạn. Chúng tôi sẽ gửi một liên kết để đặt lại mật khẩu của bạn.</p>
+    <!-- Reset Password Card -->
+    <div class="reset-card">
+      <!-- State 1: Reset Form -->
+      <div v-if="!isSuccess">
+        <h2 class="form-title">ĐẶT LẠI MẬT KHẨU</h2>
+        <p class="form-subtitle">Tạo mật khẩu mới cho tài khoản của bạn.</p>
+
+        <!-- Warning missing token -->
+        <div v-if="!token" class="error-banner">
+          Mã xác thực (token) không tồn tại hoặc đã hết hạn. Vui lòng thử lại quy trình quên mật khẩu.
+        </div>
 
         <!-- Thông báo lỗi -->
         <div v-if="errorMessage" class="error-banner">
           {{ errorMessage }}
         </div>
 
-        <form @submit.prevent="handleSubmit">
+        <form v-if="token" @submit.prevent="handleSubmit">
+          <div class="form-group" v-if="email">
+            <label class="form-label">Email tài khoản</label>
+            <input type="text" :value="email" disabled class="email-input disabled-input" />
+          </div>
+
           <div class="form-group">
-            <label for="email" class="form-label">Địa chỉ Email</label>
+            <label for="newPassword" class="form-label">Mật khẩu mới</label>
             <div class="input-with-icon">
               <input
-                id="email"
-                type="email"
-                v-model="email"
-                placeholder="example@email.com"
+                id="newPassword"
+                type="password"
+                v-model="newPassword"
+                placeholder="Nhập mật khẩu mới (tối thiểu 8 ký tự)"
                 required
-                autocomplete="email"
                 class="email-input"
               />
               <span class="input-icon">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+                  <rect width="18" height="11" x="3" y="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                </svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="confirmPassword" class="form-label">Xác nhận mật khẩu mới</label>
+            <div class="input-with-icon">
+              <input
+                id="confirmPassword"
+                type="password"
+                v-model="confirmPassword"
+                placeholder="Nhập lại mật khẩu mới"
+                required
+                class="email-input"
+              />
+              <span class="input-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/>
                 </svg>
               </span>
             </div>
@@ -43,12 +72,12 @@
 
           <button type="submit" class="submit-btn" :disabled="isLoading">
             <span v-if="isLoading" class="loading-spinner"></span>
-            <span>{{ isLoading ? 'Đang gửi yêu cầu...' : 'Gửi liên kết khôi phục' }}</span>
+            <span>{{ isLoading ? 'Đang đặt lại mật khẩu...' : 'Cập nhật mật khẩu' }}</span>
           </button>
         </form>
       </div>
 
-      <!-- Success State -->
+      <!-- State 2: Success State -->
       <div v-else class="success-state">
         <div class="success-icon-wrapper">
           <svg class="success-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52">
@@ -56,22 +85,15 @@
             <path class="success-check" fill="none" d="M14.1 27.2l7.1 7.2 16.7-16.8"/>
           </svg>
         </div>
-        
-        <h2 class="form-title">ĐÃ GỬI EMAIL KHÔI PHỤC</h2>
+
+        <h2 class="form-title">ĐẶT LẠI MẬT KHẨU THÀNH CÔNG!</h2>
         <p class="success-text">
-          Chúng tôi đã gửi liên kết đặt lại mật khẩu đến địa chỉ email <strong>{{ email }}</strong>. 
-          Vui lòng kiểm tra hộp thư đến (hoặc thư rác/spam).
+          Mật khẩu của bạn đã được cập nhật. Bạn có thể đăng nhập ngay bây giờ bằng mật khẩu mới.
         </p>
 
-        <div class="resend-section">
-          <span v-if="countdown > 0" class="countdown-text">
-            Gửi lại email sau <strong>{{ countdown }}s</strong>
-          </span>
-          <button v-else type="button" class="resend-btn" @click="handleResend" :disabled="isLoading">
-            <span v-if="isLoading" class="loading-spinner loading-spinner-dark"></span>
-            <span>Gửi lại email</span>
-          </button>
-        </div>
+        <router-link to="/login" class="submit-btn text-center-btn">
+          Đăng nhập ngay
+        </router-link>
       </div>
 
       <div class="divider-row">
@@ -87,39 +109,34 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onUnmounted } from 'vue'
-import { forgotPassword } from '@/features/auth/auth.api'
+import { ref, computed } from 'vue'
+import { useRoute } from 'vue-router'
+import { resetPassword } from '@/features/auth/auth.api'
 
-const email = ref('')
+const route = useRoute()
+
+const token = computed(() => (route.query.token as string) || '')
+const email = computed(() => (route.query.email as string) || '')
+
+const newPassword = ref('')
+const confirmPassword = ref('')
 const isLoading = ref(false)
-const isEmailSent = ref(false)
+const isSuccess = ref(false)
 const errorMessage = ref('')
-const countdown = ref(0)
-let timer: ReturnType<typeof setInterval> | null = null
-
-// Hủy timer khi component bị destroy
-onUnmounted(() => {
-  if (timer) clearInterval(timer)
-})
-
-const startCountdown = () => {
-  countdown.value = 60
-  if (timer) clearInterval(timer)
-  timer = setInterval(() => {
-    if (countdown.value > 0) {
-      countdown.value--
-    } else {
-      if (timer) {
-        clearInterval(timer)
-        timer = null
-      }
-    }
-  }, 1000)
-}
 
 const handleSubmit = async () => {
-  if (!email.value || !email.value.includes('@')) {
-    errorMessage.value = 'Vui lòng nhập địa chỉ email hợp lệ.'
+  if (!token.value) {
+    errorMessage.value = 'Mã token không hợp lệ hoặc đã hết hạn.'
+    return
+  }
+
+  if (newPassword.value.length < 8) {
+    errorMessage.value = 'Mật khẩu mới phải có tối thiểu 8 ký tự.'
+    return
+  }
+
+  if (newPassword.value !== confirmPassword.value) {
+    errorMessage.value = 'Mật khẩu xác nhận không trùng khớp.'
     return
   }
 
@@ -127,37 +144,25 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    await forgotPassword(email.value)
-    isEmailSent.value = true
-    startCountdown()
+    await resetPassword({
+      email: email.value || undefined,
+      token: token.value,
+      newPassword: newPassword.value,
+      confirmPassword: confirmPassword.value,
+    })
+    isSuccess.value = true
   } catch (error) {
-    errorMessage.value = (error as Error).message || 'Không thể gửi yêu cầu khôi phục mật khẩu. Vui lòng thử lại sau.'
-    console.error('Lỗi khôi phục mật khẩu:', error)
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const handleResend = async () => {
-  errorMessage.value = ''
-  isLoading.value = true
-
-  try {
-    await forgotPassword(email.value)
-    startCountdown()
-  } catch (error) {
-    errorMessage.value = (error as Error).message || 'Không thể gửi lại email. Vui lòng thử lại sau.'
-    console.error('Lỗi gửi lại email:', error)
+    errorMessage.value = (error as Error).message || 'Đặt lại mật khẩu thất bại. Mã token có thể đã hết hạn hoặc không hợp lệ.'
+    console.error('Lỗi đặt lại mật khẩu:', error)
   } finally {
     isLoading.value = false
   }
 }
 </script>
 
-
 <style scoped>
 /* ===== Wrapper ===== */
-.forgot-wrapper {
+.reset-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -205,7 +210,7 @@ const handleResend = async () => {
 }
 
 /* ===== Card ===== */
-.forgot-card {
+.reset-card {
   background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   width: 100%;
@@ -277,11 +282,18 @@ const handleResend = async () => {
   color: #2d3748;
 }
 
+.disabled-input {
+  background-color: #edf2f7;
+  color: #718096;
+  cursor: not-allowed;
+  padding-left: 14px;
+}
+
 .email-input::placeholder {
   color: #a0aec0;
 }
 
-.email-input:focus {
+.email-input:focus:not(.disabled-input) {
   border-color: #1a4f8d;
   box-shadow: 0 0 0 3px rgba(26, 79, 141, 0.1);
   background-color: #fff;
@@ -314,6 +326,12 @@ const handleResend = async () => {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  text-decoration: none;
+  box-sizing: border-box;
+}
+
+.text-center-btn {
+  text-align: center;
 }
 
 .submit-btn:hover:not(:disabled) {
@@ -339,11 +357,6 @@ const handleResend = async () => {
   animation: spin 0.7s linear infinite;
 }
 
-.loading-spinner-dark {
-  border: 2px solid rgba(26, 79, 141, 0.2);
-  border-top-color: #1a4f8d;
-}
-
 @keyframes spin {
   to {
     transform: rotate(360deg);
@@ -364,39 +377,6 @@ const handleResend = async () => {
   color: #4a5568;
   line-height: 1.6;
   margin: 0 0 24px 0;
-}
-
-.resend-section {
-  margin-bottom: 24px;
-}
-
-.countdown-text {
-  font-size: 13px;
-  color: #718096;
-}
-
-.resend-btn {
-  background: none;
-  border: none;
-  color: #1a4f8d;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  text-decoration: underline;
-  padding: 4px 8px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.resend-btn:hover {
-  color: #e27d24;
-}
-
-.resend-btn:disabled {
-  color: #a0aec0;
-  cursor: not-allowed;
-  text-decoration: none;
 }
 
 /* ===== Animated Success Checkmark SVG ===== */

@@ -102,6 +102,25 @@ export interface LogoutPayload {
   refreshToken: string
 }
 
+/**
+ * POST /api/auth/forgot-password
+ * BE nhận { email }
+ */
+export interface ForgotPasswordPayload {
+  email: string
+}
+
+/**
+ * POST /api/auth/reset-password
+ * BE nhận { email, token, newPassword, confirmPassword }
+ */
+export interface ResetPasswordPayload {
+  email?: string
+  token: string
+  newPassword: string
+  confirmPassword: string
+}
+
 // ── Response Models ───────────────────────────────────────────
 
 /**
