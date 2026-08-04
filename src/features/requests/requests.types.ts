@@ -9,7 +9,7 @@ export interface CreateReliefRequestPayload {
   title: string
   description: string
   address: string
-  region: string
+  region?: string
   latitude: number
   longitude: number
   emergencyLevel: 1 | 2 | 3 // Nhẹ, Quy mô lớn, Nghiêm trọng (BE: RemapEmergencyLevelTo3Tiers)
