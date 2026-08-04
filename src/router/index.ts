@@ -345,6 +345,16 @@ const routes: RouteRecordRaw[] = [
       title: 'Duyệt nguyện vọng nâng quyền',
     },
   },
+  {
+    path: '/admin/reports',
+    name: 'admin-reports',
+    component: () => import('@/views/admin/ReportsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Báo cáo & Xuất dữ liệu',
+    },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  ERROR PAGES

@@ -615,6 +615,7 @@ export default {
     nav_coordination: 'Coordination',
     nav_volunteers: 'Volunteer Management',
     nav_skills: 'Skill Management',
+    nav_reports: 'Reports & Export',
 
     // Dashboard
     dash_title: 'System Overview',
