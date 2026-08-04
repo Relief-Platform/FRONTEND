@@ -615,6 +615,7 @@ export default {
     nav_coordination: 'Điều phối',
     nav_volunteers: 'Quản lý Tình nguyện viên',
     nav_skills: 'Quản lý Kỹ năng',
+    nav_reports: 'Báo cáo & Xuất dữ liệu',
 
     // Dashboard
     dash_title: 'Tổng quan hệ thống',

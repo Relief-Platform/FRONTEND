@@ -79,6 +79,7 @@ export interface RegisterPayload {
   password: string
   confirmPassword: string
   fullName: string
+  phoneNumber?: string
 }
 
 /** POST /api/auth/refresh-token */
