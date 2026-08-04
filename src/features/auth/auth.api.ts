@@ -15,6 +15,8 @@ import type {
   RefreshTokenPayload,
   ChangePasswordPayload,
   LogoutPayload,
+  ForgotPasswordPayload,
+  ResetPasswordPayload,
   LoginResult,
   AuthUser,
   RefreshResult,
@@ -134,6 +136,51 @@ export async function changePassword(
       r.errorMessages && r.errorMessages.length > 0
         ? r.errorMessages.join(' | ')
         : 'Đổi mật khẩu thất bại'
+    throw new Error(msg)
+  }
+}
+
+// ── POST /api/auth/forgot-password ───────────────────────────
+/**
+ * Gửi email yêu cầu đặt lại mật khẩu (hiệu lực 30 phút).
+ * Body: { email }
+ */
+export async function forgotPassword(email: string): Promise<void> {
+  const payload: ForgotPasswordPayload = { email }
+  const { data } = await http.post<ApiResponse<null> | null>('/auth/forgot-password', payload)
+  if (
+    data !== null &&
+    typeof data === 'object' &&
+    'isSuccess' in data &&
+    !(data as ApiResponse<null>).isSuccess
+  ) {
+    const r = data as ApiResponse<null>
+    const msg =
+      r.errorMessages && r.errorMessages.length > 0
+        ? r.errorMessages.join(' | ')
+        : 'Yêu cầu khôi phục thất bại'
+    throw new Error(msg)
+  }
+}
+
+// ── POST /api/auth/reset-password ────────────────────────────
+/**
+ * Đặt lại mật khẩu bằng token nhận được qua email.
+ * Body: { email, token, newPassword, confirmPassword }
+ */
+export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
+  const { data } = await http.post<ApiResponse<null> | null>('/auth/reset-password', payload)
+  if (
+    data !== null &&
+    typeof data === 'object' &&
+    'isSuccess' in data &&
+    !(data as ApiResponse<null>).isSuccess
+  ) {
+    const r = data as ApiResponse<null>
+    const msg =
+      r.errorMessages && r.errorMessages.length > 0
+        ? r.errorMessages.join(' | ')
+        : 'Đặt lại mật khẩu thất bại'
     throw new Error(msg)
   }
 }
