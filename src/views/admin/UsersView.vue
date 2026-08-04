@@ -4,9 +4,16 @@
       <!-- Header -->
       <div class="page-header">
         <h1 class="page-title">{{ $t('admin.users_title') }}</h1>
+        <button class="btn-create" @click="showCreateDialog = true">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+            fill="none" stroke="currentColor" stroke-width="2.5">
+            <path d="M12 5v14M5 12h14"/>
+          </svg>
+          {{ $t('admin.action_create_user') }}
+        </button>
       </div>
 
-      <!-- Search bar -->
+      <!-- Toolbar -->
       <div class="users-toolbar">
         <BaseInput
           id="search-users"
@@ -24,11 +31,7 @@
 
         <select v-model="selectedRole" class="role-filter" @change="onRoleChange">
           <option value="">{{ $t('admin.all_roles') }}</option>
-          <option value="Admin">Admin</option>
-          <option value="Volunteer">Volunteer</option>
-          <option value="Requester">Requester</option>
-          <option value="Coordinator">Coordinator</option>
-          <option value="Organization">Organization</option>
+          <option v-for="r in roleOptions" :key="r.value" :value="r.value">{{ r.label }}</option>
         </select>
       </div>
 
@@ -43,12 +46,19 @@
         </div>
 
         <table v-else class="users-table">
+          <colgroup>
+            <col style="width: 60px" />
+            <col style="width: 220px" />
+            <col style="width: 280px" />
+            <col style="width: 130px" />
+            <col style="width: 150px" />
+            <col style="width: 220px" />
+          </colgroup>
           <thead>
             <tr>
               <th>#</th>
               <th>{{ $t('admin.col_name') }}</th>
               <th>{{ $t('admin.col_email') }}</th>
-              <th>{{ $t('admin.col_phone') }}</th>
               <th>{{ $t('admin.col_status') }}</th>
               <th>{{ $t('admin.col_role') }}</th>
               <th>{{ $t('admin.col_actions') }}</th>
@@ -57,9 +67,8 @@
           <tbody>
             <tr v-for="(user, idx) in filteredUsers" :key="user.id">
               <td class="text-muted">{{ query.trim() ? idx + 1 : (store.page - 1) * store.pageSize + idx + 1 }}</td>
-              <td class="font-semibold">{{ user.fullName }}</td>
-              <td>{{ user.email }}</td>
-              <td>{{ user.phoneNumber ?? '—' }}</td>
+              <td class="font-semibold text-ellipsis" :title="user.fullName">{{ user.fullName }}</td>
+              <td class="email-cell" :title="user.email">{{ user.email }}</td>
               <td>
                 <span class="status-badge" :class="user.isActive ? 'status--active' : 'status--inactive'">
                   {{ user.isActive ? $t('admin.status_active') : $t('admin.status_locked') }}
@@ -67,7 +76,14 @@
               </td>
               <td><span class="role-badge">{{ user.role ? $t(`roles.${user.role}`, user.role) : 'User' }}</span></td>
               <td class="actions-cell">
-                <button class="action-btn action-btn--edit" @click="openEditRole(user)">{{ $t('admin.btn_change_role') }}</button>
+                <button class="action-btn action-btn--edit" @click="openEdit(user)">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2.5">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                  </svg>
+                  Chỉnh sửa
+                </button>
                 <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">{{ $t('admin.btn_lock') }}</button>
                 <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">{{ $t('admin.btn_unlock') }}</button>
               </td>
@@ -84,21 +100,25 @@
       </BaseCard>
     </div>
 
-    <!-- Dialog -->
-    <UserFormDialog v-model="showDialog" :edit-data="editTarget" @saved="onSaved" />
+    <!-- Dialogs -->
+    <CreateUserDialog v-model="showCreateDialog" @saved="onSaved" />
+    <UserFormDialog v-model="showEditDialog" :edit-data="editTarget" @saved="onSaved" />
   </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseSpinner from '@/components/ui/BaseSpinner.vue'
 import UserFormDialog from '@/features/users/UserFormDialog.vue'
+import CreateUserDialog from '@/features/users/CreateUserDialog.vue'
 import { useUsersStore } from '@/stores/users'
+import { getRoles } from '@/features/users/roles.api'
 import { useDebouncedSearch } from '@/composables/useDebouncedRef'
 import { useConfirm } from '@/composables/useConfirm'
 import type { User } from '@/features/users/users.types'
@@ -106,6 +126,7 @@ import type { User } from '@/features/users/users.types'
 const route = useRoute()
 const router = useRouter()
 const store = useUsersStore()
+const { t } = useI18n()
 const { query, debouncedQuery } = useDebouncedSearch(300)
 const { confirm } = useConfirm()
 
@@ -113,10 +134,35 @@ const totalPages = computed(() => Math.ceil(store.total / store.pageSize) || 1)
 const hasPrev = computed(() => store.page > 1)
 const hasNext = computed(() => store.page < totalPages.value)
 
-const showDialog = ref(false)
+// ── Dialogs ───────────────────────────────────────────────────
+const showCreateDialog = ref(false)
+const showEditDialog = ref(false)
 const editTarget = ref<User | null>(null)
+
 const selectedRole = ref('')
 
+// ── Dynamic role options ──────────────────────────────────────
+const roleOptions = ref<{ value: string; label: string }[]>([])
+
+async function loadRoleOptions(): Promise<void> {
+  try {
+    const data = await getRoles()
+    roleOptions.value = data.map((r) => ({
+      value: r.name,
+      label: t(`roles.${r.name}`, r.name),
+    }))
+  } catch {
+    roleOptions.value = [
+      { value: 'Admin',        label: t('roles.Admin') },
+      { value: 'Volunteer',    label: t('roles.Volunteer') },
+      { value: 'Requester',    label: t('roles.Requester') },
+      { value: 'Coordinator',  label: t('roles.Coordinator') },
+      { value: 'Organization', label: t('roles.Organization') },
+    ]
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────
 function removeTones(str: string): string {
   return str
     .normalize('NFD')
@@ -136,7 +182,7 @@ const filteredUsers = computed(() => {
   })
 })
 
-function updateQueryParams() {
+function updateQueryParams(): void {
   router.replace({
     query: {
       ...route.query,
@@ -147,7 +193,9 @@ function updateQueryParams() {
   })
 }
 
+// ── Lifecycle ─────────────────────────────────────────────────
 onMounted(() => {
+  loadRoleOptions()
   if (route.query.role) {
     selectedRole.value = route.query.role as string
     store.currentRoleFilter = selectedRole.value || undefined
@@ -157,7 +205,7 @@ onMounted(() => {
   }
   if (route.query.q) {
     query.value = route.query.q as string
-    store.pageSize = 100 // Tăng page size để tìm kiếm tối ưu hơn
+    store.pageSize = 100
   } else {
     store.pageSize = 10
   }
@@ -166,12 +214,13 @@ onMounted(() => {
 
 watch(debouncedQuery, () => {
   store.page = 1
-  store.pageSize = query.value.trim() ? 100 : 10 // Tăng page size lên tối đa 100 khi search, phục hồi 10 khi xoá search
+  store.pageSize = query.value.trim() ? 100 : 10
   updateQueryParams()
   store.fetchUsers()
 })
 
-function onRoleChange() {
+// ── Actions ───────────────────────────────────────────────────
+function onRoleChange(): void {
   store.currentRoleFilter = selectedRole.value || undefined
   store.page = 1
   updateQueryParams()
@@ -184,9 +233,9 @@ function changePage(delta: number): void {
   store.fetchUsers()
 }
 
-function openEditRole(user: User): void {
+function openEdit(user: User): void {
   editTarget.value = user
-  showDialog.value = true
+  showEditDialog.value = true
 }
 
 async function toggleStatus(user: User): Promise<void> {
@@ -211,6 +260,30 @@ function onSaved(): void {
 </script>
 
 <style scoped>
+/* Header */
+.page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+
+.btn-create {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 9px 18px;
+  background: #1a4f8d;
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+.btn-create:hover { background: #123766; }
+
 .users-toolbar {
   display: flex;
   align-items: center;
@@ -230,7 +303,7 @@ function onSaved(): void {
 }
 
 /* Table */
-.users-table { width: 100%; border-collapse: collapse; font-size: 14px; }
+.users-table { width: 100%; border-collapse: collapse; font-size: 14px; table-layout: fixed; }
 .users-table th {
   text-align: left;
   padding: 10px 14px;
@@ -249,6 +322,19 @@ function onSaved(): void {
 }
 .users-table tbody tr:hover { background: #f8fafc; }
 .users-table tbody tr:last-child td { border-bottom: none; }
+
+/* Email truncation & ellipsis utilities */
+.text-ellipsis {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.email-cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: default;
+}
 
 /* Status badge */
 .status-badge {
@@ -273,8 +359,11 @@ function onSaved(): void {
 }
 
 /* Actions */
-.actions-cell { display: flex; gap: 8px; }
+.actions-cell { display: flex; gap: 6px; flex-wrap: wrap; }
 .action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   padding: 5px 12px;
   border-radius: var(--radius-sm);
   font-size: 13px;
@@ -282,10 +371,11 @@ function onSaved(): void {
   border: none;
   cursor: pointer;
   transition: background-color var(--transition-fast);
+  white-space: nowrap;
 }
-.action-btn--edit  { background: rgba(26,79,141,0.1); color: var(--color-blue); }
-.action-btn--edit:hover  { background: rgba(26,79,141,0.2); }
-.action-btn--delete { background: rgba(197,48,48,0.1); color: var(--color-danger); }
+.action-btn--edit    { background: rgba(26,79,141,0.1); color: var(--color-blue); }
+.action-btn--edit:hover { background: rgba(26,79,141,0.2); }
+.action-btn--delete  { background: rgba(197,48,48,0.1); color: var(--color-danger); }
 .action-btn--delete:hover { background: rgba(197,48,48,0.2); }
 .action-btn--activate { background: rgba(39,103,73,0.1); color: #276749; }
 .action-btn--activate:hover { background: rgba(39,103,73,0.2); }
