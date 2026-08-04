@@ -12,7 +12,7 @@ export interface CreateReliefRequestPayload {
   region?: string
   latitude: number
   longitude: number
-  emergencyLevel: 1 | 2 | 3 | 4 // Low, Medium, High, Critical
+  emergencyLevel: 1 | 2 | 3 // Nhẹ, Quy mô lớn, Nghiêm trọng (BE: RemapEmergencyLevelTo3Tiers)
   affectedPeople: number
   needFood: boolean
   needWater: boolean
@@ -26,6 +26,11 @@ export interface ReliefRequestResponse extends CreateReliefRequestPayload {
   id: string
   status: ReliefRequestStatus
   createdAt: string
+  /** Số người mục tiêu Admin nhập tay khi duyệt/phân công — null nếu chưa nhập */
+  targetHeadcount: number | null
+  /** Khoảng gợi ý tính runtime theo emergencyLevel — KHÔNG lưu DB, chỉ tham khảo */
+  suggestedHeadcountMin: number | null
+  suggestedHeadcountMax: number | null
 }
 
 // ── UI helper: nhóm status thành màu riêng rẽ ──

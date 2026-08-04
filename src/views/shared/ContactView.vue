@@ -67,6 +67,9 @@
             <div v-if="submitted" class="alert alert--success mb-4">
               <strong>{{ $t('common.success') }}!</strong> {{ $t('contact.success_msg') }}
             </div>
+            <div v-if="submitError" class="alert alert--error mb-4">
+              {{ submitError }}
+            </div>
 
             <form @submit.prevent="handleSubmit" class="contact-form">
               <div class="form-group">
@@ -93,12 +96,13 @@
                 </div>
 
                 <div class="form-group">
-                  <label class="form-label">{{ $t('contact.phone') }}</label>
+                  <label class="form-label">{{ $t('contact.phone') }} <span class="req">*</span></label>
                   <input
                     v-model="form.phone"
                     type="tel"
                     class="form-input"
                     placeholder="0912 345 678"
+                    required
                   />
                 </div>
               </div>
@@ -140,10 +144,23 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import { submitContactMessage } from '@/features/public/public.api'
+
+const { t } = useI18n()
 
 const loading = ref(false)
 const submitted = ref(false)
+const submitError = ref('')
+
+const SUBJECT_LABELS: Record<string, string> = {
+  hotro: 'Hỗ trợ sử dụng tài khoản',
+  tinhnguyen: 'Hỏi về Đăng ký Tình nguyện viên',
+  kho: 'Hợp tác Quyên góp / Quản lý Kho',
+  'gop-y': 'Góp ý cải thiện hệ thống',
+  khac: 'Khác',
+}
 
 const form = ref({
   fullName: '',
@@ -155,11 +172,25 @@ const form = ref({
 
 async function handleSubmit() {
   loading.value = true
-  // Mock API call
-  await new Promise((resolve) => setTimeout(resolve, 800))
-  loading.value = false
-  submitted.value = true
-  form.value = { fullName: '', email: '', phone: '', subject: '', message: '' }
+  submitError.value = ''
+  try {
+    // BE chưa có field "subject" riêng — ghép vào đầu nội dung để không mất thông tin
+    const subjectLabel = SUBJECT_LABELS[form.value.subject] ?? form.value.subject
+    const content = subjectLabel ? `[${subjectLabel}] ${form.value.message}` : form.value.message
+
+    await submitContactMessage({
+      fullName: form.value.fullName,
+      email: form.value.email,
+      phoneNumber: form.value.phone,
+      content,
+    })
+    submitted.value = true
+    form.value = { fullName: '', email: '', phone: '', subject: '', message: '' }
+  } catch (e: unknown) {
+    submitError.value = e instanceof Error ? e.message : t('contact.submit_failed')
+  } finally {
+    loading.value = false
+  }
 }
 </script>
 

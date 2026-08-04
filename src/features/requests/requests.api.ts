@@ -61,6 +61,9 @@ function buildOfflineResponse(payload: CreateReliefRequestPayload): ReliefReques
     id: `offline-${Date.now()}`,
     status: 'Pending',
     createdAt: new Date().toISOString(),
+    targetHeadcount: null,
+    suggestedHeadcountMin: null,
+    suggestedHeadcountMax: null,
   }
 }
 
@@ -152,10 +155,12 @@ export async function getReliefRequestById(id: string): Promise<ReliefRequestRes
 export async function updateReliefRequestStatus(
   id: string,
   status: ReliefRequestStatus,
+  note?: string,
+  targetHeadcount?: number,
 ): Promise<ReliefRequestActionResult> {
   const { data } = await http.put<ReliefRequestActionResult>(
     `/relief-requests/${id}/status`,
-    { status },
+    { status, note: note || null, targetHeadcount: targetHeadcount ?? null },
   )
   return data
 }
@@ -163,4 +168,16 @@ export async function updateReliefRequestStatus(
 /** Tiện ích: Requester hủy yêu cầu của mình */
 export function cancelReliefRequest(id: string): Promise<ReliefRequestActionResult> {
   return updateReliefRequestStatus(id, 'Cancelled')
+}
+
+/**
+ * DELETE /api/relief-requests/{id}/team-lead
+ * Gỡ hẳn nhóm trưởng hiện tại của yêu cầu này, không đặt ai thay thế.
+ * Idempotent: không có ai đang là trưởng vẫn trả về 200.
+ */
+export async function removeTeamLead(reliefRequestId: string): Promise<ReliefRequestActionResult> {
+  const { data } = await http.delete<ReliefRequestActionResult>(
+    `/relief-requests/${reliefRequestId}/team-lead`,
+  )
+  return data
 }

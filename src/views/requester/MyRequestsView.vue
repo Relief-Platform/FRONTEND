@@ -69,9 +69,9 @@
               <div class="form-group half">
                 <label>{{ $t('requester.form_emergency_level') }} <span class="required">*</span></label>
                 <select v-model.number="form.emergencyLevel">
-                  <option :value="2">{{ $t('requester.level_medium') }}</option>
-                  <option :value="3">{{ $t('requester.level_high') }}</option>
-                  <option :value="4">{{ $t('requester.level_urgent') }}</option>
+                  <option :value="1">{{ $t('requester.level_low') }}</option>
+                  <option :value="2">{{ $t('requester.level_large_scale') }}</option>
+                  <option :value="3">{{ $t('requester.level_severe') }}</option>
                 </select>
               </div>
               <div class="form-group half">
@@ -157,6 +157,16 @@
                 <div>
                   <span class="detail-field__label">{{ $t('requester.detail_address') }}</span>
                   <span class="detail-field__value">{{ selectedRequest.address }}</span>
+                </div>
+              </div>
+
+              <div class="detail-field">
+                <span class="detail-field__icon">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 6v16l7-4 8 4 7-4V2l-7 4-8-4-7 4z"/><path d="M8 2v16"/><path d="M16 6v16"/></svg>
+                </span>
+                <div>
+                  <span class="detail-field__label">{{ $t('requester.detail_region') }}</span>
+                  <span class="detail-field__value">{{ selectedRequest.region || '—' }}</span>
                 </div>
               </div>
 
@@ -344,7 +354,7 @@ const emptyForm = (): CreateReliefRequestPayload => ({
   region: 'Hà Nội',
   latitude: 0,
   longitude: 0,
-  emergencyLevel: 4,
+  emergencyLevel: 2,
   affectedPeople: 1,
   needFood: false,
   needWater: false,

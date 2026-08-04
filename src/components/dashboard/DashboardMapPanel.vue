@@ -44,8 +44,8 @@
       <div ref="mapElRef" class="dm-map" />
       <div class="dm-legend">
         <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#fecaca; width:8px; height:8px;" />{{ $t('coordinator.emergency_low') }}</span>
-        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#f87171; width:11px; height:11px;" />{{ $t('coordinator.emergency_medium') }}</span>
-        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#b91c1c; width:14px; height:14px;" />{{ $t('coordinator.emergency_high') }}</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#f87171; width:11px; height:11px;" />{{ $t('coordinator.emergency_large_scale') }}</span>
+        <span class="dm-legend-item"><span class="dm-legend-dot" style="background:#b91c1c; width:14px; height:14px;" />{{ $t('coordinator.emergency_severe') }}</span>
         <span class="dm-legend-item"><span class="dm-legend-dot dm-legend-dot--sq" style="background:#6b46c1;" />{{ $t('nav.warehouse') }}</span>
       </div>
     </template>
@@ -81,8 +81,8 @@ function severityRadius(level: number): number {
   return 6
 }
 function severityLabel(level: number): string {
-  if (level >= 3) return t('coordinator.emergency_high')
-  if (level === 2) return t('coordinator.emergency_medium')
+  if (level >= 3) return t('coordinator.emergency_severe')
+  if (level === 2) return t('coordinator.emergency_large_scale')
   return t('coordinator.emergency_low')
 }
 

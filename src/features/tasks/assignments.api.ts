@@ -31,6 +31,8 @@ export interface Assignment {
   cancellationRequested: boolean
   cancellationReason: string | null
   cancellationRequestedAt: string | null
+  /** Nhãn nhóm trưởng trong phạm vi ReliefRequest này — tối đa 1 assignment/request */
+  isTeamLead: boolean
 }
 
 export interface AssignmentActionResult {
@@ -136,6 +138,18 @@ export async function adminCancelAssignment(
     `/assignments/${id}/cancel`,
     { reason },
   )
+  return data
+}
+
+// ── Admin — Set team lead ────────────────────────────────────
+
+/**
+ * PUT /api/assignments/{id}/set-team-lead
+ * Chỉ định assignment này làm nhóm trưởng — tự gỡ nhóm trưởng cũ (nếu có) của
+ * cùng ReliefRequest. Chỉ áp dụng cho assignment đang Accepted/OnTheWay.
+ */
+export async function setTeamLead(id: string): Promise<AssignmentActionResult> {
+  const { data } = await http.put<AssignmentActionResult>(`/assignments/${id}/set-team-lead`)
   return data
 }
 

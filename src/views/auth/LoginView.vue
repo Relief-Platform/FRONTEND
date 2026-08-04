@@ -116,7 +116,7 @@ const handleLogin = async () => {
       Volunteer:    '/volunteer',
       Requester:    '/requester',
       Coordinator:  '/warehouses',    // quản lý kho
-      Organization: '/requester',     // chưa có dashboard riêng → dùng requester tạm
+      Organization: '/donations',     // chưa có dashboard riêng → vào thẳng trang quyên góp
     }
     const dest = authStore.role ? (roleRoutes[authStore.role] ?? '/home') : '/home'
     await router.push(dest)
