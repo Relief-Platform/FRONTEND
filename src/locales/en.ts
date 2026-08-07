@@ -190,7 +190,7 @@ export default {
     faq_3_q: 'Do volunteers need skill verification?',
     faq_3_a: 'Yes. Coordination teams verify contact info, rescue equipment, and skill certifications (medical, diving, boat driving) before assigning high-risk emergency tasks to ensure maximum safety.',
     faq_4_q: 'How can Charity Funds or Relief Teams set up Warehouses on ReliefConnect?',
-    faq_4_a: 'Please visit the Contact page or email hotro@reliefconnect.vn. System administrators will verify your organization and issue Warehouse Management credentials within 2 hours.',
+    faq_4_a: 'Please visit the Contact page or email {email}. System administrators will verify your organization and issue Warehouse Management credentials within 2 hours.',
     faq_5_q: 'How do I know when Volunteers are delivering supplies to my location?',
     faq_5_a: 'Once your request is approved and assigned, the system sends an SMS/Zalo notification containing the assigned Volunteer\'s name, phone number, and relief tracking code.',
     help_title: 'Still haven\'t found the answer you need?',
@@ -374,7 +374,7 @@ export default {
     guide_process_title: 'Support Process',
     guide_process_desc: 'Submit request → System receives it → Volunteers gather supplies → Delivery → Completed.',
     guide_contact_title: 'Support Contact',
-    guide_contact_desc: 'Hotline: 1900 1234 · Email: hotro@reliefconnect.vn',
+    guide_contact_desc: 'Hotline: 1900 1234 · Email: {email}',
 
     vol_checking: 'Checking your profile...',
     vol_pending_title: 'Profile Under Review',
