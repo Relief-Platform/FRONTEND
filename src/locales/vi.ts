@@ -190,7 +190,7 @@ export default {
     faq_3_q: 'Tình nguyện viên có cần qua kiểm duyệt kỹ năng không?',
     faq_3_a: 'Có. Đội ngũ Điều phối viên sẽ kiểm tra thông tin liên lạc, phương tiện cứu hộ và các chứng chỉ kỹ năng trước khi giao các nhiệm vụ khẩn cấp nhằm đảm bảo an toàn tối đa.',
     faq_4_q: 'Làm thế nào để các Quỹ từ thiện / Đội cứu trợ mở Kho hàng trên ReliefConnect?',
-    faq_4_a: 'Vui lòng vào trang Liên hệ hoặc gửi thông tin tới email hotro@reliefconnect.vn. Ban quản trị hệ thống sẽ xác minh tổ chức và cấp tài khoản Quản lý Kho vật tư trong vòng 2 giờ.',
+    faq_4_a: 'Vui lòng vào trang Liên hệ hoặc gửi thông tin tới email {email}. Ban quản trị hệ thống sẽ xác minh tổ chức và cấp tài khoản Quản lý Kho vật tư trong vòng 2 giờ.',
     faq_5_q: 'Làm sao để biết khi nào Tình nguyện viên mang vật tư tới nơi?',
     faq_5_a: 'Sau khi yêu cầu được duyệt và phân công, hệ thống sẽ gửi tin nhắn SMS/Zalo kèm tên, số điện thoại và mã cứu trợ của Tình nguyện viên đang di chuyển tới địa điểm của bạn.',
     help_title: 'Vẫn chưa tìm thấy câu trả lời bạn cần?',
@@ -374,7 +374,7 @@ export default {
     guide_process_title: 'Quy trình hỗ trợ',
     guide_process_desc: 'Gửi yêu cầu → Hệ thống tiếp nhận → Tình nguyện viên gom vật tư → Vận chuyển → Hoàn thành.',
     guide_contact_title: 'Liên hệ hỗ trợ',
-    guide_contact_desc: 'Hotline: 1900 1234 · Email: hotro@reliefconnect.vn',
+    guide_contact_desc: 'Hotline: 1900 1234 · Email: {email}',
 
     vol_checking: 'Đang kiểm tra hồ sơ của bạn...',
     vol_pending_title: 'Hồ sơ đang được xem xét',

@@ -416,7 +416,7 @@ const faqs = computed(() => [
     category: t('nav.warehouse'),
     tagClass: 'tag-orange',
     question: t('guide.faq_4_q'),
-    answer: t('guide.faq_4_a'),
+    answer: t('guide.faq_4_a', { email: 'hotro@reliefconnect.vn' }),
   },
   {
     category: t('common.status'),

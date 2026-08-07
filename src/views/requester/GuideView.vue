@@ -39,7 +39,7 @@
         </div>
         <div>
           <h3>{{ $t('requester.guide_contact_title') }}</h3>
-          <p>{{ $t('requester.guide_contact_desc') }}</p>
+          <p>{{ $t('requester.guide_contact_desc', { email: 'hotro@reliefconnect.vn' }) }}</p>
         </div>
       </div>
     </div>
