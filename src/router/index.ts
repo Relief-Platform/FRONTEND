@@ -78,6 +78,12 @@ const routes: RouteRecordRaw[] = [
     meta: { guestOnly: true, title: 'Quên mật khẩu' },
   },
   {
+    path: '/verify-reset-code',
+    name: 'verify-reset-code',
+    component: () => import('@/views/auth/VerifyResetCodeView.vue'),
+    meta: { guestOnly: true, title: 'Xác minh mã đặt lại mật khẩu' },
+  },
+  {
     path: '/reset-password',
     name: 'reset-password',
     component: () => import('@/views/auth/ResetPasswordView.vue'),

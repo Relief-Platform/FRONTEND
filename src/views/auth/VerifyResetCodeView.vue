@@ -1,5 +1,5 @@
 <template>
-  <div class="forgot-wrapper">
+  <div class="verify-wrapper">
     <!-- Logo Header -->
     <router-link to="/" class="header-logo">
       <h2 class="brand-name">
@@ -8,11 +8,16 @@
       <p class="slogan">Kết nối trái tim - Vẹn tròn cứu trợ</p>
     </router-link>
 
-    <!-- Forgot Password Card -->
-    <div class="forgot-card">
-      <div>
-        <h2 class="form-title">KHÔI PHỤC MẬT KHẨU</h2>
-        <p class="form-subtitle">Nhập email liên kết với tài khoản của bạn. Chúng tôi sẽ gửi một mã xác minh gồm 6 số để đặt lại mật khẩu của bạn.</p>
+    <!-- Verify Code Card -->
+    <div class="verify-card">
+      <!-- Warning: no pending reset flow (direct nav / storage cleared) -->
+      <div v-if="!email" class="error-banner">
+        {{ $t('auth.no_pending_reset') }}
+      </div>
+
+      <div v-else>
+        <h2 class="form-title">{{ $t('auth.verify_code_title') }}</h2>
+        <p class="form-subtitle">{{ $t('auth.verify_code_subtitle', { email: maskedEmail }) }}</p>
 
         <!-- Thông báo lỗi -->
         <div v-if="errorMessage" class="error-banner">
@@ -21,39 +26,44 @@
 
         <form @submit.prevent="handleSubmit">
           <div class="form-group">
-            <label for="email" class="form-label">Địa chỉ Email</label>
-            <div class="input-with-icon">
-              <input
-                id="email"
-                type="email"
-                v-model="email"
-                placeholder="example@email.com"
-                required
-                autocomplete="email"
-                class="email-input"
-              />
-              <span class="input-icon">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <rect width="20" height="16" x="2" y="4" rx="2" />
-                  <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
-                </svg>
-              </span>
-            </div>
+            <label for="code" class="form-label">{{ $t('auth.verify_code_label') }}</label>
+            <input
+              id="code"
+              type="text"
+              inputmode="numeric"
+              autocomplete="one-time-code"
+              maxlength="6"
+              v-model="code"
+              @input="onCodeInput"
+              :placeholder="$t('auth.verify_code_placeholder')"
+              required
+              class="code-input"
+            />
           </div>
 
           <button type="submit" class="submit-btn" :disabled="isLoading">
             <span v-if="isLoading" class="loading-spinner"></span>
-            <span>{{ isLoading ? 'Đang gửi yêu cầu...' : 'Gửi mã khôi phục' }}</span>
+            <span>{{ isLoading ? $t('auth.verifying_code') : $t('auth.btn_verify_code') }}</span>
           </button>
         </form>
+
+        <div class="resend-section">
+          <span v-if="countdown > 0" class="countdown-text">
+            {{ $t('auth.resend_code_countdown', { seconds: countdown }) }}
+          </span>
+          <button v-else type="button" class="resend-btn" @click="handleResend" :disabled="isResending">
+            <span v-if="isResending" class="loading-spinner loading-spinner-dark"></span>
+            <span>{{ $t('auth.resend_code') }}</span>
+          </button>
+        </div>
       </div>
 
       <div class="divider-row">
-        <router-link to="/login" class="back-to-login">
+        <router-link to="/forgot-password" class="back-to-login">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="m15 18-6-6 6-6"/>
           </svg>
-          Quay lại Đăng nhập
+          {{ $t('auth.back_to_forgot_password') }}
         </router-link>
       </div>
     </div>
@@ -61,20 +71,63 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { forgotPassword } from '@/features/auth/auth.api'
+import { useI18n } from 'vue-i18n'
+import { forgotPassword, verifyResetCode } from '@/features/auth/auth.api'
 import { resetFlowStorage } from '@/features/auth/reset-flow.storage'
 
 const router = useRouter()
+const { t } = useI18n()
 
-const email = ref('')
+// email đọc 1 lần lúc mở trang — ForgotPasswordView đã ghi vào sessionStorage
+// trước khi điều hướng sang đây. Không có email nghĩa là user vào thẳng URL
+// này mà chưa qua bước quên mật khẩu — chặn lại, không hiện form nhập mã.
+const email = ref(resetFlowStorage.getEmail() || '')
+
+const maskedEmail = computed(() => {
+  const value = email.value
+  const atIndex = value.indexOf('@')
+  if (atIndex <= 0) return value
+  const local = value.slice(0, atIndex)
+  const domain = value.slice(atIndex)
+  const visiblePrefix = local.slice(0, 1)
+  return `${visiblePrefix}${'*'.repeat(Math.max(local.length - 1, 3))}${domain}`
+})
+
+const code = ref('')
 const isLoading = ref(false)
+const isResending = ref(false)
 const errorMessage = ref('')
+const countdown = ref(60)
+let timer: ReturnType<typeof setInterval> | null = null
+
+const startCountdown = () => {
+  countdown.value = 60
+  if (timer) clearInterval(timer)
+  timer = setInterval(() => {
+    if (countdown.value > 0) {
+      countdown.value--
+    } else if (timer) {
+      clearInterval(timer)
+      timer = null
+    }
+  }, 1000)
+}
+
+startCountdown()
+
+onUnmounted(() => {
+  if (timer) clearInterval(timer)
+})
+
+const onCodeInput = () => {
+  code.value = code.value.replace(/\D/g, '').slice(0, 6)
+}
 
 const handleSubmit = async () => {
-  if (!email.value || !email.value.includes('@')) {
-    errorMessage.value = 'Vui lòng nhập địa chỉ email hợp lệ.'
+  if (code.value.length !== 6) {
+    errorMessage.value = t('auth.code_required_error')
     return
   }
 
@@ -82,22 +135,37 @@ const handleSubmit = async () => {
   isLoading.value = true
 
   try {
-    await forgotPassword(email.value)
-    resetFlowStorage.setEmail(email.value)
-    router.push({ name: 'verify-reset-code' })
+    const result = await verifyResetCode(email.value, code.value)
+    resetFlowStorage.setResetSessionId(result.resetSessionId)
+    router.push({ name: 'reset-password' })
   } catch (error) {
-    errorMessage.value = (error as Error).message || 'Không thể gửi yêu cầu khôi phục mật khẩu. Vui lòng thử lại sau.'
-    console.error('Lỗi khôi phục mật khẩu:', error)
+    errorMessage.value = (error as Error).message || 'Xác minh mã thất bại. Vui lòng thử lại.'
+    console.error('Lỗi xác minh mã đặt lại mật khẩu:', error)
   } finally {
     isLoading.value = false
   }
 }
-</script>
 
+const handleResend = async () => {
+  errorMessage.value = ''
+  isResending.value = true
+
+  try {
+    await forgotPassword(email.value)
+    code.value = ''
+    startCountdown()
+  } catch (error) {
+    errorMessage.value = (error as Error).message || 'Không thể gửi lại mã. Vui lòng thử lại sau.'
+    console.error('Lỗi gửi lại mã:', error)
+  } finally {
+    isResending.value = false
+  }
+}
+</script>
 
 <style scoped>
 /* ===== Wrapper ===== */
-.forgot-wrapper {
+.verify-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -145,7 +213,7 @@ const handleSubmit = async () => {
 }
 
 /* ===== Card ===== */
-.forgot-card {
+.verify-card {
   background-color: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(12px);
   width: 100%;
@@ -200,16 +268,15 @@ const handleSubmit = async () => {
   margin-bottom: 8px;
 }
 
-.input-with-icon {
-  position: relative;
-}
-
-.email-input {
+.code-input {
   width: 100%;
-  padding: 12px 14px 12px 42px;
+  padding: 14px;
   border: 1px solid #d0d5dd;
   border-radius: 8px;
-  font-size: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: 10px;
+  text-align: center;
   background-color: #fafafa;
   outline: none;
   transition: border-color 0.2s, box-shadow 0.2s;
@@ -217,24 +284,17 @@ const handleSubmit = async () => {
   color: #2d3748;
 }
 
-.email-input::placeholder {
+.code-input::placeholder {
   color: #a0aec0;
+  letter-spacing: normal;
+  font-size: 14px;
+  font-weight: 400;
 }
 
-.email-input:focus {
+.code-input:focus {
   border-color: #1a4f8d;
   box-shadow: 0 0 0 3px rgba(26, 79, 141, 0.1);
   background-color: #fff;
-}
-
-.input-icon {
-  position: absolute;
-  left: 14px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: #a0aec0;
-  display: flex;
-  align-items: center;
 }
 
 /* ===== Submit Button ===== */
@@ -279,10 +339,50 @@ const handleSubmit = async () => {
   animation: spin 0.7s linear infinite;
 }
 
+.loading-spinner-dark {
+  border: 2px solid rgba(26, 79, 141, 0.2);
+  border-top-color: #1a4f8d;
+}
+
 @keyframes spin {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ===== Resend Section ===== */
+.resend-section {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.countdown-text {
+  font-size: 13px;
+  color: #718096;
+}
+
+.resend-btn {
+  background: none;
+  border: none;
+  color: #1a4f8d;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  padding: 4px 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.resend-btn:hover {
+  color: #e27d24;
+}
+
+.resend-btn:disabled {
+  color: #a0aec0;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 /* ===== Divider / Return Links ===== */
