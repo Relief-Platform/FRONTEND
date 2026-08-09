@@ -112,12 +112,31 @@ export interface ForgotPasswordPayload {
 }
 
 /**
+ * POST /api/auth/verify-reset-code
+ * BE nhận { email, code } — code là mã 6 chữ số gửi qua email.
+ */
+export interface VerifyResetCodePayload {
+  email: string
+  code: string
+}
+
+/**
+ * result của POST /api/auth/verify-reset-code khi mã đúng.
+ * resetSessionId dùng ở bước reset-password tiếp theo (KHÔNG phải code).
+ */
+export interface VerifyResetCodeResult {
+  resetSessionId: string
+}
+
+/**
  * POST /api/auth/reset-password
- * BE nhận { email, token, newPassword, confirmPassword }
+ * BE nhận { resetSessionId, newPassword } — resetSessionId lấy từ
+ * response của verify-reset-code, không còn token từ link email.
+ * confirmPassword chỉ dùng để validate phía FE, BE không đọc field này
+ * (giữ lại trong payload cho nhất quán với form).
  */
 export interface ResetPasswordPayload {
-  email?: string
-  token: string
+  resetSessionId: string
   newPassword: string
   confirmPassword: string
 }

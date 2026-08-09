@@ -16,6 +16,8 @@ import type {
   ChangePasswordPayload,
   LogoutPayload,
   ForgotPasswordPayload,
+  VerifyResetCodePayload,
+  VerifyResetCodeResult,
   ResetPasswordPayload,
   LoginResult,
   AuthUser,
@@ -142,7 +144,7 @@ export async function changePassword(
 
 // ── POST /api/auth/forgot-password ───────────────────────────
 /**
- * Gửi email yêu cầu đặt lại mật khẩu (hiệu lực 30 phút).
+ * Gửi email chứa mã xác minh 6 số (hiệu lực 10 phút).
  * Body: { email }
  */
 export async function forgotPassword(email: string): Promise<void> {
@@ -163,10 +165,30 @@ export async function forgotPassword(email: string): Promise<void> {
   }
 }
 
+// ── POST /api/auth/verify-reset-code ─────────────────────────
+/**
+ * Xác minh mã 6 số đã gửi qua email. Đúng mã → trả về resetSessionId
+ * dùng ở bước reset-password tiếp theo. Sai mã quá 5 lần thì mã bị
+ * vô hiệu — BE trả lỗi 400, số lần thử còn lại nằm ngay trong nội
+ * dung message (không phải field riêng), FE chỉ cần hiển thị nguyên văn.
+ * Body: { email, code }
+ */
+export async function verifyResetCode(
+  email: string,
+  code: string,
+): Promise<VerifyResetCodeResult> {
+  const payload: VerifyResetCodePayload = { email, code }
+  const { data } = await http.post<ApiResponse<VerifyResetCodeResult> | VerifyResetCodeResult>(
+    '/auth/verify-reset-code',
+    payload,
+  )
+  return unwrap(data)
+}
+
 // ── POST /api/auth/reset-password ────────────────────────────
 /**
- * Đặt lại mật khẩu bằng token nhận được qua email.
- * Body: { email, token, newPassword, confirmPassword }
+ * Đặt lại mật khẩu bằng resetSessionId nhận được từ verify-reset-code.
+ * Body: { resetSessionId, newPassword }
  */
 export async function resetPassword(payload: ResetPasswordPayload): Promise<void> {
   const { data } = await http.post<ApiResponse<null> | null>('/auth/reset-password', payload)

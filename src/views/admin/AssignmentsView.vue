@@ -41,6 +41,12 @@
         </button>
       </div>
 
+      <!-- ── Đang lọc theo 1 yêu cầu cụ thể (điều hướng từ "Quản lý đội") ── -->
+      <div v-if="filterRequestId" class="request-filter-banner">
+        <span>{{ $t('admin.filtered_by_request', { title: filterRequestTitle ?? filterRequestId }) }}</span>
+        <button class="btn-clear-filter" @click="clearRequestFilter">{{ $t('admin.btn_clear_filter') }}</button>
+      </div>
+
       <!-- ══════ TAB: TẤT CẢ PHÂN CÔNG ══════ -->
       <template v-if="activeTab === 'all'">
         <!-- Filter bar -->
@@ -357,6 +363,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
 import {
@@ -372,6 +379,8 @@ import {
 import { removeTeamLead } from '@/features/requests/requests.api'
 
 const { locale, t } = useI18n()
+const route = useRoute()
+const router = useRouter()
 
 const fmtDate = (dateStr: string) => {
   const _ = locale.value
@@ -486,15 +495,32 @@ const displayedRows = computed(() => {
   return list
 })
 
+// ── Lọc theo ReliefRequestId khi điều hướng từ "Quản lý đội" (?requestId=) ──
+const filterRequestId = ref<string | null>(null)
+const filterRequestTitle = computed(() => {
+  const match = assignments.value.find(a => a.reliefRequestId === filterRequestId.value)
+  return match?.reliefRequestTitle ?? null
+})
+
+function clearRequestFilter() {
+  filterRequestId.value = null
+  router.replace({ query: {} })
+  void loadAll()
+}
+
 // ── Lifecycle ─────────────────────────────────────────────────
 onMounted(async () => {
+  const requestId = route.query.requestId
+  if (typeof requestId === 'string' && requestId) {
+    filterRequestId.value = requestId
+  }
   await loadAll()
 })
 
 async function loadAll() {
   isLoading.value = true
   try {
-    assignments.value = await getAssignments(1, 200)
+    assignments.value = await getAssignments(1, 200, filterRequestId.value ?? undefined)
   } catch (e) {
     console.error(e)
   } finally {
@@ -712,6 +738,34 @@ function removePending(id: string) {
 .tab-btn--danger.active { color: #c53030; }
 .tab-count { background: #e9ecef; color: #4b5563; font-size: 10.5px; font-weight: 700; padding: 2px 7px; border-radius: 99px; }
 .tab-count--danger { background: #fee2e2; color: #c53030; }
+
+/* ── Request filter banner ───────────────────────────────── */
+.request-filter-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 16px;
+  margin-bottom: 14px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e3a5f;
+}
+.btn-clear-filter {
+  border: 1px solid #93c5fd;
+  background: #fff;
+  color: #1d4ed8;
+  padding: 5px 12px;
+  border-radius: 7px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-clear-filter:hover { background: #dbeafe; }
 
 /* ── Filter bar ───────────────────────────────────────────── */
 .filter-bar { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
