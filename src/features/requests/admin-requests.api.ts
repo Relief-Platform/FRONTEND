@@ -13,6 +13,8 @@ export interface SuggestedVolunteer {
   fullName: string
   /** Khoảng cách tính theo km từ điểm yêu cầu đến volunteer */
   distanceKm: number
+  /** Số năm kinh nghiệm — tham khảo cho Admin khi chọn/bầu đội trưởng */
+  experienceYears: number
   /** [M11] Chưa có mapping request→skill ở BE, luôn 0/rỗng đợt này */
   matchedSkillsCount: number
   matchedSkillNames: string[]
@@ -30,13 +32,20 @@ export interface SuggestedVolunteersResponse {
 /**
  * GET /api/relief-requests/{id}/suggested-volunteers
  * Admin only – chỉ hoạt động khi request đang ở trạng thái `Approved`.
- * Trả về danh sách volunteer gần nhất kèm khoảng cách (km).
+ * Trả về danh sách volunteer đang rảnh (không dính assignment active) trong bán kính
+ * `maxDistanceKm` (mặc định BE = 50km), kèm khoảng cách (km).
+ *
+ * `maxDistanceKm` truyền lớn (vd 100000) = coi như bỏ giới hạn khoảng cách — dùng cho
+ * fallback "không ai lân cận rảnh → lấy tất cả người đang rảnh", tái dùng thẳng endpoint
+ * này thay vì thêm API mới ở BE.
  */
 export async function getSuggestedVolunteers(
   reliefRequestId: string,
+  options?: { maxDistanceKm?: number; top?: number },
 ): Promise<SuggestedVolunteer[]> {
   const { data } = await http.get<SuggestedVolunteersResponse>(
     `/relief-requests/${reliefRequestId}/suggested-volunteers`,
+    { params: { maxDistanceKm: options?.maxDistanceKm, top: options?.top } },
   )
   return Array.isArray(data?.candidates) ? data.candidates : []
 }

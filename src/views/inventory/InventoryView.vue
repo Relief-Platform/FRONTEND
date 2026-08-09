@@ -37,6 +37,7 @@
           <thead>
             <tr>
               <th>{{ $t('inventory.col_item') }}</th>
+              <th>{{ $t('inventory.col_category') }}</th>
               <th>{{ $t('inventory.col_unit') }}</th>
               <th class="col-num">{{ $t('inventory.col_stock') }}</th>
               <th class="col-num">{{ $t('inventory.col_threshold') }}</th>
@@ -47,6 +48,7 @@
           <tbody>
             <tr v-for="item in items" :key="item.id" :class="{ 'row-low': item.isLowStock }">
               <td class="cell-name">{{ item.itemName }}</td>
+              <td class="cell-muted"><span class="category-tag">{{ categoryLabel(item.category) }}</span></td>
               <td class="cell-muted">{{ item.unit }}</td>
               <td class="col-num cell-qty">{{ formatNumber(item.quantity) }}</td>
               <td class="col-num cell-muted">{{ formatNumber(item.minimumQuantity) }}</td>
@@ -81,6 +83,12 @@
             <div class="form-group">
               <label>{{ $t('inventory.form_item_name') }} <span class="required">*</span></label>
               <input v-model="itemForm.itemName" type="text" :placeholder="$t('inventory.form_item_name_placeholder')" required />
+            </div>
+            <div class="form-group">
+              <label>{{ $t('inventory.form_category') }} <span class="required">*</span></label>
+              <select v-model="itemForm.category" required>
+                <option v-for="c in INVENTORY_CATEGORIES" :key="c" :value="c">{{ categoryLabel(c) }}</option>
+              </select>
             </div>
             <div class="form-row">
               <div class="form-group half">
@@ -242,17 +250,30 @@ import {
   getInventoryTransactions,
 } from '@/features/inventory/inventory.api'
 import { getSeverityGuideline, type SeverityGuidelineItem } from '@/features/inventory/severity-guideline.api'
-import type {
-  InventoryItemResponse,
-  UpdateInventoryItemPayload,
-  StockMovePayload,
-  InventoryTransaction,
+import {
+  INVENTORY_CATEGORIES,
+  type InventoryItemResponse,
+  type InventoryCategory,
+  type UpdateInventoryItemPayload,
+  type StockMovePayload,
+  type InventoryTransaction,
 } from '@/features/inventory/inventory.types'
 import { formatDateTimeVI } from '@/features/requests/requests.helpers'
 
 const { t } = useI18n()
 
 const formatNumber = (n: number) => n.toLocaleString('vi-VN')
+
+// [Giới hạn tồn kho] Nhãn hiển thị tiếng Việt cho từng nhóm — khớp enum InventoryCategory BE.
+const CATEGORY_LABELS: Record<InventoryCategory, string> = {
+  Food: 'Lương thực',
+  Water: 'Nước sạch',
+  Medicine: 'Thuốc men',
+  Blanket: 'Chăn màn',
+  Shelter: 'Nơi trú ẩn',
+  Other: 'Khác',
+}
+const categoryLabel = (c: InventoryCategory) => CATEGORY_LABELS[c] ?? c
 
 // ── Chọn kho ──────────────────────────────────────────────
 const warehouseOptions = ref<WarehouseResponse[]>([])
@@ -317,11 +338,12 @@ const itemForm = ref<UpdateInventoryItemPayload>({
   itemName: '',
   unit: '',
   minimumQuantity: 0,
+  category: 'Other',
 })
 
 const openCreateModal = () => {
   editingId.value = null
-  itemForm.value = { itemName: '', unit: '', minimumQuantity: 0 }
+  itemForm.value = { itemName: '', unit: '', minimumQuantity: 0, category: 'Other' }
   itemFormError.value = ''
   showItemModal.value = true
 }
@@ -332,6 +354,7 @@ const openEditModal = (item: InventoryItemResponse) => {
     itemName: item.itemName ?? '',
     unit: item.unit ?? '',
     minimumQuantity: item.minimumQuantity,
+    category: item.category ?? 'Other',
   }
   itemFormError.value = ''
   showItemModal.value = true
@@ -507,6 +530,8 @@ const closeHistoryModal = () => { showHistoryModal.value = false }
 .badge { padding: 4px 11px; border-radius: 20px; font-size: 11.5px; font-weight: 700; white-space: nowrap; }
 .badge--low { background: #fee2e2; color: #b91c1c; }
 
+.category-tag { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11.5px; font-weight: 600; background: #eef2f7; color: #475569; }
+
 .btn-outline { background: transparent; border: 1px solid #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; transition: all 0.15s ease; }
 .btn-outline:hover { background: #fff; border-color: #1a4f8d; color: #1a4f8d; }
 .btn-outline:disabled { opacity: 0.5; cursor: not-allowed; }
@@ -541,10 +566,10 @@ const closeHistoryModal = () => { showHistoryModal.value = false }
 .form-row .half { margin-bottom: 0; flex: 1; }
 label { display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px; }
 .required { color: #e11d48; }
-input[type="text"], input[type="number"], textarea {
+input[type="text"], input[type="number"], select, textarea {
   width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13.5px; box-sizing: border-box;
 }
-input:focus, textarea:focus { outline: none; border-color: #1a4f8d; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: #1a4f8d; }
 textarea { resize: vertical; }
 
 .hint-text { font-size: 12.5px; color: #64748b; background: #f8fafc; border-radius: 8px; padding: 10px 12px; margin: 0 0 14px; line-height: 1.5; }

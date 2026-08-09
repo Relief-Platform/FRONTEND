@@ -63,15 +63,18 @@ export async function createAssignment(
 
 /**
  * GET /api/assignments
- * Admin xem tất cả phân công (có phân trang).
+ * Admin xem tất cả phân công (có phân trang). Truyền `reliefRequestId` để lọc
+ * đúng theo 1 yêu cầu cứu trợ (BE `GetAssignmentsQuery.ReliefRequestId` đã hỗ trợ sẵn) —
+ * dùng khi điều hướng từ trang quản lý yêu cầu sang đây để "Quản lý đội".
  */
 export async function getAssignments(
   pageNumber = 1,
   pageSize = 50,
+  reliefRequestId?: string,
 ): Promise<Assignment[]> {
   const { data } = await http.get<PagedResult<Assignment> | Assignment[]>(
     '/assignments',
-    { params: { pageNumber, pageSize } },
+    { params: { pageNumber, pageSize, reliefRequestId } },
   )
   return unwrapItems(data)
 }

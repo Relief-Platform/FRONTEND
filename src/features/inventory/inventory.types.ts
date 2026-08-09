@@ -3,11 +3,18 @@
 //  Sinh từ docs/swagger.json (schema thật của BE, 2026-07-14)
 // ============================================================
 
+/** [Giới hạn tồn kho] Nhóm nhu cầu — khớp enum InventoryCategory phía BE */
+export type InventoryCategory = 'Food' | 'Water' | 'Medicine' | 'Blanket' | 'Shelter' | 'Other'
+
+export const INVENTORY_CATEGORIES: InventoryCategory[] =
+  ['Food', 'Water', 'Medicine', 'Blanket', 'Shelter', 'Other']
+
 /** Schema: InventoryItemResponse */
 export interface InventoryItemResponse {
   id: string                 // GUID
   warehouseId: string        // GUID
   itemName: string | null
+  category: InventoryCategory
   unit: string | null
   quantity: number
   minimumQuantity: number
@@ -20,6 +27,8 @@ export interface CreateInventoryItemPayload {
   itemName: string
   unit: string
   minimumQuantity: number
+  /** Không truyền → BE mặc định "Other" */
+  category?: InventoryCategory
 }
 
 /** Schema: UpdateInventoryItemRequest — body PUT /inventory-items/{id} (không đụng tồn) */
@@ -27,6 +36,7 @@ export interface UpdateInventoryItemPayload {
   itemName: string
   unit: string
   minimumQuantity: number
+  category?: InventoryCategory
 }
 
 /** Schema: StockMoveCommand — body POST .../stock-in | .../stock-out */

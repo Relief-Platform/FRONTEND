@@ -15,9 +15,9 @@
         <h2 class="form-title">ĐẶT LẠI MẬT KHẨU</h2>
         <p class="form-subtitle">Tạo mật khẩu mới cho tài khoản của bạn.</p>
 
-        <!-- Warning missing token -->
-        <div v-if="!token" class="error-banner">
-          Mã xác thực (token) không tồn tại hoặc đã hết hạn. Vui lòng thử lại quy trình quên mật khẩu.
+        <!-- Warning missing reset session -->
+        <div v-if="!resetSessionId" class="error-banner">
+          Phiên đặt lại mật khẩu không tồn tại hoặc đã hết hạn. Vui lòng thử lại quy trình quên mật khẩu.
         </div>
 
         <!-- Thông báo lỗi -->
@@ -25,7 +25,7 @@
           {{ errorMessage }}
         </div>
 
-        <form v-if="token" @submit.prevent="handleSubmit">
+        <form v-if="resetSessionId" @submit.prevent="handleSubmit">
           <div class="form-group" v-if="email">
             <label class="form-label">Email tài khoản</label>
             <input type="text" :value="email" disabled class="email-input disabled-input" />
@@ -109,14 +109,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref } from 'vue'
 import { resetPassword } from '@/features/auth/auth.api'
+import { resetFlowStorage } from '@/features/auth/reset-flow.storage'
 
-const route = useRoute()
-
-const token = computed(() => (route.query.token as string) || '')
-const email = computed(() => (route.query.email as string) || '')
+// resetSessionId/email đọc 1 lần từ sessionStorage lúc mở trang — do
+// VerifyResetCodeView ghi vào sau khi xác minh mã đúng. KHÔNG còn đọc
+// token từ query string URL (luồng cũ dựa vào link email đã bỏ).
+const resetSessionId = ref(resetFlowStorage.getResetSessionId() || '')
+const email = ref(resetFlowStorage.getEmail() || '')
 
 const newPassword = ref('')
 const confirmPassword = ref('')
@@ -125,8 +126,8 @@ const isSuccess = ref(false)
 const errorMessage = ref('')
 
 const handleSubmit = async () => {
-  if (!token.value) {
-    errorMessage.value = 'Mã token không hợp lệ hoặc đã hết hạn.'
+  if (!resetSessionId.value) {
+    errorMessage.value = 'Phiên đặt lại mật khẩu không hợp lệ hoặc đã hết hạn.'
     return
   }
 
@@ -145,14 +146,14 @@ const handleSubmit = async () => {
 
   try {
     await resetPassword({
-      email: email.value || undefined,
-      token: token.value,
+      resetSessionId: resetSessionId.value,
       newPassword: newPassword.value,
       confirmPassword: confirmPassword.value,
     })
     isSuccess.value = true
+    resetFlowStorage.clear()
   } catch (error) {
-    errorMessage.value = (error as Error).message || 'Đặt lại mật khẩu thất bại. Mã token có thể đã hết hạn hoặc không hợp lệ.'
+    errorMessage.value = (error as Error).message || 'Đặt lại mật khẩu thất bại. Phiên đặt lại mật khẩu có thể đã hết hạn.'
     console.error('Lỗi đặt lại mật khẩu:', error)
   } finally {
     isLoading.value = false

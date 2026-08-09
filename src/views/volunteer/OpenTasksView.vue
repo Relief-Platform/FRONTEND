@@ -22,6 +22,15 @@
               <p class="task-card__region">{{ task.region }}</p>
               <p class="task-card__slots">{{ $t('openTasks.slots', { current: task.activeAssignmentCount, total: task.targetHeadcount }) }}</p>
               <p class="task-card__time">{{ formatDateTimeVI(task.createdAt) }}</p>
+
+              <div class="map-block">
+                <div
+                  v-if="hasRegionArea(task)"
+                  :ref="(el) => setMapRef(task.id, el as HTMLElement | null)"
+                  class="region-map"
+                ></div>
+                <p v-else class="map-empty">{{ $t('openTasks.no_location') }}</p>
+              </div>
             </div>
             <button
               class="btn-join"
@@ -39,11 +48,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getOpenTasks, joinOpenTask, type OpenTask } from '@/features/requests/open-tasks.api'
 import { formatDateTimeVI } from '@/features/requests/requests.helpers'
+import { resolveProvinceCenter } from '@/features/requests/vn-provinces'
 
 const { t } = useI18n()
 
@@ -64,7 +76,81 @@ async function loadTasks() {
     isLoading.value = false
   }
 }
-onMounted(loadTasks)
+onMounted(() => {
+  void loadTasks()
+})
+
+// ── Bản đồ MỨC KHU VỰC (không lộ vị trí chính xác) ─────────
+// Khác hẳn TrackingView/MyTasksView: open task chưa có ai nhận, backend chỉ
+// trả `region` (text tỉnh/thành, KHÔNG có toạ độ nhà dân) — đúng chủ đích,
+// không đổi. Ở đây chỉ tra toạ độ TRUNG TÂM TỈNH/THÀNH theo tên (bảng cứng
+// vn-provinces.ts) rồi vẽ 1 vòng tròn mờ bao quanh, không đặt ghim chính xác.
+const REGION_CIRCLE_RADIUS_METERS = 15000
+const REGION_ZOOM = 9
+
+const mapEls = new Map<string, HTMLElement>()
+const mapInstances = new Map<string, L.Map>()
+
+function setMapRef(id: string, el: HTMLElement | null) {
+  if (el) mapEls.set(id, el)
+  else mapEls.delete(id)
+}
+
+function hasRegionArea(task: OpenTask): boolean {
+  return resolveProvinceCenter(task.region) !== null
+}
+
+function destroyMaps() {
+  mapInstances.forEach((map) => map.remove())
+  mapInstances.clear()
+}
+
+function renderMaps() {
+  destroyMaps()
+
+  for (const task of tasks.value) {
+    const center = resolveProvinceCenter(task.region)
+    if (!center) continue
+    const el = mapEls.get(task.id)
+    if (!el) continue
+
+    const map = L.map(el, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      dragging: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+      attributionControl: false,
+    }).setView(center, REGION_ZOOM)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map)
+
+    // Vòng tròn mờ thay vì ghim — chỉ truyền tải "việc ở khu vực này",
+    // không chỉ đích danh toạ độ cụ thể.
+    L.circle(center, {
+      radius: REGION_CIRCLE_RADIUS_METERS,
+      color: '#e11d48',
+      weight: 1.5,
+      fillColor: '#e11d48',
+      fillOpacity: 0.15,
+    }).addTo(map)
+
+    mapInstances.set(task.id, map)
+  }
+}
+
+watch(tasks, async () => {
+  await nextTick()
+  renderMaps()
+})
+
+onBeforeUnmount(() => {
+  destroyMaps()
+})
 
 function emergencyLabel(level: number): string {
   if (level >= 3) return t('coordinator.emergency_severe')
@@ -113,6 +199,26 @@ async function handleJoin(task: OpenTask) {
 .task-card__region { font-size: 13px; color: #475569; margin: 0; }
 .task-card__slots { font-size: 12.5px; color: #ea580c; font-weight: 600; margin: 0; }
 .task-card__time { font-size: 11.5px; color: #a0aec0; margin: 0; }
+
+.map-block { margin-top: 4px; }
+.region-map {
+  width: 100%;
+  height: 140px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  z-index: 0;
+}
+.map-empty {
+  margin: 0;
+  padding: 10px;
+  text-align: center;
+  font-size: 11.5px;
+  color: #a0aec0;
+  background: #fff;
+  border: 1px dashed #e2e8f0;
+  border-radius: 8px;
+}
 .btn-join {
   margin-top: 6px; background: #e11d48; color: #fff; border: none; padding: 9px 16px;
   border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;

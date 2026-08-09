@@ -103,6 +103,20 @@
             <button type="button" class="btn-geo" @click="useCurrentLocation">{{ $t('requester.use_current_location') }}</button>
 
             <div class="form-group">
+              <label>{{ $t('requester.map_hint') }}</label>
+              <div ref="mapElRef" class="request-map"></div>
+              <div v-if="isGeocoding" class="map-suggestion map-suggestion--loading">
+                {{ $t('requester.map_geocoding') }}
+              </div>
+              <div v-else-if="suggestedAddressText" class="map-suggestion">
+                <span>{{ $t('requester.map_suggested_address', { address: suggestedAddressText }) }}</span>
+                <button type="button" class="btn-use-suggestion" @click="applySuggestedAddress">
+                  {{ $t('requester.map_use_suggestion') }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label>{{ $t('requester.form_contact_phone') }} <span class="required">*</span></label>
               <input v-model="form.contactPhone" type="tel" required />
             </div>
@@ -114,12 +128,57 @@
 
             <div class="form-group">
               <label>{{ $t('requester.form_needs') }}</label>
-              <div class="needs-grid">
-                <label class="need-item"><input type="checkbox" v-model="form.needFood" /> {{ $t('requester.need_food') }}</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needWater" /> {{ $t('requester.need_water') }}</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needMedicine" /> {{ $t('requester.need_medicine') }}</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needBlanket" /> {{ $t('requester.need_blanket') }}</label>
-                <label class="need-item"><input type="checkbox" v-model="form.needShelter" /> {{ $t('requester.need_shelter') }}</label>
+              <p class="need-quantity-hint">{{ $t('requester.need_quantity_hint') }}</p>
+              <div class="needs-list">
+                <div class="need-row">
+                  <label class="need-item"><input type="checkbox" v-model="form.needFood" @change="!form.needFood && (form.foodQuantity = null)" /> {{ $t('requester.need_food') }}</label>
+                  <input
+                    v-show="form.needFood"
+                    v-model.number="form.foodQuantity"
+                    type="number" min="1" class="need-qty-input"
+                    :placeholder="$t('requester.need_quantity_unit_food')"
+                  />
+                </div>
+
+                <div class="need-row">
+                  <label class="need-item"><input type="checkbox" v-model="form.needWater" @change="!form.needWater && (form.waterQuantity = null)" /> {{ $t('requester.need_water') }}</label>
+                  <input
+                    v-show="form.needWater"
+                    v-model.number="form.waterQuantity"
+                    type="number" min="1" class="need-qty-input"
+                    :placeholder="$t('requester.need_quantity_unit_water')"
+                  />
+                </div>
+
+                <div class="need-row">
+                  <label class="need-item"><input type="checkbox" v-model="form.needMedicine" @change="!form.needMedicine && (form.medicineQuantity = null)" /> {{ $t('requester.need_medicine') }}</label>
+                  <input
+                    v-show="form.needMedicine"
+                    v-model.number="form.medicineQuantity"
+                    type="number" min="1" class="need-qty-input"
+                    :placeholder="$t('requester.need_quantity_unit_medicine')"
+                  />
+                </div>
+
+                <div class="need-row">
+                  <label class="need-item"><input type="checkbox" v-model="form.needBlanket" @change="!form.needBlanket && (form.blanketQuantity = null)" /> {{ $t('requester.need_blanket') }}</label>
+                  <input
+                    v-show="form.needBlanket"
+                    v-model.number="form.blanketQuantity"
+                    type="number" min="1" class="need-qty-input"
+                    :placeholder="$t('requester.need_quantity_unit_blanket')"
+                  />
+                </div>
+
+                <div class="need-row">
+                  <label class="need-item"><input type="checkbox" v-model="form.needShelter" @change="!form.needShelter && (form.shelterQuantity = null)" /> {{ $t('requester.need_shelter') }}</label>
+                  <input
+                    v-show="form.needShelter"
+                    v-model.number="form.shelterQuantity"
+                    type="number" min="1" class="need-qty-input"
+                    :placeholder="$t('requester.need_quantity_unit_shelter')"
+                  />
+                </div>
               </div>
             </div>
 
@@ -235,9 +294,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
+import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
+import markerIcon from 'leaflet/dist/images/marker-icon.png'
+import markerShadow from 'leaflet/dist/images/marker-shadow.png'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import {
   createReliefRequest,
@@ -256,6 +320,20 @@ import {
   matchesRequesterFilterGroup,
   type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
+
+// Fix icon marker mặc định của Leaflet bị vỡ khi build qua bundler (Vite/Webpack):
+// đường dẫn ảnh trong CSS gốc của Leaflet không khớp với asset đã qua xử lý.
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: markerIcon2x,
+  iconUrl: markerIcon,
+  shadowUrl: markerShadow,
+})
+
+// Trung tâm mặc định khi chưa có toạ độ (form mới mở, lat/lng = 0/0):
+// Hà Nội, khớp với giá trị mặc định của ô "Khu vực/Tỉnh thành" (form_region).
+const DEFAULT_CENTER: L.LatLngTuple = [21.0285, 105.8542]
+const DEFAULT_ZOOM = 13
 
 const route = useRoute()
 const router = useRouter()
@@ -362,16 +440,163 @@ const emptyForm = (): CreateReliefRequestPayload => ({
   needBlanket: false,
   needShelter: false,
   contactPhone: '',
+  foodQuantity: null,
+  waterQuantity: null,
+  medicineQuantity: null,
+  blanketQuantity: null,
+  shelterQuantity: null,
 })
 
 const form = ref<CreateReliefRequestPayload>(emptyForm())
 
+// ── Bản đồ chọn vị trí (Leaflet + OpenStreetMap) ───────────
+const mapElRef = ref<HTMLElement | null>(null)
+let mapInstance: L.Map | null = null
+let markerInstance: L.Marker | null = null
+// true trong lúc code tự set toạ độ từ marker → tránh watcher di chuyển
+// marker lần nữa (marker đã ở đúng chỗ rồi, chỉ tránh vòng lặp/giật hình).
+let isSyncingFromMap = false
+
+const isGeocoding = ref(false)
+const suggestedAddressText = ref('')
+const suggestedAddressParts = ref<{ line: string; region: string } | null>(null)
+let geocodeTimer: ReturnType<typeof setTimeout> | null = null
+
+function initMap() {
+  if (!mapElRef.value) return
+  destroyMap()
+
+  const hasCoords = form.value.latitude !== 0 || form.value.longitude !== 0
+  const start: L.LatLngTuple = hasCoords
+    ? [form.value.latitude, form.value.longitude]
+    : DEFAULT_CENTER
+
+  const map = L.map(mapElRef.value).setView(start, DEFAULT_ZOOM)
+  mapInstance = map
+
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; OpenStreetMap contributors',
+    maxZoom: 18,
+  }).addTo(map)
+
+  const marker = L.marker(start, { draggable: true }).addTo(map)
+  markerInstance = marker
+
+  marker.on('drag', (e) => {
+    const pos = (e.target as L.Marker).getLatLng()
+    setPosition(pos.lat, pos.lng)
+  })
+
+  map.on('click', (e: L.LeafletMouseEvent) => {
+    marker.setLatLng(e.latlng)
+    setPosition(e.latlng.lat, e.latlng.lng)
+  })
+
+  // Ghim mặc định (kể cả khi chưa tương tác) đồng bộ luôn vào form,
+  // tránh trường hợp submit toạ độ (0,0) giữa đại dương.
+  setPosition(start[0], start[1])
+}
+
+function destroyMap() {
+  if (geocodeTimer) {
+    clearTimeout(geocodeTimer)
+    geocodeTimer = null
+  }
+  mapInstance?.remove()
+  mapInstance = null
+  markerInstance = null
+}
+
+function setPosition(lat: number, lng: number) {
+  isSyncingFromMap = true
+  form.value.latitude = lat
+  form.value.longitude = lng
+  nextTick(() => { isSyncingFromMap = false })
+  scheduleReverseGeocode(lat, lng)
+}
+
+// Gõ tay vào ô Vĩ độ/Kinh độ → di chuyển marker + pan bản đồ theo (2 chiều).
+// Cũng là nơi xử lý cho nút "Dùng vị trí hiện tại" (chỉ set form.latitude/
+// longitude, watcher này lo phần đồng bộ marker).
+watch(
+  () => [form.value.latitude, form.value.longitude] as const,
+  ([lat, lng]) => {
+    if (isSyncingFromMap) return
+    if (!mapInstance || !markerInstance) return
+    if (typeof lat !== 'number' || typeof lng !== 'number' || Number.isNaN(lat) || Number.isNaN(lng)) return
+    markerInstance.setLatLng([lat, lng])
+    mapInstance.panTo([lat, lng])
+    scheduleReverseGeocode(lat, lng)
+  },
+)
+
+function scheduleReverseGeocode(lat: number, lng: number) {
+  if (geocodeTimer) clearTimeout(geocodeTimer)
+  // Nominatim yêu cầu tối đa ~1 request/giây → debounce 700ms sau khi
+  // người dùng dừng thao tác (thả ghim/kéo/gõ tay) mới thực sự gọi.
+  geocodeTimer = setTimeout(() => {
+    reverseGeocode(lat, lng)
+  }, 700)
+}
+
+async function reverseGeocode(lat: number, lng: number) {
+  isGeocoding.value = true
+  try {
+    // Lưu ý giới hạn Nominatim (chính sách sử dụng công khai của OSM):
+    // - Tối đa ~1 request/giây, không polling/loop nhanh (đã debounce ở trên).
+    // - Yêu cầu định danh app qua header User-Agent hoặc Referer. Trình duyệt
+    //   KHÔNG cho phép JS tự set User-Agent (forbidden header theo Fetch spec),
+    //   nên ở đây dựa vào Referer mà trình duyệt tự gửi kèm (là domain của app).
+    // - Nếu app lên production quy mô lớn, nên đổi sang dịch vụ geocoding trả
+    //   phí (Google/Mapbox/Here...) hoặc tự host Nominatim riêng.
+    const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}&addressdetails=1&accept-language=vi`
+    const res = await fetch(url, { headers: { 'Accept-Language': 'vi' } })
+    if (!res.ok) throw new Error(`Nominatim HTTP ${res.status}`)
+    const data = await res.json()
+    const addr = data?.address ?? {}
+
+    const line = [addr.house_number, addr.road || addr.pedestrian || addr.residential, addr.suburb || addr.quarter || addr.village]
+      .filter(Boolean)
+      .join(', ')
+    const region = addr.city || addr.town || addr.state || addr.county || ''
+
+    suggestedAddressText.value = String(data?.display_name ?? line ?? '')
+    suggestedAddressParts.value = { line: line || String(data?.display_name ?? ''), region }
+
+    // Chỉ tự điền khi ô đang trống — không ghi đè nội dung người dùng đã gõ tay.
+    if (!form.value.address.trim() && suggestedAddressParts.value.line) {
+      form.value.address = suggestedAddressParts.value.line
+    }
+    if (!form.value.region.trim() && suggestedAddressParts.value.region) {
+      form.value.region = suggestedAddressParts.value.region
+    }
+  } catch (e) {
+    console.error('[MyRequestsView] Reverse geocode failed', e)
+    suggestedAddressText.value = ''
+    suggestedAddressParts.value = null
+  } finally {
+    isGeocoding.value = false
+  }
+}
+
+function applySuggestedAddress() {
+  if (!suggestedAddressParts.value) return
+  if (suggestedAddressParts.value.line) form.value.address = suggestedAddressParts.value.line
+  if (suggestedAddressParts.value.region) form.value.region = suggestedAddressParts.value.region
+}
+
 const openCreateModal = () => {
   form.value = emptyForm()
   createError.value = ''
+  suggestedAddressText.value = ''
+  suggestedAddressParts.value = null
   showCreateModal.value = true
+  nextTick(() => initMap())
 }
-const closeCreateModal = () => { showCreateModal.value = false }
+const closeCreateModal = () => {
+  showCreateModal.value = false
+  destroyMap()
+}
 
 const useCurrentLocation = () => {
   if (!navigator.geolocation) {
@@ -386,6 +611,10 @@ const useCurrentLocation = () => {
     () => alert(t('requester.geolocation_failed')),
   )
 }
+
+onBeforeUnmount(() => {
+  destroyMap()
+})
 
 const handleCreateSubmit = async () => {
   createError.value = ''
@@ -523,9 +752,52 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: #3b82f6
 textarea { resize: vertical; }
 .btn-geo { background: none; border: none; color: #2563eb; font-size: 12.5px; font-weight: 600; cursor: pointer; padding: 0; margin: -8px 0 16px 0; }
 
+.request-map {
+  width: 100%;
+  height: 340px;
+  border-radius: 10px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  margin-top: 4px;
+  z-index: 0;
+}
+.map-suggestion {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 12px;
+  color: #475569;
+}
+.map-suggestion span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.map-suggestion--loading { color: #94a3b8; font-style: italic; }
+.btn-use-suggestion {
+  flex-shrink: 0;
+  background: #fff;
+  border: 1px solid #2563eb;
+  color: #2563eb;
+  padding: 5px 10px;
+  border-radius: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.btn-use-suggestion:hover { background: #eff6ff; }
+
 .needs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 8px; }
 .need-item { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; margin: 0; }
 .need-item input { width: 15px; height: 15px; }
+.need-quantity-hint { font-size: 11.5px; color: #6b7280; margin: 6px 0 0 0; }
+.needs-list { display: flex; flex-wrap: wrap; gap: 10px 16px; margin-top: 8px; }
+.need-row { display: flex; align-items: center; gap: 8px; min-width: 220px; }
+.need-row .need-item { flex: 0 0 auto; }
+.need-qty-input { width: 90px; padding: 5px 8px; font-size: 12.5px; border: 1px solid #d1d5db; border-radius: 6px; }
 
 .error-text { color: #e53e3e; font-size: 12.5px; margin: 8px 0 0 0; }
 
@@ -595,5 +867,7 @@ textarea { resize: vertical; }
   .req-actions { width: 100%; justify-content: space-between; }
   .form-row { flex-direction: column; gap: 16px; }
   .detail-grid { grid-template-columns: 1fr; }
+  .request-map { height: 260px; }
+  .map-suggestion { flex-direction: column; align-items: flex-start; }
 }
 </style>

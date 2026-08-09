@@ -15,6 +15,7 @@ import { http, ApiError } from '@/lib/api/http'
 import { unwrapItems, type PagedResult } from '@/lib/api/paging'
 import type {
   CreateReliefRequestPayload,
+  InventoryIssueResult,
   ReliefRequestResponse,
   ReliefRequestStatus,
 } from './requests.types'
@@ -23,6 +24,8 @@ import type {
 export interface ReliefRequestActionResult {
   id: string
   message: string
+  /** [Giới hạn tồn kho] Chỉ có khi status → Approved: chi tiết cấp phát thực tế theo từng nhóm nhu cầu */
+  inventoryIssues?: InventoryIssueResult[]
 }
 
 const STORAGE_KEY = 'relief_requests_offline'

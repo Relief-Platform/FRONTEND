@@ -92,6 +92,15 @@
             </div>
           </div>
 
+          <div class="map-block">
+            <div
+              v-if="hasValidCoords(task)"
+              :ref="(el) => setMapRef(String(task.id), el as HTMLElement | null)"
+              class="task-map"
+            ></div>
+            <p v-else class="map-empty">{{ $t('volunteer.tasks_no_location') }}</p>
+          </div>
+
           <div class="task-footer">
             <span class="task-note">{{ task.note }}</span>
             <button class="detail-btn">{{ $t('volunteer.tasks_btn_detail') }}</button>
@@ -103,11 +112,22 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onBeforeUnmount, nextTick, ref, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getMyTasks } from '@/features/tasks/tasks.api'
-import type { TaskItem } from '@/features/tasks/tasks.types'
+import type { TaskItem, TaskStatus } from '@/features/tasks/tasks.types'
+
+// Màu marker theo trạng thái nhiệm vụ — đồng bộ tinh thần với dotStyle bên
+// requests.helpers.ts (Requester), nhưng TaskStatus của Volunteer là bộ giá
+// trị khác (ongoing/upcoming/completed) nên định nghĩa riêng ở đây.
+const TASK_STATUS_MARKER_COLOR: Record<TaskStatus, string> = {
+  ongoing: '#e27d24',
+  upcoming: '#3182ce',
+  completed: '#276749',
+}
 
 const { t } = useI18n()
 const selectedFilter = ref('all')
@@ -153,6 +173,70 @@ const activeFilterLabel = computed(() => {
 const activeCount = computed(() => tasks.value.filter((task) => task.status === 'ongoing').length)
 const upcomingCount = computed(() => tasks.value.filter((task) => task.status === 'upcoming').length)
 const completedCount = computed(() => tasks.value.filter((task) => task.status === 'completed').length)
+
+// ── Bản đồ mini theo từng card (Leaflet + OpenStreetMap) ───
+// Cùng pattern đã dùng ở TrackingView.vue (Requester): circleMarker màu theo
+// status, tắt tương tác vì chỉ để xem nhanh trong danh sách.
+const mapEls = new Map<string, HTMLElement>()
+const mapInstances = new Map<string, L.Map>()
+
+function setMapRef(id: string, el: HTMLElement | null) {
+  if (el) mapEls.set(id, el)
+  else mapEls.delete(id)
+}
+
+function hasValidCoords(task: TaskItem): boolean {
+  return typeof task.latitude === 'number' && typeof task.longitude === 'number'
+}
+
+function destroyMaps() {
+  mapInstances.forEach((map) => map.remove())
+  mapInstances.clear()
+}
+
+function renderMaps() {
+  destroyMaps()
+
+  for (const task of filteredTasks.value) {
+    if (!hasValidCoords(task)) continue
+    const el = mapEls.get(String(task.id))
+    if (!el) continue
+
+    const map = L.map(el, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      dragging: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+      attributionControl: false,
+    }).setView([task.latitude as number, task.longitude as number], 15)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map)
+
+    L.circleMarker([task.latitude as number, task.longitude as number], {
+      radius: 9,
+      fillColor: TASK_STATUS_MARKER_COLOR[task.status],
+      fillOpacity: 0.9,
+      color: '#fff',
+      weight: 2,
+    }).addTo(map)
+
+    mapInstances.set(String(task.id), map)
+  }
+}
+
+watch(filteredTasks, async () => {
+  await nextTick()
+  renderMaps()
+})
+
+onBeforeUnmount(() => {
+  destroyMaps()
+})
 </script>
 
 <style scoped>
@@ -397,6 +481,30 @@ const completedCount = computed(() => tasks.value.filter((task) => task.status =
   transition: width 0.25s ease;
 }
 
+.map-block {
+  margin-bottom: 14px;
+}
+
+.task-map {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #edf2f7;
+  z-index: 0;
+}
+
+.map-empty {
+  margin: 0;
+  padding: 14px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #a0aec0;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+}
+
 .task-footer {
   display: flex;
   justify-content: space-between;
@@ -438,6 +546,10 @@ const completedCount = computed(() => tasks.value.filter((task) => task.status =
   .task-footer {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .task-map {
+    height: 160px;
   }
 }
 </style>

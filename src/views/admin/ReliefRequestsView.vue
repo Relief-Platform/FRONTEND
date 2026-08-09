@@ -107,7 +107,14 @@
               </td>
               <td class="td-date">{{ formatDate(req.createdAt) }}</td>
               <td class="th-center" @click.stop>
-                <button class="action-btn action-btn--details" @click="openDetail(req.id)">{{ $t('admin.btn_details') }}</button>
+                <div class="row-actions">
+                  <button class="action-btn action-btn--details" @click="openDetail(req.id)">{{ $t('admin.btn_details') }}</button>
+                  <button
+                    v-if="req.status !== 'Pending'"
+                    class="action-btn action-btn--team"
+                    @click="goToTeamManagement(req.id)"
+                  >{{ $t('admin.btn_manage_team') }}</button>
+                </div>
               </td>
             </tr>
           </tbody>
@@ -234,20 +241,82 @@
                   <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">{{ $t('admin.no_status_transition') }}</span>
                 </div>
                 <p v-if="statusMsg" class="status-msg" :class="statusMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ statusMsg }}</p>
+
+                <div v-if="inventoryIssues.length" class="inventory-issues">
+                  <p class="inventory-issues__title">{{ $t('admin.inventory_issues_title') }}</p>
+                  <ul class="inventory-issues__list">
+                    <li
+                      v-for="issue in inventoryIssues"
+                      :key="issue.category"
+                      class="inventory-issues__item"
+                      :class="{ 'inventory-issues__item--short': !issue.isFullyIssued }"
+                    >
+                      <span class="inventory-issues__category">{{ needCategoryLabel(issue.category) }}</span>:
+                      {{ $t('admin.inventory_issued', { issued: issue.issuedQuantity, requested: issue.requestedQuantity }) }}
+                      <span v-if="!issue.isFullyIssued" class="inventory-issues__warning">
+                        — {{ $t('admin.inventory_shortfall') }}
+                      </span>
+                    </li>
+                  </ul>
+                </div>
               </div>
 
               <!-- Gợi ý TNV (chỉ khi Approved) -->
               <div v-if="detail.status === 'Approved'" class="modal-section">
                 <div class="suggested-header">
                   <p class="modal-section__label" style="margin-bottom:0">{{ $t('admin.suggested_volunteers') }}</p>
-                  <button class="btn-refresh" @click="loadSuggested" :disabled="isSuggestLoading">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" :class="{ 'spin-icon': isSuggestLoading }"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/><path d="M21 3v4h-4"/></svg>
-                    {{ $t('admin.btn_refresh') }}
-                  </button>
+                  <div class="suggested-header__right">
+                    <span class="allocate-progress" :class="{ 'allocate-progress--full': isFullyAllocated }">
+                      {{ $t('admin.allocate_progress', { current: allocatedCount, target: targetHeadcountValue }) }}
+                    </span>
+                    <button class="btn-refresh" @click="loadSuggested" :disabled="isSuggestLoading">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" :class="{ 'spin-icon': isSuggestLoading }"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/><path d="M21 3v4h-4"/></svg>
+                      {{ $t('admin.btn_refresh') }}
+                    </button>
+                  </div>
                 </div>
+                <p v-if="isFullyAllocated" class="allocate-full-note">{{ $t('admin.allocate_full_note') }}</p>
                 <div v-if="isSuggestLoading" class="suggest-loading"><div class="spinner" /> {{ $t('admin.suggest_searching') }}</div>
                 <div v-else-if="suggestedVolunteers.length === 0" class="suggest-empty">{{ $t('admin.no_suggested_volunteers') }}</div>
-                <div v-else class="volunteer-cards" style="margin-top:10px">
+                <template v-else>
+                  <p v-if="isFallbackVolunteers" class="fallback-note">{{ $t('admin.fallback_no_nearby_note') }}</p>
+                  <div class="auto-assign-bar">
+                    <label class="auto-assign-label">
+                      {{ $t('admin.auto_assign_label') }}
+                      <input
+                        type="number"
+                        class="auto-assign-input"
+                        min="1"
+                        :max="suggestedVolunteers.length"
+                        v-model.number="autoAssignCount"
+                      />
+                    </label>
+                    <button
+                      class="btn-auto-assign"
+                      :disabled="isAutoAssigning || autoAssignCount < 1 || isFullyAllocated"
+                      @click="autoAssignTeam"
+                    >
+                      <svg v-if="isAutoAssigning" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+                      <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                      {{ $t('admin.btn_auto_assign') }}
+                    </button>
+                  </div>
+                  <div v-if="autoAssignResults.length > 0" class="auto-assign-results">
+                    <p v-if="autoAssignSummary" class="auto-assign-summary">{{ autoAssignSummary }}</p>
+                    <div
+                      v-for="r in autoAssignResults"
+                      :key="r.volunteerProfileId"
+                      class="auto-assign-row"
+                      :class="r.ok ? 'auto-assign-row--ok' : 'auto-assign-row--error'"
+                    >
+                      <svg v-if="r.ok" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                      <span class="auto-assign-row__name">{{ r.fullName }}</span>
+                      <span class="auto-assign-row__msg">{{ r.ok ? $t('admin.auto_assign_row_ok') : r.message }}</span>
+                    </div>
+                  </div>
+                </template>
+                <div v-if="!isSuggestLoading && suggestedVolunteers.length > 0" class="volunteer-cards" style="margin-top:10px">
                   <div v-for="vol in suggestedVolunteers" :key="vol.volunteerProfileId" class="vol-card">
                     <div class="vol-card__avatar">{{ vol.fullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
                     <div class="vol-card__info">
@@ -257,12 +326,17 @@
                           <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
                           {{ vol.distanceKm.toFixed(1) }} km
                         </span>
+                        <span class="vol-tag vol-tag--exp">{{ $t('admin.experience_years_short', { years: vol.experienceYears }) }}</span>
                         <span class="vol-tag">{{ $t('admin.completed_assignments_short', { count: vol.completedAssignmentsCount }) }}</span>
                         <span v-for="sk in vol.matchedSkillNames.slice(0, 2)" :key="sk" class="vol-tag">{{ sk }}</span>
                         <span v-if="vol.matchedSkillNames.length > 2" class="vol-tag vol-tag--more">+{{ vol.matchedSkillNames.length - 2 }}</span>
                       </div>
                     </div>
-                    <button class="btn-assign" :disabled="isAssigning && assigningId === vol.volunteerProfileId" @click="assignVolunteer(vol)">
+                    <button
+                      class="btn-assign"
+                      :disabled="isFullyAllocated || (isAssigning && assigningId === vol.volunteerProfileId)"
+                      @click="assignVolunteer(vol)"
+                    >
                       <svg v-if="isAssigning && assigningId === vol.volunteerProfileId" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
                       <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
                       {{ $t('admin.btn_assign') }}
@@ -294,7 +368,7 @@ import {
   badgeStyle,
   dotStyle,
 } from '@/features/requests/requests.helpers'
-import type { ReliefRequestResponse, ReliefRequestStatus } from '@/features/requests/requests.types'
+import type { ReliefRequestResponse, ReliefRequestStatus, InventoryIssueResult } from '@/features/requests/requests.types'
 import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.types'
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
 
@@ -353,16 +427,46 @@ const isUpdating   = ref(false)
 const pendingStatus = ref<ReliefRequestStatus | null>(null)
 const statusMsg    = ref('')
 const statusMsgType = ref<'ok' | 'error'>('ok')
+// [Giới hạn tồn kho] Chi tiết cấp phát thực tế trả về sau khi duyệt (Approved) — reset mỗi lần đổi status
+const inventoryIssues = ref<InventoryIssueResult[]>([])
+
+const NEED_CATEGORY_LABELS: Record<string, string> = {
+  Food: 'Lương thực', Water: 'Nước sạch', Medicine: 'Thuốc men',
+  Blanket: 'Chăn màn', Shelter: 'Nơi trú ẩn', Other: 'Khác',
+}
+function needCategoryLabel(category: string): string {
+  return NEED_CATEGORY_LABELS[category] ?? category
+}
 const targetHeadcountInput = ref<number | null>(null)
 const statusNoteInput = ref('')
 
 const suggestedVolunteers = ref<SuggestedVolunteer[]>([])
 const isSuggestLoading    = ref(false)
+// true khi danh sách trên là fallback "toàn bộ người đang rảnh" (không tìm được ai lân cận)
+const isFallbackVolunteers = ref(false)
 
 const isAssigning  = ref(false)
 const assigningId  = ref<string | null>(null)
 const assignMsg    = ref('')
 const assignMsgType = ref<'ok' | 'error'>('ok')
+
+// Số người đã phân bổ thành công cho yêu cầu đang mở (đếm dồn cả phân công lẻ từng
+// dòng lẫn phân công tự động theo lô) — so với targetHeadcount để khoá nút khi đủ.
+const allocatedCount = ref(0)
+const targetHeadcountValue = computed(() => detail.value?.targetHeadcount ?? 1)
+const isFullyAllocated = computed(() => allocatedCount.value >= targetHeadcountValue.value)
+
+// ── Tự động phân công đội tối thiểu ─────────────────────────
+interface AutoAssignResult {
+  volunteerProfileId: string
+  fullName: string
+  ok: boolean
+  message: string
+}
+const autoAssignCount   = ref(2)
+const isAutoAssigning   = ref(false)
+const autoAssignResults = ref<AutoAssignResult[]>([])
+const autoAssignSummary = ref('')
 
 // ── Computed ─────────────────────────────────────────────────
 const statusFilters = computed(() => {
@@ -438,8 +542,13 @@ async function openDetail(id: string) {
   drawerOpen.value = true
   detail.value = null
   suggestedVolunteers.value = []
+  isFallbackVolunteers.value = false
+  allocatedCount.value = 0
   statusMsg.value = ''
+  inventoryIssues.value = []
   assignMsg.value = ''
+  autoAssignResults.value = []
+  autoAssignSummary.value = ''
   targetHeadcountInput.value = null
   statusNoteInput.value = ''
   isDetailLoading.value = true
@@ -460,12 +569,36 @@ function closeDrawer() {
   detail.value = null
 }
 
+// Không giới hạn khoảng cách nào coi như "lấy hết" — dùng cho fallback bước 2 khi
+// không có ai lân cận rảnh, tái dùng thẳng endpoint suggested-volunteers hiện có.
+const UNLIMITED_DISTANCE_KM = 100000
+
 async function loadSuggested() {
   if (!detail.value) return
   isSuggestLoading.value = true
   suggestedVolunteers.value = []
+  isFallbackVolunteers.value = false
+  allocatedCount.value = 0
   try {
-    suggestedVolunteers.value = await getSuggestedVolunteers(detail.value.id)
+    // Bước 1 — ưu tiên lân cận + đang rảnh (BE mặc định bán kính 50km).
+    const nearby = await getSuggestedVolunteers(detail.value.id)
+
+    if (nearby.length > 0) {
+      suggestedVolunteers.value = nearby
+    } else {
+      // Bước 2 — không ai lân cận rảnh → fallback lấy TẤT CẢ người đang rảnh,
+      // bỏ giới hạn khoảng cách (vẫn cùng 1 endpoint, chỉ đổi maxDistanceKm).
+      const allAvailable = await getSuggestedVolunteers(detail.value.id, {
+        maxDistanceKm: UNLIMITED_DISTANCE_KM,
+        top: 50,
+      })
+      suggestedVolunteers.value = allAvailable
+      isFallbackVolunteers.value = allAvailable.length > 0
+    }
+
+    autoAssignCount.value = Math.max(1, Math.min(2, suggestedVolunteers.value.length))
+    autoAssignResults.value = []
+    autoAssignSummary.value = ''
   } catch (e) {
     console.error(e)
   } finally {
@@ -478,19 +611,21 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
   isUpdating.value = true
   pendingStatus.value = newStatus
   statusMsg.value = ''
+  inventoryIssues.value = []
   try {
-    await updateReliefRequestStatus(
+    const result = await updateReliefRequestStatus(
       detail.value.id,
       newStatus,
       statusNoteInput.value,
       targetHeadcountInput.value ?? undefined,
     )
+    inventoryIssues.value = result.inventoryIssues ?? []
     // cập nhật local
     const newTargetHeadcount = targetHeadcountInput.value ?? detail.value.targetHeadcount
     const idx = allRequests.value.findIndex(r => r.id === detail.value!.id)
     if (idx !== -1) allRequests.value[idx] = { ...allRequests.value[idx], status: newStatus, targetHeadcount: newTargetHeadcount }
     detail.value = { ...detail.value, status: newStatus, targetHeadcount: newTargetHeadcount }
-    statusMsg.value = `Đã chuyển sang "${STATUS_LABEL_FULL[newStatus]}" thành công.`
+    statusMsg.value = `Đã chuyển sang "${STATUS_LABEL_FULL.value[newStatus]}" thành công.`
     statusMsgType.value = 'ok'
     targetHeadcountInput.value = null
     statusNoteInput.value = ''
@@ -507,7 +642,7 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
 }
 
 async function assignVolunteer(vol: SuggestedVolunteer) {
-  if (!detail.value) return
+  if (!detail.value || isFullyAllocated.value) return
   isAssigning.value = true
   assigningId.value = vol.volunteerProfileId
   assignMsg.value = ''
@@ -518,16 +653,76 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
     })
     assignMsg.value = `Đã phân công ${vol.fullName} thành công!`
     assignMsgType.value = 'ok'
-    // cập nhật trạng thái local (request sẽ chuyển sang Assigned sau khi phân công)
-    const idx = allRequests.value.findIndex(r => r.id === detail.value!.id)
-    if (idx !== -1) allRequests.value[idx] = { ...allRequests.value[idx], status: 'Assigned' }
-    detail.value = { ...detail.value, status: 'Assigned' }
+    allocatedCount.value += 1
+    // Không set detail.value.status = 'Assigned' ở đây: khối gợi ý chỉ hiện khi status
+    // === 'Approved', set ngay sẽ làm danh sách/tiến độ biến mất giữa chừng trong khi
+    // admin còn đang phân bổ tiếp cho đủ targetHeadcount. Chỉ làm mới ngầm bảng danh
+    // sách phía sau; trạng thái thật cập nhật khi đóng/mở lại modal.
+    getReliefRequests(1, 200)
+      .then((list) => { allRequests.value = list })
+      .catch(() => { /* làm mới ngầm — lỗi không quan trọng, bỏ qua */ })
   } catch (e: unknown) {
     assignMsg.value = e instanceof Error ? e.message : 'Phân công thất bại.'
     assignMsgType.value = 'error'
   } finally {
     isAssigning.value = false
     assigningId.value = null
+  }
+}
+
+// PHẦN B — điều hướng sang trang bầu đội trưởng, lọc sẵn theo đúng yêu cầu này
+function goToTeamManagement(reliefRequestId: string) {
+  router.push({ path: '/admin/assignments', query: { requestId: reliefRequestId } })
+}
+
+// PHẦN C — phân công N người đầu (đã sắp theo gần nhất/phù hợp nhất) làm đội tối thiểu.
+// Gọi TUẦN TỰ (không song song) để tránh nhiều request cùng lúc đua nhau vượt quá
+// TargetHeadcount ở BE (BE check "đã đủ người" theo từng lần gọi, không có lock riêng
+// cho việc gọi hàng loạt). Không tự bầu đội trưởng — admin bầu tay ở "Quản lý đội".
+async function autoAssignTeam() {
+  if (!detail.value || isFullyAllocated.value) return
+
+  const requested = autoAssignCount.value
+  const candidates = suggestedVolunteers.value.slice(0, Math.max(1, requested))
+
+  isAutoAssigning.value = true
+  autoAssignResults.value = []
+  autoAssignSummary.value = ''
+
+  const results: AutoAssignResult[] = []
+  for (const vol of candidates) {
+    try {
+      await createAssignment({
+        reliefRequestId: detail.value.id,
+        volunteerProfileId: vol.volunteerProfileId,
+      })
+      results.push({ volunteerProfileId: vol.volunteerProfileId, fullName: vol.fullName, ok: true, message: '' })
+    } catch (e: unknown) {
+      results.push({
+        volunteerProfileId: vol.volunteerProfileId,
+        fullName: vol.fullName,
+        ok: false,
+        message: e instanceof Error ? e.message : t('admin.auto_assign_row_failed'),
+      })
+    }
+    // Cập nhật dần từng dòng để admin thấy tiến trình, không đợi hết cả vòng lặp.
+    autoAssignResults.value = [...results]
+  }
+
+  const successCount = results.filter(r => r.ok).length
+  autoAssignSummary.value = candidates.length < requested
+    ? t('admin.auto_assign_summary_partial', { available: candidates.length, requested, success: successCount })
+    : t('admin.auto_assign_summary', { success: successCount, total: candidates.length })
+
+  allocatedCount.value += successCount
+  isAutoAssigning.value = false
+
+  // Không đụng detail.value/suggestedVolunteers ở đây — giữ nguyên khối "Approved" đang mở để
+  // admin đọc được kết quả từng người; chỉ làm mới ngầm bảng danh sách phía sau cho lần xem sau.
+  if (successCount > 0) {
+    getReliefRequests(1, 200)
+      .then((list) => { allRequests.value = list })
+      .catch(() => { /* làm mới ngầm — lỗi không quan trọng, bỏ qua */ })
   }
 }
 </script>
@@ -764,6 +959,17 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   border-color: #cbd5e1;
   color: #1e40af;
 }
+.row-actions { display: inline-flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.action-btn--team {
+  background-color: #fef9c3;
+  border-color: #fde68a;
+  color: #854d0e;
+}
+.action-btn--team:hover {
+  background-color: #fde68a;
+  border-color: #fcd34d;
+  color: #713f12;
+}
 
 /* Loading / Empty */
 .loading-state, .empty-state {
@@ -922,9 +1128,47 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
 .msg--ok    { background: #dcfce7; color: #15803d; }
 .msg--error { background: #fee2e2; color: #991b1b; }
 
+.inventory-issues { margin-top: 10px; padding: 10px 12px; border-radius: 8px; background: #f8fafc; border: 1px solid #e2e8f0; }
+.inventory-issues__title { font-size: 12px; font-weight: 700; color: #334155; margin: 0 0 6px 0; }
+.inventory-issues__list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.inventory-issues__item { font-size: 12.5px; color: #334155; }
+.inventory-issues__category { font-weight: 600; }
+.inventory-issues__item--short { color: #b45309; }
+.inventory-issues__warning { font-weight: 600; color: #b45309; }
+
 /* Suggested volunteers */
-.suggested-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.suggested-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
 .suggested-header .section-label { margin-bottom: 0; }
+.suggested-header__right { display: flex; align-items: center; gap: 10px; }
+.allocate-progress {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: #eff6ff;
+  color: #1d4ed8;
+  white-space: nowrap;
+}
+.allocate-progress--full { background: #dcfce7; color: #15803d; }
+.allocate-full-note {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #15803d;
+  background: #ecfdf5;
+  border: 1px solid #a7f3d0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+}
+.fallback-note {
+  font-size: 12.5px;
+  color: #92400e;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+  padding: 8px 12px;
+  margin: 0 0 10px;
+}
 .btn-refresh {
   display: inline-flex;
   align-items: center;
@@ -991,7 +1235,70 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
   font-weight: 600;
 }
 .vol-tag--dist  { background: rgba(197,48,48,0.1); color: #c53030; display: inline-flex; align-items: center; gap: 3px; }
+.vol-tag--exp   { background: rgba(29,78,216,0.1); color: #1d4ed8; }
 .vol-tag--more  { background: #1a3b5c; color: #fff; }
+
+/* Tự động phân công đội tối thiểu */
+.auto-assign-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 10px;
+}
+.auto-assign-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #1e3a5f;
+}
+.auto-assign-input {
+  width: 56px;
+  padding: 5px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+  text-align: center;
+}
+.btn-auto-assign {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: #1d4ed8;
+  border: 1px solid #1d4ed8;
+  color: #fff;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+.btn-auto-assign:hover:not(:disabled) { background: #1e40af; }
+.btn-auto-assign:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.auto-assign-results { margin-bottom: 10px; display: flex; flex-direction: column; gap: 6px; }
+.auto-assign-summary { font-size: 12.5px; font-weight: 700; color: #1e3a5f; margin: 0 0 2px; }
+.auto-assign-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  font-size: 12.5px;
+}
+.auto-assign-row--ok    { background: #ecfdf5; color: #065f46; }
+.auto-assign-row--error { background: #fef2f2; color: #991b1b; }
+.auto-assign-row__name  { font-weight: 700; flex-shrink: 0; }
+.auto-assign-row__msg   { color: inherit; opacity: 0.85; }
 
 .btn-assign {
   display: inline-flex;

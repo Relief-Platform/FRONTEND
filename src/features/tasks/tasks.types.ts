@@ -8,6 +8,9 @@ export interface TaskItem {
   id: number | string
   title: string
   address: string
+  /** Toạ độ ReliefRequest liên quan — null nếu BE chưa có/không hợp lệ (0,0) */
+  latitude: number | null
+  longitude: number | null
   date: string
   time: string
   progress: number
@@ -22,9 +25,12 @@ export interface RawTask {
   title?: string
   name?: string
   taskName?: string
+  /** BE thật (AssignmentResponse) trả field này — giữ location/locationName làm fallback */
   address?: string
   location?: string
   locationName?: string
+  latitude?: number
+  longitude?: number
   date?: string
   startDate?: string
   scheduleDate?: string
