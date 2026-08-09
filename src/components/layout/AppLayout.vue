@@ -7,49 +7,11 @@
       </router-link>
 
       <div class="navbar__links">
-        <!-- Public links -->
+        <!-- Public links (Tất cả mọi role đều dùng chung 4 link cơ bản này trên Navbar) -->
         <router-link to="/home" class="nav-link">{{ $t('nav.home') }}</router-link>
         <router-link to="/about" class="nav-link">{{ $t('nav.about') }}</router-link>
         <router-link to="/guide" class="nav-link">{{ $t('nav.guide') }}</router-link>
         <router-link to="/contact" class="nav-link">{{ $t('nav.contact') }}</router-link>
-
-        <!-- Requester + Admin -->
-        <router-link
-          v-if="auth.hasRole('Requester', 'Admin')"
-          to="/requester"
-          class="nav-link"
-        >{{ $t('nav.requests') }}</router-link>
-
-        <!-- Volunteer + Admin -->
-        <router-link
-          v-if="auth.hasRole('Volunteer', 'Admin')"
-          to="/volunteer"
-          class="nav-link"
-        >{{ $t('nav.volunteer') }}</router-link>
-
-        <!-- Admin + Coordinator (quản lý kho) -->
-        <router-link
-          v-if="auth.hasRole('Admin', 'Coordinator')"
-          to="/warehouses"
-          class="nav-link"
-        >{{ $t('nav.warehouse') }}</router-link>
-
-        <!-- Admin only -->
-        <router-link
-          v-if="auth.hasRole('Admin')"
-          to="/coordinator"
-          class="nav-link"
-        >{{ $t('nav.coordination') }}</router-link>
-        <router-link
-          v-if="auth.hasRole('Admin')"
-          to="/admin"
-          class="nav-link nav-link--admin"
-        >{{ $t('nav.admin') }}</router-link>
-        <router-link
-          v-if="auth.hasRole('Admin')"
-          to="/users"
-          class="nav-link"
-        >{{ $t('nav.users') }}</router-link>
       </div>
 
       <div class="navbar__right">
@@ -90,15 +52,88 @@
             </div>
             <span class="chevron" :class="{ rotated: showMenu }">▾</span>
 
-            <!-- Dropdown -->
+            <!-- Dropdown khi click vào Avatar của người dùng -->
             <Transition name="fade">
               <div v-if="showMenu" class="user-dropdown">
                 <router-link to="/profile" class="dropdown-item" @click="showMenu = false">
-                  👤 {{ $t('nav.profile') }}
+                  {{ $t('nav.profile') }}
                 </router-link>
+
+                <!-- Các mục quản trị gộp vào Avatar Dropdown khi log role Admin -->
+                <template v-if="auth.hasRole('Admin')">
+                  <div class="dropdown-divider" />
+                  <div class="dropdown-section-title">Quản trị hệ thống</div>
+                  <router-link to="/admin" class="dropdown-item dropdown-item--admin" @click="showMenu = false">
+                    Bảng điều khiển Admin
+                  </router-link>
+                  <router-link to="/requester" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.requests') }}
+                  </router-link>
+                  <router-link to="/volunteer" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.volunteer') }}
+                  </router-link>
+                  <router-link to="/warehouses" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.warehouse') }}
+                  </router-link>
+                  <router-link to="/coordinator" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.coordination') }}
+                  </router-link>
+                  <router-link to="/users" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.users') }}
+                  </router-link>
+                </template>
+
+                <!-- Các mục quản lý gộp vào Avatar Dropdown khi log role Coordinator -->
+                <template v-else-if="auth.hasRole('Coordinator')">
+                  <div class="dropdown-divider" />
+                  <div class="dropdown-section-title">Quản lý kho & Điều phối</div>
+                  <router-link to="/warehouses" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.warehouse') }}
+                  </router-link>
+                  <router-link to="/coordinator" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.coordination') }}
+                  </router-link>
+                  <router-link to="/requester" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('nav.requests') }}
+                  </router-link>
+                </template>
+
+                <!-- Các mục gộp vào Avatar Dropdown khi log role Requester -->
+                <template v-else-if="auth.hasRole('Requester')">
+                  <div class="dropdown-divider" />
+                  <div class="dropdown-section-title">Yêu cầu hỗ trợ</div>
+                  <router-link to="/requester" class="dropdown-item" @click="showMenu = false">
+                    Dashboard Yêu cầu
+                  </router-link>
+                  <router-link to="/requester/my-requests" class="dropdown-item" @click="showMenu = false">
+                    Yêu cầu của tôi
+                  </router-link>
+                  <router-link to="/requester/tracking" class="dropdown-item" @click="showMenu = false">
+                    Theo dõi hỗ trợ
+                  </router-link>
+                </template>
+
+                <!-- Các mục gộp vào Avatar Dropdown khi log role Volunteer -->
+                <template v-else-if="auth.hasRole('Volunteer')">
+                  <div class="dropdown-divider" />
+                  <div class="dropdown-section-title">Nhiệm vụ tình nguyện</div>
+                  <router-link to="/volunteer" class="dropdown-item" @click="showMenu = false">
+                    Dashboard Tình nguyện
+                  </router-link>
+                  <router-link to="/volunteer/open-tasks" class="dropdown-item" @click="showMenu = false">
+                    Bảng nhiệm vụ mở
+                  </router-link>
+                  <router-link to="/volunteer/my-tasks" class="dropdown-item" @click="showMenu = false">
+                    Nhiệm vụ của tôi
+                  </router-link>
+                  <router-link to="/volunteer/history" class="dropdown-item" @click="showMenu = false">
+                    Lịch sử hoạt động
+                  </router-link>
+                </template>
+
                 <div class="dropdown-divider" />
                 <button id="logout-btn" class="dropdown-item dropdown-item--danger" @click="handleLogout">
-                  🚪 {{ $t('nav.logout') }}
+                  {{ $t('nav.logout') }}
                 </button>
               </div>
             </Transition>
@@ -160,15 +195,20 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
 import { ROLE_LABELS, ROLE_COLORS } from '@/features/auth/auth.types'
 import type { UserRole } from '@/features/auth/auth.types'
 
 const router = useRouter()
+const route  = useRoute()
 const auth   = useAuthStore()
 const showMenu = ref(false)
+const showAdminMenu = ref(false)
+
+const adminRoutes = ['/admin', '/users', '/requester', '/volunteer', '/warehouses', '/coordinator']
+const isAdminRouteActive = computed(() => adminRoutes.some((p) => route.path.startsWith(p)))
 
 const { locale, t } = useI18n()
 const currentLang = computed(() => locale.value)
@@ -254,6 +294,69 @@ const vClickOutside = {
 .nav-link--admin { color: #c53030; }
 .nav-link--admin:hover { background: rgba(197,48,48,0.08); }
 
+/* ── Admin Menu Dropdown ── */
+.admin-menu-dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.nav-link--admin-trigger {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(197, 48, 48, 0.08);
+  color: #c53030;
+  border: 1px solid rgba(197, 48, 48, 0.2);
+  border-radius: var(--radius-md);
+  font-weight: 700;
+  cursor: pointer;
+  padding: 6px 12px;
+  font-size: 13px;
+  transition: all var(--transition-fast);
+}
+
+.nav-link--admin-trigger:hover,
+.nav-link--admin-trigger.active {
+  background: #c53030;
+  color: #ffffff;
+  border-color: #c53030;
+}
+
+.nav-link--admin-trigger.active .chevron,
+.nav-link--admin-trigger:hover .chevron {
+  color: #ffffff;
+}
+
+.admin-nav-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  background: #ffffff;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--color-border-soft);
+  min-width: 230px;
+  padding: 6px 0;
+  z-index: 200;
+  overflow: hidden;
+}
+
+.dropdown-item--header {
+  font-weight: 700;
+  color: #c53030;
+  background: rgba(197, 48, 48, 0.04);
+}
+.dropdown-item--header:hover {
+  background: rgba(197, 48, 48, 0.1);
+}
+
+.dropdown-icon {
+  font-size: 15px;
+  width: 22px;
+  display: inline-flex;
+  justify-content: center;
+}
+
 .navbar__right { display: flex; align-items: center; gap: var(--space-3); margin-left: auto; }
 
 /* ── Language Switcher ── */
@@ -322,24 +425,36 @@ const vClickOutside = {
 .chevron { font-size: 12px; color: #a0aec0; transition: transform var(--transition-fast); }
 .chevron.rotated { transform: rotate(180deg); }
 
-/* ── Dropdown ── */
+/* ── User menu Dropdown ── */
 .user-dropdown {
   position: absolute; top: calc(100% + 6px); right: 0;
   background: #fff; border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-lg); border: 1px solid var(--color-border-soft);
-  min-width: 190px; overflow: hidden; z-index: 200;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.12), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+  border: 1px solid var(--color-border-soft);
+  min-width: 220px; overflow: hidden; z-index: 200;
+  padding: 6px 0;
+}
+.dropdown-section-title {
+  padding: 8px 16px 4px;
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #a0aec0;
 }
 .dropdown-item {
   display: flex; align-items: center; gap: 8px;
-  padding: 11px 16px; font-size: 14px; font-weight: 500;
+  padding: 9px 16px; font-size: 13.5px; font-weight: 500;
   color: #2d3748; text-decoration: none;
   width: 100%; background: none; border: none; cursor: pointer;
   transition: background var(--transition-fast); text-align: left;
 }
 .dropdown-item:hover { background: #f8fafc; }
-.dropdown-item--danger { color: #c53030; }
-.dropdown-item--danger:hover { background: rgba(197,48,48,0.06); }
-.dropdown-divider { border-top: 1px solid var(--color-border-soft); }
+.dropdown-item--admin { color: #c53030; font-weight: 700; }
+.dropdown-item--admin:hover { background: rgba(197, 48, 48, 0.06); }
+.dropdown-item--danger { color: #e53e3e; }
+.dropdown-item--danger:hover { background: rgba(229,62,62,0.08); }
+.dropdown-divider { border-top: 1px solid var(--color-border-soft); margin: 4px 0; }
 
 /* ── Fade transition ── */
 .fade-enter-active, .fade-leave-active { transition: opacity 0.15s, transform 0.15s; }
