@@ -39,10 +39,16 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
   const rawStatusStr = String(raw.status ?? raw.state ?? raw.taskStatus ?? '')
   const resolvedStatus = normalizeStatus(rawStatusStr)
 
+  const lat = Number(raw.latitude)
+  const lng = Number(raw.longitude)
+  const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)
+
   return {
     id: Number(raw.id ?? index + 1),
     title,
     address,
+    latitude: hasCoords ? lat : null,
+    longitude: hasCoords ? lng : null,
     date: dateValue
       ? new Date(String(dateValue)).toLocaleDateString('vi-VN')
       : 'Chưa cập nhật',

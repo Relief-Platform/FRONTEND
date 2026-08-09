@@ -42,6 +42,15 @@
               <span v-if="i < TRACKING_STEPS.length - 1" class="progress-line" :class="{ done: i < currentStepIndex(item) }" />
             </div>
           </div>
+
+          <div class="map-block">
+            <div
+              v-if="hasValidCoords(item)"
+              :ref="(el) => setMapRef(item.id, el as HTMLElement | null)"
+              class="tracking-map"
+            ></div>
+            <p v-else class="map-empty">{{ $t('requester.tracking_no_location') }}</p>
+          </div>
         </div>
       </div>
     </div>
@@ -49,12 +58,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useI18n } from 'vue-i18n'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import RequesterLayout from '@/components/layout/RequesterLayout.vue'
 import { getReliefRequests } from '@/features/requests/requests.api'
 import { type ReliefRequestResponse, type ReliefRequestStatus } from '@/features/requests/requests.types'
-import { badgeStyle, formatDateTimeVI } from '@/features/requests/requests.helpers'
+import { badgeStyle, dotStyle, formatDateTimeVI } from '@/features/requests/requests.helpers'
 
 const { t } = useI18n()
 
@@ -85,6 +96,77 @@ const activeRequests = computed(() =>
     .filter((r) => ACTIVE_STATUSES.includes(r.status))
     .sort((a, b) => b.createdAt.localeCompare(a.createdAt)),
 )
+
+// ── Bản đồ mini theo từng card (Leaflet + OpenStreetMap) ───
+// Không marker mặc định (tránh phải fix icon vỡ khi build) — dùng circleMarker
+// màu theo đúng status, đồng bộ màu badge/timeline đang có (dotStyle).
+const mapEls = new Map<string, HTMLElement>()
+const mapInstances = new Map<string, L.Map>()
+
+function setMapRef(id: string, el: HTMLElement | null) {
+  if (el) mapEls.set(id, el)
+  else mapEls.delete(id)
+}
+
+function hasValidCoords(item: ReliefRequestResponse): boolean {
+  const { latitude: lat, longitude: lng } = item
+  return (
+    typeof lat === 'number' && typeof lng === 'number' &&
+    Number.isFinite(lat) && Number.isFinite(lng) &&
+    !(lat === 0 && lng === 0)
+  )
+}
+
+function destroyMaps() {
+  mapInstances.forEach((map) => map.remove())
+  mapInstances.clear()
+}
+
+function renderMaps() {
+  destroyMaps()
+
+  for (const item of activeRequests.value) {
+    if (!hasValidCoords(item)) continue
+    const el = mapEls.get(item.id)
+    if (!el) continue
+
+    // Bản đồ mini chỉ để xem vị trí, không phải để thao tác trong 1 danh
+    // sách dài — tắt tương tác để cuộn trang không bị "nuốt" vào map.
+    const map = L.map(el, {
+      zoomControl: false,
+      scrollWheelZoom: false,
+      dragging: false,
+      doubleClickZoom: false,
+      boxZoom: false,
+      keyboard: false,
+      touchZoom: false,
+      attributionControl: false,
+    }).setView([item.latitude, item.longitude], 15)
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 18,
+    }).addTo(map)
+
+    L.circleMarker([item.latitude, item.longitude], {
+      radius: 9,
+      fillColor: dotStyle(item.status).background,
+      fillOpacity: 0.9,
+      color: '#fff',
+      weight: 2,
+    }).addTo(map)
+
+    mapInstances.set(item.id, map)
+  }
+}
+
+watch(activeRequests, async () => {
+  await nextTick()
+  renderMaps()
+})
+
+onBeforeUnmount(() => {
+  destroyMaps()
+})
 
 // Timeline hiển thị theo state machine BE: Pending → Approved → Assigned → InProgress → Completed
 const TRACKING_STEPS = computed<{ status: ReliefRequestStatus; label: string }[]>(() => [
@@ -153,7 +235,28 @@ function currentStepIndex(item: ReliefRequestResponse): number {
 }
 .progress-line.done { background: #22c55e; }
 
+.map-block { margin-top: 18px; }
+.tracking-map {
+  width: 100%;
+  height: 200px;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e2e8f0;
+  z-index: 0;
+}
+.map-empty {
+  margin: 0;
+  padding: 14px;
+  text-align: center;
+  font-size: 12.5px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border: 1px dashed #e2e8f0;
+  border-radius: 10px;
+}
+
 @media (max-width: 600px) {
   .progress-label { font-size: 10px; }
+  .tracking-map { height: 160px; }
 }
 </style>

@@ -20,6 +20,12 @@ export interface CreateReliefRequestPayload {
   needBlanket: boolean
   needShelter: boolean
   contactPhone: string
+  /** [Giới hạn tồn kho] Số lượng cụ thể cho từng nhu cầu — optional, chỉ có ý nghĩa khi need* = true */
+  foodQuantity?: number | null
+  waterQuantity?: number | null
+  medicineQuantity?: number | null
+  blanketQuantity?: number | null
+  shelterQuantity?: number | null
 }
 
 export interface ReliefRequestResponse extends CreateReliefRequestPayload {
@@ -31,6 +37,21 @@ export interface ReliefRequestResponse extends CreateReliefRequestPayload {
   /** Khoảng gợi ý tính runtime theo emergencyLevel — KHÔNG lưu DB, chỉ tham khảo */
   suggestedHeadcountMin: number | null
   suggestedHeadcountMax: number | null
+}
+
+/** [Giới hạn tồn kho] Kết quả cấp phát tồn kho thực tế theo từng nhóm — trả về sau khi duyệt (Approved) */
+export interface InventoryIssueResult {
+  category: string
+  requestedQuantity: number
+  issuedQuantity: number
+  isFullyIssued: boolean
+}
+
+export interface UpdateReliefRequestStatusResponse {
+  id: string
+  status: ReliefRequestStatus
+  message: string
+  inventoryIssues: InventoryIssueResult[]
 }
 
 // ── UI helper: nhóm status thành màu riêng rẽ ──
