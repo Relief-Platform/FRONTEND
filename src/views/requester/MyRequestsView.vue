@@ -51,143 +51,331 @@
         </div>
       </div>
 
-      <!-- ══════════ MODAL: TẠO YÊU CẦU MỚI ══════════ -->
+      <!-- ══════════ MODAL: TẠO YÊU CẦU MỚI (WIZARD 3 BƯỚC) ══════════ -->
       <div v-if="showCreateModal" class="modal-overlay" @click.self="closeCreateModal">
-        <div class="modal-box">
+        <div class="modal-box create-modal-box">
+          <!-- Modal Header -->
           <div class="modal-header">
-            <h3>{{ $t('requester.modal_create_title') }}</h3>
+            <div>
+              <h3>{{ $t('requester.modal_create_title') }}</h3>
+              <p class="modal-subtitle">Hoàn thành 3 bước đơn giản để gửi yêu cầu hỗ trợ khẩn cấp</p>
+            </div>
             <button class="modal-close" @click="closeCreateModal">✕</button>
           </div>
 
-          <form class="modal-body" @submit.prevent="handleCreateSubmit">
-            <div class="form-group">
-              <label>{{ $t('requester.form_title_label') }} <span class="required">*</span></label>
-              <input v-model="form.title" type="text" :placeholder="$t('requester.form_title_placeholder')" required />
-            </div>
-
-            <div class="form-row">
-              <div class="form-group half">
-                <label>{{ $t('requester.form_emergency_level') }} <span class="required">*</span></label>
-                <select v-model.number="form.emergencyLevel">
-                  <option :value="1">{{ $t('requester.level_low') }}</option>
-                  <option :value="2">{{ $t('requester.level_large_scale') }}</option>
-                  <option :value="3">{{ $t('requester.level_severe') }}</option>
-                </select>
+          <!-- Wizard Progress Bar -->
+          <div class="wizard-stepper">
+            <div
+              v-for="stepNum in 3"
+              :key="stepNum"
+              :class="['step-item', { active: currentStep === stepNum, completed: currentStep > stepNum }]"
+              @click="goToStep(stepNum)"
+            >
+              <div class="step-circle">
+                <svg v-if="currentStep > stepNum" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="20 6 9 17 4 12"/></svg>
+                <span v-else>{{ stepNum }}</span>
               </div>
-              <div class="form-group half">
-                <label>{{ $t('requester.form_affected_people') }} <span class="required">*</span></label>
-                <input v-model.number="form.affectedPeople" type="number" min="1" required />
+              <span class="step-title">
+                {{ stepNum === 1 ? '1. Thông tin chung' : stepNum === 2 ? '2. Vị trí & Bản đồ' : '3. Nhu cầu vật tư' }}
+              </span>
+              <div v-if="stepNum < 3" class="step-line"></div>
+            </div>
+          </div>
+
+          <form class="modal-body wizard-body" @submit.prevent="handleCreateSubmit">
+            <!-- ── BƯỚC 1: THÔNG TIN CHUNG ── -->
+            <div v-show="currentStep === 1" class="wizard-step-pane">
+              <div class="form-group">
+                <label>Tiêu đề yêu cầu <span class="required">*</span></label>
+                <input
+                  v-model="form.title"
+                  type="text"
+                  placeholder="VD: Cần cứu trợ lương thực khẩn cấp cho 5 hộ dân ngập sâu"
+                  required
+                />
               </div>
-            </div>
 
-            <div class="form-group">
-              <label>{{ $t('requester.form_address') }} <span class="required">*</span></label>
-              <input v-model="form.address" type="text" :placeholder="$t('requester.form_address_placeholder')" required />
-            </div>
+              <div class="form-group">
+                <label>Mức độ khẩn cấp <span class="required">*</span></label>
+                <div class="emergency-cards">
+                  <div
+                    :class="['emergency-card', 'level-low', { selected: form.emergencyLevel === 1 }]"
+                    @click="form.emergencyLevel = 1"
+                  >
+                    <div class="card-icon">🟢</div>
+                    <div class="card-text">
+                      <strong>Cần hỗ trợ thường</strong>
+                      <span>Sinh hoạt tạm thời, chưa nguy hiểm tính mạng</span>
+                    </div>
+                  </div>
 
-            <div class="form-group">
-              <label>{{ $t('requester.form_region') }} <span class="required">*</span></label>
-              <input v-model="form.region" type="text" :placeholder="$t('requester.form_region_placeholder')" required />
-            </div>
+                  <div
+                    :class="['emergency-card', 'level-medium', { selected: form.emergencyLevel === 2 }]"
+                    @click="form.emergencyLevel = 2"
+                  >
+                    <div class="card-icon">🟠</div>
+                    <div class="card-text">
+                      <strong>Quy mô vừa / Cần gấp</strong>
+                      <span>Ngập lụt, cô lập nhẹ, thiếu lương thực 1-2 ngày</span>
+                    </div>
+                  </div>
 
-            <div class="form-row">
-              <div class="form-group half">
-                <label>{{ $t('requester.form_latitude') }} <span class="required">*</span></label>
-                <input v-model.number="form.latitude" type="number" step="any" required />
+                  <div
+                    :class="['emergency-card', 'level-high', { selected: form.emergencyLevel === 3 }]"
+                    @click="form.emergencyLevel = 3"
+                  >
+                    <div class="card-icon">🔴</div>
+                    <div class="card-text">
+                      <strong>Rất nghiêm trọng / Khẩn cấp</strong>
+                      <span>Cứu hộ tính mạng, sạt lở, cạn kiệt thức ăn/y tế</span>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div class="form-group half">
-                <label>{{ $t('requester.form_longitude') }} <span class="required">*</span></label>
-                <input v-model.number="form.longitude" type="number" step="any" required />
-              </div>
-            </div>
-            <button type="button" class="btn-geo" @click="useCurrentLocation">{{ $t('requester.use_current_location') }}</button>
 
-            <div class="form-group">
-              <label>{{ $t('requester.map_hint') }}</label>
-              <div ref="mapElRef" class="request-map"></div>
-              <div v-if="isGeocoding" class="map-suggestion map-suggestion--loading">
-                {{ $t('requester.map_geocoding') }}
-              </div>
-              <div v-else-if="suggestedAddressText" class="map-suggestion">
-                <span>{{ $t('requester.map_suggested_address', { address: suggestedAddressText }) }}</span>
-                <button type="button" class="btn-use-suggestion" @click="applySuggestedAddress">
-                  {{ $t('requester.map_use_suggestion') }}
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label>{{ $t('requester.form_contact_phone') }} <span class="required">*</span></label>
-              <input v-model="form.contactPhone" type="tel" required />
-            </div>
-
-            <div class="form-group">
-              <label>{{ $t('requester.form_description') }} <span class="required">*</span></label>
-              <textarea v-model="form.description" rows="3" required></textarea>
-            </div>
-
-            <div class="form-group">
-              <label>{{ $t('requester.form_needs') }}</label>
-              <p class="need-quantity-hint">{{ $t('requester.need_quantity_hint') }}</p>
-              <div class="needs-list">
-                <div class="need-row">
-                  <label class="need-item"><input type="checkbox" v-model="form.needFood" @change="!form.needFood && (form.foodQuantity = null)" /> {{ $t('requester.need_food') }}</label>
-                  <input
-                    v-show="form.needFood"
-                    v-model.number="form.foodQuantity"
-                    type="number" min="1" class="need-qty-input"
-                    :placeholder="$t('requester.need_quantity_unit_food')"
-                  />
+              <div class="form-row">
+                <div class="form-group half">
+                  <label>Số người ảnh hưởng <span class="required">*</span></label>
+                  <div class="input-with-suffix">
+                    <input v-model.number="form.affectedPeople" type="number" min="1" required />
+                    <span class="input-suffix">người</span>
+                  </div>
                 </div>
 
-                <div class="need-row">
-                  <label class="need-item"><input type="checkbox" v-model="form.needWater" @change="!form.needWater && (form.waterQuantity = null)" /> {{ $t('requester.need_water') }}</label>
+                <div class="form-group half">
+                  <label>Số điện thoại liên hệ <span class="required">*</span></label>
                   <input
-                    v-show="form.needWater"
-                    v-model.number="form.waterQuantity"
-                    type="number" min="1" class="need-qty-input"
-                    :placeholder="$t('requester.need_quantity_unit_water')"
-                  />
-                </div>
-
-                <div class="need-row">
-                  <label class="need-item"><input type="checkbox" v-model="form.needMedicine" @change="!form.needMedicine && (form.medicineQuantity = null)" /> {{ $t('requester.need_medicine') }}</label>
-                  <input
-                    v-show="form.needMedicine"
-                    v-model.number="form.medicineQuantity"
-                    type="number" min="1" class="need-qty-input"
-                    :placeholder="$t('requester.need_quantity_unit_medicine')"
-                  />
-                </div>
-
-                <div class="need-row">
-                  <label class="need-item"><input type="checkbox" v-model="form.needBlanket" @change="!form.needBlanket && (form.blanketQuantity = null)" /> {{ $t('requester.need_blanket') }}</label>
-                  <input
-                    v-show="form.needBlanket"
-                    v-model.number="form.blanketQuantity"
-                    type="number" min="1" class="need-qty-input"
-                    :placeholder="$t('requester.need_quantity_unit_blanket')"
-                  />
-                </div>
-
-                <div class="need-row">
-                  <label class="need-item"><input type="checkbox" v-model="form.needShelter" @change="!form.needShelter && (form.shelterQuantity = null)" /> {{ $t('requester.need_shelter') }}</label>
-                  <input
-                    v-show="form.needShelter"
-                    v-model.number="form.shelterQuantity"
-                    type="number" min="1" class="need-qty-input"
-                    :placeholder="$t('requester.need_quantity_unit_shelter')"
+                    v-model="form.contactPhone"
+                    type="tel"
+                    placeholder="VD: 0912345678"
+                    required
                   />
                 </div>
               </div>
+
+              <div class="form-group">
+                <label>Mô tả chi tiết tình hình <span class="required">*</span></label>
+                <textarea
+                  v-model="form.description"
+                  rows="3"
+                  placeholder="Mô tả cụ thể hoàn cảnh hiện tại, đường vào có bị ngập không, người già/trẻ em..."
+                  required
+                ></textarea>
+              </div>
             </div>
 
-            <p v-if="createError" class="error-text">{{ createError }}</p>
+            <!-- ── BƯỚC 2: VỊ TRÍ & BẢN ĐỒ ── -->
+            <div v-show="currentStep === 2" class="wizard-step-pane">
+              <div class="form-row">
+                <div class="form-group half">
+                  <label>Tỉnh / Thành phố <span class="required">*</span></label>
+                  <select v-model="form.region" @change="onProvinceSelectChange" required class="form-select">
+                    <option v-for="prov in provinceOptions" :key="prov" :value="prov">
+                      {{ prov }}
+                    </option>
+                  </select>
+                </div>
 
-            <div class="modal-actions">
-              <button type="button" class="btn-outline" @click="closeCreateModal">{{ $t('common.cancel') }}</button>
-              <button type="submit" class="btn-primary" :disabled="isSubmitting">
-                {{ isSubmitting ? $t('requester.submitting') : $t('requester.btn_submit_request') }}
+                <div class="form-group half">
+                  <label>Địa chỉ chi tiết (Thôn/Xóm/Số nhà) <span class="required">*</span></label>
+                  <input
+                    v-model="form.address"
+                    type="text"
+                    placeholder="VD: Số 12, Thôn A, Xã B, Huyện C"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div class="form-group map-section">
+                <div class="map-header">
+                  <label>Ghim vị trí chính xác trên bản đồ</label>
+                  <button type="button" class="btn-geo-compact" @click="useCurrentLocation">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v3m0 14v3M2 12h3m14 0h3"/><circle cx="12" cy="12" r="7"/></svg>
+                    Lấy vị trí của tôi
+                  </button>
+                </div>
+                <div class="map-container-wrapper">
+                  <div ref="mapElRef" class="request-map"></div>
+                  <div v-if="isGeocoding" class="map-suggestion map-suggestion--loading">
+                    <span class="spinner-dot"></span> Đang nhận diện địa chỉ từ bản đồ...
+                  </div>
+                  <div v-else-if="suggestedAddressText" class="map-suggestion">
+                    <div class="suggestion-text">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                      <span>{{ suggestedAddressText }}</span>
+                    </div>
+                    <button type="button" class="btn-use-suggestion" @click="applySuggestedAddress">
+                      Đồng bộ vào form
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-row coords-preview">
+                <div class="form-group half">
+                  <label>Vĩ độ (Latitude)</label>
+                  <input v-model.number="form.latitude" type="number" step="any" readonly class="input-readonly" />
+                </div>
+                <div class="form-group half">
+                  <label>Kinh độ (Longitude)</label>
+                  <input v-model.number="form.longitude" type="number" step="any" readonly class="input-readonly" />
+                </div>
+              </div>
+            </div>
+
+            <!-- ── BƯỚC 3: NHU CẦU VẬT TƯ CỨU TRỢ ── -->
+            <div v-show="currentStep === 3" class="wizard-step-pane">
+              <div class="form-group">
+                <label>Chọn các loại nhu yếu phẩm cần hỗ trợ</label>
+                <p class="form-hint">Tích chọn loại vật tư cần và nhập số lượng ước tính (nếu biết)</p>
+
+                <div class="needs-grid">
+                  <!-- Thức ăn -->
+                  <div :class="['need-card', { active: form.needFood }]">
+                    <div class="need-card-header" @click="form.needFood = !form.needFood; if (!form.needFood) form.foodQuantity = null">
+                      <div class="need-checkbox">
+                        <input type="checkbox" v-model="form.needFood" @click.stop />
+                      </div>
+                      <span class="need-icon">🍚</span>
+                      <div class="need-info">
+                        <strong>Lương thực / Thực phẩm</strong>
+                        <span>Gạo, mì tôm, đồ hộp, lương khô...</span>
+                      </div>
+                    </div>
+                    <div v-if="form.needFood" class="need-card-body">
+                      <label>Số lượng cần:</label>
+                      <div class="input-with-suffix">
+                        <input v-model.number="form.foodQuantity" type="number" min="1" placeholder="VD: 10" />
+                        <span class="input-suffix">suất / kg</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Nước uống -->
+                  <div :class="['need-card', { active: form.needWater }]">
+                    <div class="need-card-header" @click="form.needWater = !form.needWater; if (!form.needWater) form.waterQuantity = null">
+                      <div class="need-checkbox">
+                        <input type="checkbox" v-model="form.needWater" @click.stop />
+                      </div>
+                      <span class="need-icon">💧</span>
+                      <div class="need-info">
+                        <strong>Nước uống sạch</strong>
+                        <span>Nước đóng chai, bình nước lọc...</span>
+                      </div>
+                    </div>
+                    <div v-if="form.needWater" class="need-card-body">
+                      <label>Số lượng cần:</label>
+                      <div class="input-with-suffix">
+                        <input v-model.number="form.waterQuantity" type="number" min="1" placeholder="VD: 5" />
+                        <span class="input-suffix">thùng / lốc</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Thuốc men -->
+                  <div :class="['need-card', { active: form.needMedicine }]">
+                    <div class="need-card-header" @click="form.needMedicine = !form.needMedicine; if (!form.needMedicine) form.medicineQuantity = null">
+                      <div class="need-checkbox">
+                        <input type="checkbox" v-model="form.needMedicine" @click.stop />
+                      </div>
+                      <span class="need-icon">💊</span>
+                      <div class="need-info">
+                        <strong>Thuốc & Y tế</strong>
+                        <span>Thuốc cảm, bông băng, sát trùng...</span>
+                      </div>
+                    </div>
+                    <div v-if="form.needMedicine" class="need-card-body">
+                      <label>Số lượng cần:</label>
+                      <div class="input-with-suffix">
+                        <input v-model.number="form.medicineQuantity" type="number" min="1" placeholder="VD: 2" />
+                        <span class="input-suffix">bộ / cơ số</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Chăn mền -->
+                  <div :class="['need-card', { active: form.needBlanket }]">
+                    <div class="need-card-header" @click="form.needBlanket = !form.needBlanket; if (!form.needBlanket) form.blanketQuantity = null">
+                      <div class="need-checkbox">
+                        <input type="checkbox" v-model="form.needBlanket" @click.stop />
+                      </div>
+                      <span class="need-icon">🛏️</span>
+                      <div class="need-info">
+                        <strong>Chăn mền / Áo ấm</strong>
+                        <span>Chăn ấm, áo mưa, quần áo...</span>
+                      </div>
+                    </div>
+                    <div v-if="form.needBlanket" class="need-card-body">
+                      <label>Số lượng cần:</label>
+                      <div class="input-with-suffix">
+                        <input v-model.number="form.blanketQuantity" type="number" min="1" placeholder="VD: 4" />
+                        <span class="input-suffix">cái / chiếc</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Nơi trú ẩn -->
+                  <div :class="['need-card', { active: form.needShelter }]">
+                    <div class="need-card-header" @click="form.needShelter = !form.needShelter; if (!form.needShelter) form.shelterQuantity = null">
+                      <div class="need-checkbox">
+                        <input type="checkbox" v-model="form.needShelter" @click.stop />
+                      </div>
+                      <span class="need-icon">⛺</span>
+                      <div class="need-info">
+                        <strong>Nơi trú ẩn / Bạt bạt bạt</strong>
+                        <span>Lều bạt, chỗ ở tạm thời...</span>
+                      </div>
+                    </div>
+                    <div v-if="form.needShelter" class="need-card-body">
+                      <label>Số lượng cần:</label>
+                      <div class="input-with-suffix">
+                        <input v-model.number="form.shelterQuantity" type="number" min="1" placeholder="VD: 1" />
+                        <span class="input-suffix">bộ / tấm</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p v-if="createError" class="error-text alert-danger">{{ createError }}</p>
+
+            <!-- Action Navigation Buttons -->
+            <div class="modal-actions wizard-actions">
+              <button
+                v-if="currentStep > 1"
+                type="button"
+                class="btn-outline"
+                @click="currentStep--"
+              >
+                ← Quay lại
+              </button>
+              <button
+                v-else
+                type="button"
+                class="btn-outline"
+                @click="closeCreateModal"
+              >
+                Hủy bỏ
+              </button>
+
+              <button
+                v-if="currentStep < 3"
+                type="button"
+                class="btn-primary"
+                @click="nextStep"
+              >
+                Tiếp tục →
+              </button>
+              <button
+                v-else
+                type="submit"
+                class="btn-primary btn-submit-final"
+                :disabled="isSubmitting"
+              >
+                <svg v-if="isSubmitting" class="spinner-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                {{ isSubmitting ? 'Đang gửi yêu cầu...' : '🚀 Gửi Yêu Cầu Cứu Trợ' }}
               </button>
             </div>
           </form>
@@ -320,6 +508,25 @@ import {
   matchesRequesterFilterGroup,
   type RequesterFilterGroup,
 } from '@/features/requests/requests.helpers'
+import { VN_PROVINCE_CENTERS, resolveProvinceCenter } from '@/features/requests/vn-provinces'
+
+// Danh sách các Tỉnh/Thành phố chuẩn hóa
+const PROVINCES_RAW = [
+  'Hà Nội', 'TP. Hồ Chí Minh', 'Đà Nẵng', 'Hải Phòng', 'Cần Thơ',
+  'An Giang', 'Bà Rịa - Vũng Tàu', 'Bắc Giang', 'Bắc Kạn', 'Bạc Liêu',
+  'Bắc Ninh', 'Bến Tre', 'Bình Định', 'Bình Dương', 'Bình Phước',
+  'Bình Thuận', 'Cà Mau', 'Cao Bằng', 'Đắk Lắk', 'Đắk Nông',
+  'Điện Biên', 'Đồng Nai', 'Đồng Tháp', 'Gia Lai', 'Hà Giang',
+  'Hà Nam', 'Hà Tĩnh', 'Hải Dương', 'Hậu Giang', 'Hòa Bình',
+  'Hưng Yên', 'Khánh Hòa', 'Kiên Giang', 'Kon Tum', 'Lai Châu',
+  'Lâm Đồng', 'Lạng Sơn', 'Lào Cai', 'Long An', 'Nam Định',
+  'Nghệ An', 'Ninh Bình', 'Ninh Thuận', 'Phú Thọ', 'Phú Yên',
+  'Quảng Bình', 'Quảng Nam', 'Quảng Ngãi', 'Quảng Ninh', 'Quảng Trị',
+  'Sóc Trăng', 'Sơn La', 'Tây Ninh', 'Thái Bình', 'Thái Nguyên',
+  'Thanh Hóa', 'Thừa Thiên Huế', 'Tiền Giang', 'Trà Vinh', 'Tuyên Quang',
+  'Vĩnh Long', 'Vĩnh Phúc', 'Yên Bái',
+]
+const provinceOptions = ref(PROVINCES_RAW)
 
 // Fix icon marker mặc định của Leaflet bị vỡ khi build qua bundler (Vite/Webpack):
 // đường dẫn ảnh trong CSS gốc của Leaflet không khớp với asset đã qua xử lý.
@@ -579,19 +786,79 @@ async function reverseGeocode(lat: number, lng: number) {
   }
 }
 
-function applySuggestedAddress() {
-  if (!suggestedAddressParts.value) return
-  if (suggestedAddressParts.value.line) form.value.address = suggestedAddressParts.value.line
-  if (suggestedAddressParts.value.region) form.value.region = suggestedAddressParts.value.region
+const currentStep = ref(1)
+
+function goToStep(step: number) {
+  if (step > currentStep.value) {
+    if (!validateStep(currentStep.value)) return
+  }
+  currentStep.value = step
+  if (step === 2) {
+    nextTick(() => {
+      initMap()
+      if (mapInstance) {
+        mapInstance.invalidateSize()
+      }
+    })
+  }
+}
+
+function nextStep() {
+  if (!validateStep(currentStep.value)) return
+  currentStep.value++
+  if (currentStep.value === 2) {
+    nextTick(() => {
+      initMap()
+      if (mapInstance) {
+        mapInstance.invalidateSize()
+      }
+    })
+  }
+}
+
+function validateStep(step: number): boolean {
+  createError.value = ''
+  if (step === 1) {
+    if (!form.value.title.trim()) {
+      createError.value = 'Vui lòng nhập tiêu đề yêu cầu hỗ trợ'
+      return false
+    }
+    if (!form.value.contactPhone.trim()) {
+      createError.value = 'Vui lòng nhập số điện thoại liên hệ'
+      return false
+    }
+    if (!form.value.description.trim()) {
+      createError.value = 'Vui lòng nhập mô tả chi tiết hoàn cảnh'
+      return false
+    }
+  } else if (step === 2) {
+    if (!form.value.address.trim()) {
+      createError.value = 'Vui lòng nhập địa chỉ chi tiết'
+      return false
+    }
+  }
+  return true
+}
+
+function onProvinceSelectChange() {
+  const coords = resolveProvinceCenter(form.value.region)
+  if (coords) {
+    form.value.latitude = coords[0]
+    form.value.longitude = coords[1]
+    if (mapInstance && markerInstance) {
+      markerInstance.setLatLng(coords)
+      mapInstance.setView(coords, DEFAULT_ZOOM)
+    }
+  }
 }
 
 const openCreateModal = () => {
+  currentStep.value = 1
   form.value = emptyForm()
   createError.value = ''
   suggestedAddressText.value = ''
   suggestedAddressParts.value = null
   showCreateModal.value = true
-  nextTick(() => initMap())
 }
 const closeCreateModal = () => {
   showCreateModal.value = false
@@ -730,6 +997,352 @@ const handleCancelRequest = async (item: ReliefRequestResponse) => {
   background: #fff; border-radius: 14px; width: 100%; max-width: 560px;
   max-height: 88vh; overflow-y: auto; box-shadow: 0 20px 50px rgba(0,0,0,0.25);
 }
+.create-modal-box {
+  width: 90%;
+  max-width: 680px;
+  max-height: 90vh;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-subtitle {
+  margin: 4px 0 0 0;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 400;
+}
+
+/* Wizard Stepper Header */
+.wizard-stepper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.step-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  position: relative;
+  flex: 1;
+}
+
+.step-circle {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.step-title {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: #64748b;
+  white-space: nowrap;
+}
+
+.step-line {
+  flex: 1;
+  height: 2px;
+  background: #e2e8f0;
+  margin: 0 10px;
+}
+
+.step-item.active .step-circle {
+  background: #2563eb;
+  color: #fff;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+.step-item.active .step-title {
+  color: #1e293b;
+  font-weight: 700;
+}
+
+.step-item.completed .step-circle {
+  background: #16a34a;
+  color: #fff;
+}
+.step-item.completed .step-title {
+  color: #16a34a;
+}
+
+.wizard-body {
+  padding: 24px;
+  overflow-y: auto;
+  flex: 1;
+}
+
+.wizard-step-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+/* Emergency Level Visual Cards */
+.emergency-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.emergency-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: #fff;
+}
+
+.emergency-card:hover {
+  border-color: #cbd5e1;
+  background: #f8fafc;
+}
+
+.emergency-card.selected {
+  border-color: #2563eb;
+  background: #eff6ff;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.card-icon {
+  font-size: 20px;
+}
+
+.card-text {
+  display: flex;
+  flex-direction: column;
+}
+.card-text strong {
+  font-size: 13.5px;
+  color: #1e293b;
+}
+.card-text span {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 1px;
+}
+
+/* Input Suffix & Readonly */
+.input-with-suffix {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.input-with-suffix input {
+  padding-right: 65px;
+}
+.input-suffix {
+  position: absolute;
+  right: 12px;
+  font-size: 12.5px;
+  color: #64748b;
+  font-weight: 500;
+  pointer-events: none;
+}
+
+.input-readonly {
+  background-color: #f1f5f9;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.form-select {
+  background-color: #fff;
+  cursor: pointer;
+}
+
+/* Map Header & Layout */
+.map-section {
+  margin-bottom: 0;
+}
+
+.map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.btn-geo-compact {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.btn-geo-compact:hover {
+  background: #dbeafe;
+}
+
+.map-container-wrapper {
+  position: relative;
+}
+
+.coords-preview {
+  margin-top: 12px;
+  margin-bottom: 0;
+}
+
+/* Needs Visual Grid */
+.form-hint {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: -4px 0 12px 0;
+}
+
+.needs-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.need-card {
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  transition: all 0.2s ease;
+}
+
+.need-card.active {
+  border-color: #2563eb;
+  box-shadow: 0 2px 8px rgba(37, 99, 235, 0.08);
+}
+
+.need-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+.need-card-header:hover {
+  background: #f8fafc;
+}
+
+.need-checkbox input {
+  width: 17px;
+  height: 17px;
+  cursor: pointer;
+  accent-color: #2563eb;
+}
+
+.need-icon {
+  font-size: 22px;
+}
+
+.need-info {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+.need-info strong {
+  font-size: 13.5px;
+  color: #1e293b;
+}
+.need-info span {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.need-card-body {
+  padding: 10px 14px 14px 45px;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.need-card-body label {
+  margin: 0;
+  font-size: 12.5px;
+  color: #475569;
+  white-space: nowrap;
+}
+.need-card-body .input-with-suffix {
+  max-width: 200px;
+}
+
+.alert-danger {
+  padding: 10px 14px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+  color: #e11d48;
+}
+
+.wizard-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.btn-submit-final {
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  border: none;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-submit-final:hover:not(:disabled) {
+  background: linear-gradient(135deg, #15803d, #166534);
+}
+
+.spinner-icon {
+  width: 16px;
+  height: 16px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 600px) {
+  .wizard-stepper {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .step-line { display: none; }
+  .need-card-body {
+    flex-direction: column;
+    align-items: flex-start;
+    padding-left: 14px;
+  }
+  .need-card-body .input-with-suffix {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
 .modal-header {
   display: flex; justify-content: space-between; align-items: center;
   padding: 20px 24px; border-bottom: 1px solid #f1f5f9; position: sticky; top: 0; background: #fff; z-index: 1;
@@ -790,7 +1403,7 @@ textarea { resize: vertical; }
 }
 .btn-use-suggestion:hover { background: #eff6ff; }
 
-.needs-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 10px; margin-top: 8px; }
+.needs-grid { display: flex; flex-direction: column; gap: 10px; }
 .need-item { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; margin: 0; }
 .need-item input { width: 15px; height: 15px; }
 .need-quantity-hint { font-size: 11.5px; color: #6b7280; margin: 6px 0 0 0; }
