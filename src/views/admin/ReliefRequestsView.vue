@@ -129,7 +129,7 @@
             <!-- Header -->
             <div class="modal-header">
               <div class="modal-header__inner">
-                <p class="modal-subtitle">{{ $t('admin.detail_request_title') }}</p>
+                <p class="modal-subtitle">{{ modalMode === 'team' ? $t('admin.team_modal_subtitle') : $t('admin.detail_request_title') }}</p>
                 <h2 class="modal-title">{{ detail?.title }}</h2>
               </div>
               <button class="modal-close" @click="closeDrawer">
@@ -155,111 +155,115 @@
                 </span>
               </div>
 
-              <!-- Info cards grid -->
-              <div class="modal-cards">
-                <!-- Card: Thông tin liên hệ -->
-                <div class="info-card">
-                  <div class="info-card__header">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                    {{ $t('admin.section_contact_info') }}
+              <!-- Các khối thông tin chi tiết yêu cầu — chỉ hiện ở chế độ "Chi tiết" (mode=full),
+                   ẩn khi mở từ "Quản lý đội" (mode=team) để đỡ rối, chỉ tập trung vào TNV/phân công. -->
+              <template v-if="modalMode === 'full'">
+                <!-- Info cards grid -->
+                <div class="modal-cards">
+                  <!-- Card: Thông tin liên hệ -->
+                  <div class="info-card">
+                    <div class="info-card__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+                      {{ $t('admin.section_contact_info') }}
+                    </div>
+                    <p class="info-card__sublabel">{{ $t('admin.affected_people_label') }}</p>
+                    <p class="info-card__val">{{ $t('admin.people_count', { count: detail.affectedPeople }) }}</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.phone_label') }}</p>
+                    <p class="info-card__val">{{ detail.contactPhone }}</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.coords_label') }}</p>
+                    <p class="info-card__val info-card__val--small">{{ detail.latitude.toFixed(5) }}, {{ detail.longitude.toFixed(5) }}</p>
                   </div>
-                  <p class="info-card__sublabel">{{ $t('admin.affected_people_label') }}</p>
-                  <p class="info-card__val">{{ $t('admin.people_count', { count: detail.affectedPeople }) }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.phone_label') }}</p>
-                  <p class="info-card__val">{{ detail.contactPhone }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.coords_label') }}</p>
-                  <p class="info-card__val info-card__val--small">{{ detail.latitude.toFixed(5) }}, {{ detail.longitude.toFixed(5) }}</p>
-                </div>
 
-                <!-- Card: Địa điểm & Thời gian -->
-                <div class="info-card">
-                  <div class="info-card__header">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-                    {{ $t('admin.section_location_time') }}
+                  <!-- Card: Địa điểm & Thời gian -->
+                  <div class="info-card">
+                    <div class="info-card__header">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                      {{ $t('admin.section_location_time') }}
+                    </div>
+                    <p class="info-card__sublabel">{{ $t('admin.col_address') }}</p>
+                    <p class="info-card__val">{{ detail.address }}</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_region') }}</p>
+                    <p class="info-card__val">{{ detail.region || '—' }}</p>
+                    <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.created_date_label') }}</p>
+                    <div class="info-card__datebox">{{ formatDate(detail.createdAt) }}</div>
                   </div>
-                  <p class="info-card__sublabel">{{ $t('admin.col_address') }}</p>
-                  <p class="info-card__val">{{ detail.address }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.col_region') }}</p>
-                  <p class="info-card__val">{{ detail.region || '—' }}</p>
-                  <p class="info-card__sublabel" style="margin-top:10px">{{ $t('admin.created_date_label') }}</p>
-                  <div class="info-card__datebox">{{ formatDate(detail.createdAt) }}</div>
                 </div>
-              </div>
 
-              <!-- Mô tả -->
-              <div class="modal-section">
-                <p class="modal-section__label">{{ $t('admin.section_desc') }}</p>
-                <p class="modal-section__text">{{ detail.description }}</p>
-              </div>
-
-              <!-- Nhu cầu -->
-              <div class="modal-section">
-                <p class="modal-section__label">{{ $t('admin.section_needs') }}</p>
-                <div class="needs-tags">
-                  <span v-if="detail.needFood"     class="need-tag">🍚 Lương thực</span>
-                  <span v-if="detail.needWater"    class="need-tag">💧 Nước sạch</span>
-                  <span v-if="detail.needMedicine" class="need-tag">💊 Thuốc men</span>
-                  <span v-if="detail.needBlanket"  class="need-tag">🛏 Chăn màn</span>
-                  <span v-if="detail.needShelter"  class="need-tag">🏠 Nơi trú ẩn</span>
-                  <span v-if="!detail.needFood && !detail.needWater && !detail.needMedicine && !detail.needBlanket && !detail.needShelter" class="need-tag need-tag--none">{{ $t('admin.no_specific_needs') }}</span>
+                <!-- Mô tả -->
+                <div class="modal-section">
+                  <p class="modal-section__label">{{ $t('admin.section_desc') }}</p>
+                  <p class="modal-section__text">{{ detail.description }}</p>
                 </div>
-              </div>
 
-              <!-- Đổi trạng thái -->
-              <div class="modal-section">
-                <p class="modal-section__label">{{ $t('admin.section_change_status') }}</p>
-                <div v-if="STATUS_TRANSITIONS[detail.status]?.length" class="status-inputs">
-                  <label class="status-input-field">
-                    {{ $t('admin.target_headcount_label') }}
-                    <span v-if="detail.suggestedHeadcountMin != null" class="status-input-hint">
-                      {{ $t('admin.suggested_headcount_hint', { min: detail.suggestedHeadcountMin, max: detail.suggestedHeadcountMax }) }}
-                    </span>
-                    <input
-                      v-model.number="targetHeadcountInput"
-                      type="number"
-                      min="0"
-                      :placeholder="detail.targetHeadcount != null ? String(detail.targetHeadcount) : ''"
-                    />
-                  </label>
-                  <label class="status-input-field">
-                    {{ $t('admin.status_note_label') }}
-                    <textarea v-model="statusNoteInput" rows="2" />
-                  </label>
+                <!-- Nhu cầu -->
+                <div class="modal-section">
+                  <p class="modal-section__label">{{ $t('admin.section_needs') }}</p>
+                  <div class="needs-tags">
+                    <span v-if="detail.needFood"     class="need-tag">🍚 Lương thực</span>
+                    <span v-if="detail.needWater"    class="need-tag">💧 Nước sạch</span>
+                    <span v-if="detail.needMedicine" class="need-tag">💊 Thuốc men</span>
+                    <span v-if="detail.needBlanket"  class="need-tag">🛏 Chăn màn</span>
+                    <span v-if="detail.needShelter"  class="need-tag">🏠 Nơi trú ẩn</span>
+                    <span v-if="!detail.needFood && !detail.needWater && !detail.needMedicine && !detail.needBlanket && !detail.needShelter" class="need-tag need-tag--none">{{ $t('admin.no_specific_needs') }}</span>
+                  </div>
                 </div>
-                <div class="status-flow">
-                  <button
-                    v-for="s in STATUS_TRANSITIONS[detail.status] ?? []"
-                    :key="s"
-                    class="flow-btn"
-                    :class="`flow-btn--${s.toLowerCase()}`"
-                    :disabled="isUpdating"
-                    @click="changeStatus(s)"
-                  >
-                    <svg v-if="isUpdating && pendingStatus === s" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
-                    {{ STATUS_LABEL_FULL[s] }}
-                  </button>
-                  <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">{{ $t('admin.no_status_transition') }}</span>
-                </div>
-                <p v-if="statusMsg" class="status-msg" :class="statusMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ statusMsg }}</p>
 
-                <div v-if="inventoryIssues.length" class="inventory-issues">
-                  <p class="inventory-issues__title">{{ $t('admin.inventory_issues_title') }}</p>
-                  <ul class="inventory-issues__list">
-                    <li
-                      v-for="issue in inventoryIssues"
-                      :key="issue.category"
-                      class="inventory-issues__item"
-                      :class="{ 'inventory-issues__item--short': !issue.isFullyIssued }"
-                    >
-                      <span class="inventory-issues__category">{{ needCategoryLabel(issue.category) }}</span>:
-                      {{ $t('admin.inventory_issued', { issued: issue.issuedQuantity, requested: issue.requestedQuantity }) }}
-                      <span v-if="!issue.isFullyIssued" class="inventory-issues__warning">
-                        — {{ $t('admin.inventory_shortfall') }}
+                <!-- Đổi trạng thái -->
+                <div class="modal-section">
+                  <p class="modal-section__label">{{ $t('admin.section_change_status') }}</p>
+                  <div v-if="STATUS_TRANSITIONS[detail.status]?.length" class="status-inputs">
+                    <label class="status-input-field">
+                      {{ $t('admin.target_headcount_label') }}
+                      <span v-if="detail.suggestedHeadcountMin != null" class="status-input-hint">
+                        {{ $t('admin.suggested_headcount_hint', { min: detail.suggestedHeadcountMin, max: detail.suggestedHeadcountMax }) }}
                       </span>
-                    </li>
-                  </ul>
+                      <input
+                        v-model.number="targetHeadcountInput"
+                        type="number"
+                        min="0"
+                        :placeholder="detail.targetHeadcount != null ? String(detail.targetHeadcount) : ''"
+                      />
+                    </label>
+                    <label class="status-input-field">
+                      {{ $t('admin.status_note_label') }}
+                      <textarea v-model="statusNoteInput" rows="2" />
+                    </label>
+                  </div>
+                  <div class="status-flow">
+                    <button
+                      v-for="s in STATUS_TRANSITIONS[detail.status] ?? []"
+                      :key="s"
+                      class="flow-btn"
+                      :class="`flow-btn--${s.toLowerCase()}`"
+                      :disabled="isUpdating"
+                      @click="changeStatus(s)"
+                    >
+                      <svg v-if="isUpdating && pendingStatus === s" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+                      {{ STATUS_LABEL_FULL[s] }}
+                    </button>
+                    <span v-if="!STATUS_TRANSITIONS[detail.status]?.length" class="flow-none">{{ $t('admin.no_status_transition') }}</span>
+                  </div>
+                  <p v-if="statusMsg" class="status-msg" :class="statusMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ statusMsg }}</p>
+
+                  <div v-if="inventoryIssues.length" class="inventory-issues">
+                    <p class="inventory-issues__title">{{ $t('admin.inventory_issues_title') }}</p>
+                    <ul class="inventory-issues__list">
+                      <li
+                        v-for="issue in inventoryIssues"
+                        :key="issue.category"
+                        class="inventory-issues__item"
+                        :class="{ 'inventory-issues__item--short': !issue.isFullyIssued }"
+                      >
+                        <span class="inventory-issues__category">{{ needCategoryLabel(issue.category) }}</span>:
+                        {{ $t('admin.inventory_issued', { issued: issue.issuedQuantity, requested: issue.requestedQuantity }) }}
+                        <span v-if="!issue.isFullyIssued" class="inventory-issues__warning">
+                          — {{ $t('admin.inventory_shortfall') }}
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              </template>
 
               <!-- Gợi ý TNV (chỉ khi Approved) -->
               <div v-if="detail.status === 'Approved'" class="modal-section">
@@ -345,6 +349,62 @@
                 </div>
                 <p v-if="assignMsg" class="status-msg" :class="assignMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ assignMsg }}</p>
               </div>
+
+              <!-- Đội tình nguyện đã gán (trước đây phải sang trang /admin/assignments) -->
+              <div v-if="detail.status !== 'Pending'" ref="teamSectionEl" class="modal-section">
+                <p class="modal-section__label">{{ $t('admin.assigned_team_title') }}</p>
+
+                <div v-if="isTeamLoading" class="suggest-loading"><div class="spinner" /> {{ $t('common.loading') }}</div>
+                <div v-else-if="assignedTeam.length === 0" class="suggest-empty">{{ $t('admin.no_assigned_team') }}</div>
+                <div v-else class="team-rows">
+                  <div v-for="row in assignedTeam" :key="row.id" class="team-row">
+                    <div class="team-row__main">
+                      <div class="vol-card__avatar">{{ row.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
+                      <div class="team-row__info">
+                        <p class="team-row__name">
+                          {{ row.volunteerFullName }}
+                          <svg v-if="row.isTeamLead" class="lead-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" :title="$t('admin.team_lead_badge')"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
+                        </p>
+                        <span class="asn-status-badge" :style="asnBadgeStyle(row.status)">{{ ASN_STATUS_LABEL[row.status] }}</span>
+                        <span v-if="row.cancellationRequested" class="cancel-flag">{{ $t('admin.has_cancel_request') }}</span>
+                      </div>
+                    </div>
+                    <div class="team-row__actions" v-if="row.status === 'Accepted' || row.status === 'OnTheWay'">
+                      <button
+                        v-if="!row.isTeamLead"
+                        class="btn-team-lead"
+                        :disabled="teamActioningId === row.id"
+                        @click="handleSetTeamLead(row.id)"
+                      >{{ $t('admin.btn_set_team_lead') }}</button>
+                      <button
+                        v-else
+                        class="btn-remove-team-lead"
+                        :disabled="teamActionType === 'unlead'"
+                        @click="handleRemoveTeamLead"
+                      >{{ $t('admin.btn_remove_team_lead') }}</button>
+                      <button
+                        v-if="cancelingRowId !== row.id"
+                        class="btn-cancel-row"
+                        @click="cancelingRowId = row.id"
+                      >{{ $t('admin.btn_cancel_assignment') }}</button>
+                    </div>
+                    <div v-if="cancelingRowId === row.id" class="team-row__cancel-box">
+                      <input
+                        v-model="cancelReasonById[row.id]"
+                        class="cancel-reason-input"
+                        :placeholder="$t('admin.cancel_reason_placeholder')"
+                      />
+                      <button
+                        class="btn-cancel-confirm"
+                        :disabled="!cancelReasonById[row.id]?.trim() || teamActioningId === row.id"
+                        @click="handleCancelAssignment(row)"
+                      >{{ $t('admin.btn_confirm') }}</button>
+                      <button class="btn-cancel-dismiss" @click="cancelingRowId = null">{{ $t('admin.btn_dismiss') }}</button>
+                    </div>
+                  </div>
+                </div>
+                <p v-if="teamMsg" class="status-msg" :class="teamMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ teamMsg }}</p>
+              </div>
             </div>
           </div>
         </div>
@@ -354,7 +414,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -362,6 +422,7 @@ import {
   getReliefRequests,
   getReliefRequestById,
   updateReliefRequestStatus,
+  removeTeamLead,
 } from '@/features/requests/requests.api'
 import { getSuggestedVolunteers, createAssignment } from '@/features/requests/admin-requests.api'
 import {
@@ -371,6 +432,7 @@ import {
 import type { ReliefRequestResponse, ReliefRequestStatus, InventoryIssueResult } from '@/features/requests/requests.types'
 import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.types'
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
+import { getAssignments, setTeamLead, adminCancelAssignment, type Assignment, type AssignmentStatus } from '@/features/tasks/assignments.api'
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -422,6 +484,10 @@ const sortBy       = ref<string>('newest')
 const drawerOpen      = ref(false)
 const detail          = ref<ReliefRequestResponse | null>(null)
 const isDetailLoading = ref(false)
+const teamSectionEl   = ref<HTMLElement | null>(null)
+// 'full' = "Chi tiết" (toàn bộ thông tin yêu cầu); 'team' = "Quản lý đội" (chỉ phần
+// liên quan đến TNV/phân công — ẩn thông tin liên hệ, địa điểm, mô tả, đổi trạng thái).
+const modalMode = ref<'full' | 'team'>('full')
 
 const isUpdating   = ref(false)
 const pendingStatus = ref<ReliefRequestStatus | null>(null)
@@ -467,6 +533,40 @@ const autoAssignCount   = ref(2)
 const isAutoAssigning   = ref(false)
 const autoAssignResults = ref<AutoAssignResult[]>([])
 const autoAssignSummary = ref('')
+
+// ── Đội tình nguyện đã gán cho yêu cầu đang mở ──────────────────
+// Gộp thẳng vào modal chi tiết (thay vì điều hướng sang trang Phân công) để "Quản lý đội"
+// không còn tốn thêm 1 lượt chuyển trang.
+const assignedTeam    = ref<Assignment[]>([])
+const isTeamLoading   = ref(false)
+const teamMsg         = ref('')
+const teamMsgType     = ref<'ok' | 'error'>('ok')
+const teamActioningId = ref<string | null>(null)
+const teamActionType  = ref<'lead' | 'unlead' | 'cancel' | null>(null)
+const cancelReasonById = ref<Record<string, string>>({})
+const cancelingRowId   = ref<string | null>(null)
+
+const ASN_STATUS_LABEL = computed<Record<AssignmentStatus, string>>(() => {
+  const _ = locale.value
+  return {
+    Assigned:  t('admin.asn_status_assigned'),
+    Accepted:  t('admin.asn_status_accepted'),
+    OnTheWay:  t('admin.asn_status_ontheway'),
+    Completed: t('admin.status_completed_short'),
+    Cancelled: t('admin.status_cancelled_short'),
+  }
+})
+const ASN_STATUS_STYLE: Record<AssignmentStatus, { bg: string; color: string; dot: string }> = {
+  Assigned:  { bg: '#dbeafe', color: '#1d4ed8', dot: '#3b82f6' },
+  Accepted:  { bg: '#ede9fe', color: '#6d28d9', dot: '#8b5cf6' },
+  OnTheWay:  { bg: '#ffedd5', color: '#9a3412', dot: '#f97316' },
+  Completed: { bg: '#d1fae5', color: '#065f46', dot: '#10b981' },
+  Cancelled: { bg: '#f1f5f9', color: '#4b5563', dot: '#94a3b8' },
+}
+function asnBadgeStyle(s: AssignmentStatus) {
+  const c = ASN_STATUS_STYLE[s]
+  return { background: c.bg, color: c.color }
+}
 
 // ── Computed ─────────────────────────────────────────────────
 const statusFilters = computed(() => {
@@ -538,8 +638,9 @@ onMounted(async () => {
 })
 
 // ── Methods ──────────────────────────────────────────────────
-async function openDetail(id: string) {
+async function openDetail(id: string, mode: 'full' | 'team' = 'full') {
   drawerOpen.value = true
+  modalMode.value = mode
   detail.value = null
   suggestedVolunteers.value = []
   isFallbackVolunteers.value = false
@@ -551,16 +652,96 @@ async function openDetail(id: string) {
   autoAssignSummary.value = ''
   targetHeadcountInput.value = null
   statusNoteInput.value = ''
+  assignedTeam.value = []
+  teamMsg.value = ''
   isDetailLoading.value = true
   try {
     detail.value = await getReliefRequestById(id)
     if (detail.value?.status === 'Approved') {
       loadSuggested()
     }
+    if (detail.value && detail.value.status !== 'Pending') {
+      loadTeam(id)
+    }
   } catch (e) {
     console.error(e)
   } finally {
     isDetailLoading.value = false
+    if (mode === 'team') {
+      nextTick(() => {
+        teamSectionEl.value?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    }
+  }
+}
+
+// PHẦN B — nạp đội tình nguyện đã gán cho yêu cầu đang mở, hiển thị ngay trong modal
+// (thay vì bắt admin nhảy sang trang /admin/assignments để "Quản lý đội").
+async function loadTeam(reliefRequestId: string) {
+  isTeamLoading.value = true
+  try {
+    assignedTeam.value = await getAssignments(1, 50, reliefRequestId)
+  } catch (e) {
+    console.error(e)
+  } finally {
+    isTeamLoading.value = false
+  }
+}
+
+async function handleSetTeamLead(assignmentId: string) {
+  teamActioningId.value = assignmentId
+  teamActionType.value = 'lead'
+  teamMsg.value = ''
+  try {
+    await setTeamLead(assignmentId)
+    if (detail.value) await loadTeam(detail.value.id)
+    teamMsg.value = t('admin.team_lead_set_success')
+    teamMsgType.value = 'ok'
+  } catch (e: unknown) {
+    teamMsg.value = e instanceof Error ? e.message : t('admin.team_lead_action_failed')
+    teamMsgType.value = 'error'
+  } finally {
+    teamActioningId.value = null
+    teamActionType.value = null
+  }
+}
+
+async function handleRemoveTeamLead() {
+  if (!detail.value) return
+  teamActionType.value = 'unlead'
+  teamMsg.value = ''
+  try {
+    await removeTeamLead(detail.value.id)
+    await loadTeam(detail.value.id)
+    teamMsg.value = t('admin.team_lead_removed_success')
+    teamMsgType.value = 'ok'
+  } catch (e: unknown) {
+    teamMsg.value = e instanceof Error ? e.message : t('admin.team_lead_action_failed')
+    teamMsgType.value = 'error'
+  } finally {
+    teamActionType.value = null
+  }
+}
+
+async function handleCancelAssignment(row: Assignment) {
+  const reason = (cancelReasonById.value[row.id] ?? '').trim()
+  if (!reason) return
+  teamActioningId.value = row.id
+  teamActionType.value = 'cancel'
+  teamMsg.value = ''
+  try {
+    await adminCancelAssignment(row.id, reason)
+    cancelReasonById.value[row.id] = ''
+    cancelingRowId.value = null
+    if (detail.value) await loadTeam(detail.value.id)
+    teamMsg.value = t('admin.assignment_cancel_success')
+    teamMsgType.value = 'ok'
+  } catch (e: unknown) {
+    teamMsg.value = e instanceof Error ? e.message : t('admin.team_lead_action_failed')
+    teamMsgType.value = 'error'
+  } finally {
+    teamActioningId.value = null
+    teamActionType.value = null
   }
 }
 
@@ -641,16 +822,43 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
   }
 }
 
+// BE tự chuyển ReliefRequest Approved → Assigned ngay sau NGƯỜI ĐẦU TIÊN được phân công,
+// trong khi POST /assignments lại chỉ chấp nhận khi request đang Approved (xem README luồng
+// Admin bước K→L: "Có thể phân công thêm TNV" — nhưng thực tế BE từ chối vì đã rời Approved).
+// Do modal cố tình KHÔNG cập nhật detail.value.status ngay sau lần gán đầu (để danh sách gợi ý
+// không biến mất giữa chừng), các lượt gán tiếp theo trong cùng phiên sẽ dính lỗi "phải Approved".
+// Workaround an toàn: nếu đúng lỗi này, tự PUT lại status Approved rồi thử gán lại đúng 1 lần
+// trước khi báo lỗi thật cho admin.
+async function assignOneVolunteer(
+  volunteerProfileId: string,
+): Promise<{ ok: true } | { ok: false; message: string; statusLocked: boolean }> {
+  if (!detail.value) return { ok: false, message: t('admin.assign_failed'), statusLocked: false }
+  const reliefRequestId = detail.value.id
+  try {
+    await createAssignment({ reliefRequestId, volunteerProfileId })
+    return { ok: true }
+  } catch (e: unknown) {
+    const msg = e instanceof Error ? e.message : ''
+    if (/approved/i.test(msg)) {
+      try {
+        await updateReliefRequestStatus(reliefRequestId, 'Approved')
+        await createAssignment({ reliefRequestId, volunteerProfileId })
+        return { ok: true }
+      } catch (e2: unknown) {
+        return { ok: false, message: e2 instanceof Error ? e2.message : msg, statusLocked: true }
+      }
+    }
+    return { ok: false, message: msg || t('admin.assign_failed'), statusLocked: false }
+  }
+}
+
 async function assignVolunteer(vol: SuggestedVolunteer) {
   if (!detail.value || isFullyAllocated.value) return
   isAssigning.value = true
   assigningId.value = vol.volunteerProfileId
   assignMsg.value = ''
-  try {
-    await createAssignment({
-      reliefRequestId: detail.value.id,
-      volunteerProfileId: vol.volunteerProfileId,
-    })
+  const result = await assignOneVolunteer(vol.volunteerProfileId)
+  if (result.ok) {
     assignMsg.value = `Đã phân công ${vol.fullName} thành công!`
     assignMsgType.value = 'ok'
     allocatedCount.value += 1
@@ -661,18 +869,19 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
     getReliefRequests(1, 200)
       .then((list) => { allRequests.value = list })
       .catch(() => { /* làm mới ngầm — lỗi không quan trọng, bỏ qua */ })
-  } catch (e: unknown) {
-    assignMsg.value = e instanceof Error ? e.message : 'Phân công thất bại.'
+  } else {
+    assignMsg.value = result.statusLocked ? t('admin.assign_status_locked_note') : result.message
     assignMsgType.value = 'error'
-  } finally {
-    isAssigning.value = false
-    assigningId.value = null
   }
+  isAssigning.value = false
+  assigningId.value = null
 }
 
-// PHẦN B — điều hướng sang trang bầu đội trưởng, lọc sẵn theo đúng yêu cầu này
+// Mở modal ở chế độ "team" — chỉ hiện phần liên quan TNV/phân công (ẩn thông tin liên hệ,
+// địa điểm, mô tả, đổi trạng thái) — không điều hướng sang trang khác nữa (trước đây nhảy
+// sang /admin/assignments, tốn 1 lượt chuyển trang).
 function goToTeamManagement(reliefRequestId: string) {
-  router.push({ path: '/admin/assignments', query: { requestId: reliefRequestId } })
+  openDetail(reliefRequestId, 'team')
 }
 
 // PHẦN C — phân công N người đầu (đã sắp theo gần nhất/phù hợp nhất) làm đội tối thiểu.
@@ -690,29 +899,33 @@ async function autoAssignTeam() {
   autoAssignSummary.value = ''
 
   const results: AutoAssignResult[] = []
+  let statusLockedStop = false
   for (const vol of candidates) {
-    try {
-      await createAssignment({
-        reliefRequestId: detail.value.id,
-        volunteerProfileId: vol.volunteerProfileId,
-      })
+    const result = await assignOneVolunteer(vol.volunteerProfileId)
+    if (result.ok) {
       results.push({ volunteerProfileId: vol.volunteerProfileId, fullName: vol.fullName, ok: true, message: '' })
-    } catch (e: unknown) {
-      results.push({
-        volunteerProfileId: vol.volunteerProfileId,
-        fullName: vol.fullName,
-        ok: false,
-        message: e instanceof Error ? e.message : t('admin.auto_assign_row_failed'),
-      })
+    } else {
+      results.push({ volunteerProfileId: vol.volunteerProfileId, fullName: vol.fullName, ok: false, message: result.message })
+      // Yêu cầu đã rời trạng thái Approved và không tự khôi phục được — mọi người còn lại trong
+      // đợt này chắc chắn sẽ lỗi y hệt, dừng ngay để khỏi spam lỗi lặp lại cho từng người.
+      if (result.statusLocked) {
+        statusLockedStop = true
+        break
+      }
     }
     // Cập nhật dần từng dòng để admin thấy tiến trình, không đợi hết cả vòng lặp.
     autoAssignResults.value = [...results]
   }
+  autoAssignResults.value = [...results]
 
   const successCount = results.filter(r => r.ok).length
-  autoAssignSummary.value = candidates.length < requested
-    ? t('admin.auto_assign_summary_partial', { available: candidates.length, requested, success: successCount })
-    : t('admin.auto_assign_summary', { success: successCount, total: candidates.length })
+  if (statusLockedStop) {
+    autoAssignSummary.value = t('admin.auto_assign_status_locked_summary', { success: successCount })
+  } else {
+    autoAssignSummary.value = candidates.length < requested
+      ? t('admin.auto_assign_summary_partial', { available: candidates.length, requested, success: successCount })
+      : t('admin.auto_assign_summary', { success: successCount, total: candidates.length })
+  }
 
   allocatedCount.value += successCount
   isAutoAssigning.value = false
@@ -1196,6 +1409,43 @@ async function autoAssignTeam() {
   align-items: center;
   gap: 10px;
 }
+
+/* Đội tình nguyện đã gán (khu vực gộp trực tiếp vào modal, thay cho trang riêng) */
+.team-rows { display: flex; flex-direction: column; gap: 8px; }
+.team-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid #e9ecef;
+}
+.team-row__main { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.team-row__info { min-width: 0; }
+.team-row__name { display: flex; align-items: center; gap: 6px; font-size: 13.5px; font-weight: 700; color: #1a3b5c; margin: 0; }
+.lead-icon { color: #eab308; flex-shrink: 0; }
+.asn-status-badge { display: inline-block; margin-top: 4px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; }
+.cancel-flag { display: inline-block; margin-top: 4px; margin-left: 6px; padding: 2px 9px; border-radius: 99px; font-size: 11px; font-weight: 700; background: #fee2e2; color: #991b1b; }
+.team-row__actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.btn-team-lead, .btn-remove-team-lead, .btn-cancel-row {
+  padding: 5px 11px; border-radius: 7px; border: none; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.15s ease;
+}
+.btn-team-lead { background: #fef9c3; color: #854d0e; }
+.btn-team-lead:hover:not(:disabled) { background: #eab308; color: #fff; }
+.btn-team-lead:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-remove-team-lead { background: #f1f5f9; color: #475569; }
+.btn-remove-team-lead:hover:not(:disabled) { background: #e2e8f0; }
+.btn-remove-team-lead:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-cancel-row { background: transparent; color: #c53030; border: 1px solid #fecaca; }
+.btn-cancel-row:hover { background: #fef2f2; }
+.team-row__cancel-box { width: 100%; display: flex; gap: 6px; margin-top: 4px; }
+.cancel-reason-input { flex: 1; min-width: 120px; padding: 6px 10px; border-radius: 7px; border: 1px solid #e2e8f0; font-size: 12.5px; }
+.btn-cancel-confirm { padding: 5px 11px; border-radius: 7px; border: none; background: #c53030; color: #fff; font-size: 12px; font-weight: 600; cursor: pointer; }
+.btn-cancel-confirm:disabled { opacity: 0.45; cursor: not-allowed; }
+.btn-cancel-dismiss { padding: 5px 11px; border-radius: 7px; border: 1px solid #e2e8f0; background: #fff; color: #475569; font-size: 12px; font-weight: 600; cursor: pointer; }
 
 .volunteer-cards { display: flex; flex-direction: column; gap: 10px; }
 .vol-card {

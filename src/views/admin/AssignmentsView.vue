@@ -83,8 +83,8 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>{{ $t('admin.col_volunteer') }}</th>
                 <th>{{ $t('admin.col_request') }}</th>
+                <th>{{ $t('admin.col_volunteer') }}</th>
                 <th class="th-center">{{ $t('admin.col_status') }}</th>
                 <th>{{ $t('admin.col_assigned_date') }}</th>
                 <th>{{ $t('admin.col_completed_date') }}</th>
@@ -99,6 +99,7 @@
                 class="data-row"
                 @click="openDrawer(row)"
               >
+                <td class="td-req">{{ row.reliefRequestTitle }}</td>
                 <td class="td-vol">
                   <div class="vol-mini">
                     <div class="vol-mini__avatar">{{ row.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
@@ -106,7 +107,6 @@
                     <svg v-if="row.isTeamLead" class="vol-mini__lead-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" :title="$t('admin.team_lead_badge')"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
                   </div>
                 </td>
-                <td class="td-req">{{ row.reliefRequestTitle }}</td>
                 <td class="th-center">
                   <span class="status-badge" :style="asnBadgeStyle(row.status)">
                     <span class="status-dot" :style="asnDotStyle(row.status)" />
@@ -492,7 +492,12 @@ const displayedRows = computed(() => {
       a.reliefRequestTitle.toLowerCase().includes(q),
     )
   }
-  return list
+  // Sắp xếp theo yêu cầu cứu trợ trước — các TNV cùng 1 đơn sẽ hiện liền kề nhau,
+  // trong cùng 1 nhóm sắp theo tên TNV cho dễ quét.
+  return [...list].sort((a, b) =>
+    a.reliefRequestTitle.localeCompare(b.reliefRequestTitle) ||
+    a.volunteerFullName.localeCompare(b.volunteerFullName),
+  )
 })
 
 // ── Lọc theo ReliefRequestId khi điều hướng từ "Quản lý đội" (?requestId=) ──

@@ -24,6 +24,7 @@
             {{ $t('coordinator.dispatch_panel_title') }}
             <span v-if="needDispatch.length > 0" class="header-count">{{ needDispatch.length }}</span>
           </template>
+          <p class="panel-hint">{{ $t('coordinator.dispatch_panel_hint') }}</p>
           <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">{{ $t('common.loading') }}</p>
           <p v-else-if="needDispatch.length === 0" class="text-muted text-center" style="padding: 40px 0;">
             {{ $t('coordinator.no_dispatch') }}
@@ -41,6 +42,7 @@
               <button class="btn-outline" @click="goDispatch(req.id)">{{ $t('coordinator.dispatch_btn') }}</button>
             </div>
           </div>
+          <RouterLink to="/admin/relief-requests" class="panel-footer-link">{{ $t('coordinator.view_all_requests_link') }}</RouterLink>
         </BaseCard>
 
         <BaseCard>
@@ -48,6 +50,7 @@
             {{ $t('coordinator.volunteers_panel_title') }}
             <span v-if="availableVolunteers.length > 0" class="header-count">{{ availableVolunteers.length }}</span>
           </template>
+          <p class="panel-hint">{{ $t('coordinator.volunteers_panel_hint') }}</p>
           <p v-if="isLoading" class="text-muted text-center" style="padding: 40px 0;">{{ $t('common.loading') }}</p>
           <p v-else-if="availableVolunteers.length === 0" class="text-muted text-center" style="padding: 40px 0;">
             {{ $t('coordinator.no_volunteers') }}
@@ -62,6 +65,7 @@
               <span class="ready-badge">{{ $t('coordinator.ready_badge') }}</span>
             </div>
           </div>
+          <RouterLink to="/admin/volunteers" class="panel-footer-link">{{ $t('coordinator.view_all_volunteers_link') }}</RouterLink>
         </BaseCard>
       </div>
     </div>
@@ -70,7 +74,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, RouterLink } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
@@ -194,6 +198,14 @@ function volunteerInitial(fullName: string): string {
 .stat-label { font-size: 13px; color: #718096; margin-top: 2px; }
 .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
 @media (max-width: 768px) { .two-col { grid-template-columns: 1fr; } }
+
+.panel-hint { font-size: 12.5px; color: #94a3b8; margin: -4px 0 10px; }
+.panel-footer-link {
+  display: block; text-align: center; margin-top: 10px; padding-top: 10px;
+  border-top: 1px solid #edf2f7; font-size: 12.5px; font-weight: 600;
+  color: #2b6cb0; text-decoration: none;
+}
+.panel-footer-link:hover { text-decoration: underline; }
 
 .header-count {
   display: inline-flex; align-items: center; justify-content: center;
