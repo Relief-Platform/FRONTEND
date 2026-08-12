@@ -150,6 +150,7 @@ import RequestsOverTimeChart from '@/components/dashboard/RequestsOverTimeChart.
 import DashboardMapPanel from '@/components/dashboard/DashboardMapPanel.vue'
 import { getDashboardSummary, getAuditLogs, type DashboardSummary, type AuditLog } from '@/features/dashboard/dashboard.api'
 import { getAllWarehouses } from '@/features/warehouses/warehouses.api'
+import { formatDateTimeVN, formatDateVNWithOptions } from '@/utils/datetime'
 
 const { locale, t } = useI18n()
 const summary = ref<DashboardSummary | null>(null)
@@ -158,13 +159,11 @@ const isLoadingLogs = ref(true)
 const totalWarehouses = ref(0)
 
 const formatDate = (dateStr: string) => {
-  const _ = locale.value
-  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
+  return formatDateTimeVN(dateStr, locale.value === 'vi' ? 'vi' : 'en')
 }
 
 const currentDate = computed(() => {
-  const _ = locale.value
-  return new Date().toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', {
+  return formatDateVNWithOptions(new Date(), locale.value === 'vi' ? 'vi' : 'en', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',

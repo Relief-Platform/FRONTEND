@@ -391,14 +391,14 @@ import {
   type AssignmentStatus,
 } from '@/features/tasks/assignments.api'
 import { removeTeamLead } from '@/features/requests/requests.api'
+import { formatDateTimeVN } from '@/utils/datetime'
 
 const { locale, t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
 const fmtDate = (dateStr: string) => {
-  const _ = locale.value
-  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
+  return formatDateTimeVN(dateStr, locale.value === 'vi' ? 'vi' : 'en')
 }
 
 // ── Status config ─────────────────────────────────────────────

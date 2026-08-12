@@ -139,6 +139,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getAssignments, type Assignment } from '@/features/tasks/assignments.api'
+import { formatDateVN, formatDateVNWithOptions } from '@/utils/datetime'
 
 const { locale, t } = useI18n()
 
@@ -146,8 +147,7 @@ const assignmentsList = ref<Assignment[]>([])
 const isLoading = ref(true)
 
 const currentDate = computed(() => {
-  const loc = locale.value === 'vi' ? 'vi-VN' : 'en-US'
-  return new Date().toLocaleDateString(loc, {
+  return formatDateVNWithOptions(new Date(), locale.value === 'vi' ? 'vi' : 'en', {
     weekday: 'long',
     year: 'numeric',
     month: 'long',
@@ -230,7 +230,7 @@ const recentActivities = computed(() => {
   return assignmentsList.value.slice(0, 5).map((act) => {
     const isCompleted = act.status === 'Completed'
     const dateStr = act.completedAt || act.assignedAt
-    const formattedTime = dateStr ? new Date(dateStr).toLocaleDateString('vi-VN') : 'Mới đây'
+    const formattedTime = dateStr ? formatDateVN(dateStr) : 'Mới đây'
     return {
       id: act.id,
       title: act.reliefRequestTitle || 'Phân công nhiệm vụ',

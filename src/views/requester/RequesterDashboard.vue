@@ -167,6 +167,7 @@ import {
   type ReliefRequestResponse,
   type ReliefRequestStatus,
 } from '@/features/requests/requests.types'
+import { formatDateVNWithOptions } from '@/utils/datetime'
 import {
   dotStyle,
   tagStyle,
@@ -190,7 +191,7 @@ const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
 const statusLabel = (status: ReliefRequestStatus) => t(STATUS_LABEL_KEY[status])
 
 const currentDate = computed(() =>
-  new Date().toLocaleDateString('vi-VN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
+  formatDateVNWithOptions(new Date(), 'vi', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }),
 )
 
 // ── Danh sách yêu cầu (lấy từ API thật) ──────────────────

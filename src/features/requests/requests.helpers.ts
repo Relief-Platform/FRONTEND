@@ -11,6 +11,7 @@ import {
   type ReliefRequestResponse,
   type StatusGroup,
 } from './requests.types'
+import { formatDateVN, formatTimeVN } from '@/utils/datetime'
 
 /** Lấy nhóm màu từ status gốc của BE */
 export function statusGroup(status: ReliefRequestStatus): StatusGroup {
@@ -36,12 +37,7 @@ export function dotStyle(status: ReliefRequestStatus): Record<string, string> {
 
 /** "11/07/2026 - 10:25" theo locale VN */
 export function formatDateTimeVI(iso: string): string {
-  const d = new Date(iso)
-  return (
-    d.toLocaleDateString('vi-VN') +
-    ' - ' +
-    d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
-  )
+  return formatDateVN(iso) + ' - ' + formatTimeVN(iso)
 }
 
 // ── Nhóm hiển thị rút gọn cho Requester (3 tab lọc) ──────────
