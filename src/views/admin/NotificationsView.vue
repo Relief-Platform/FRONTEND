@@ -1,16 +1,16 @@
 <template>
-  <VolunteerLayout>
+  <AdminLayout>
     <div class="notifications-page">
       <div class="page-header">
-        <h2>{{ $t('volunteer.notifications_title') }}</h2>
+        <h2>{{ $t('notifications.title') }}</h2>
         <button class="btn-mark-read" @click="handleMarkAllAsRead" :disabled="isMarking || !hasUnread">
-          {{ isMarking ? $t('volunteer.updating') : $t('volunteer.mark_all_read') }}
+          {{ isMarking ? $t('notifications.updating') : $t('notifications.mark_all_read') }}
         </button>
       </div>
 
       <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
       <div v-else-if="notifications.length === 0" class="empty-state">
-        {{ $t('volunteer.no_notifications') }}
+        {{ $t('notifications.no_notifications') }}
       </div>
 
       <div class="notifications-list" v-else>
@@ -38,12 +38,12 @@
         </div>
       </div>
     </div>
-  </VolunteerLayout>
+  </AdminLayout>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
-import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
+import AdminLayout from '@/components/layout/AdminLayout.vue'
 import {
   getNotifications,
   markAllNotificationsRead,
@@ -101,14 +101,14 @@ const handleRead = async (note: NotificationItem) => {
 .page-header h2 {
   font-size: 24px;
   font-weight: 800;
-  color: #1a3b5c;
+  color: #1a1a2e;
   letter-spacing: -0.5px;
   margin: 0;
 }
 .btn-mark-read {
   background: none;
   border: none;
-  color: #e27d24;
+  color: #c53030;
   font-size: 13.5px;
   font-weight: 600;
   cursor: pointer;
@@ -123,7 +123,7 @@ const handleRead = async (note: NotificationItem) => {
   color: #94a3b8;
   font-size: 14px;
   background: #fff;
-  border: 1px solid #edf2f7;
+  border: 1px solid #e9ecef;
   border-radius: 16px;
 }
 
@@ -135,18 +135,18 @@ const handleRead = async (note: NotificationItem) => {
 
 .notification-item {
   background: #ffffff;
-  border: 1px solid #edf2f7;
+  border: 1px solid #e9ecef;
   border-radius: 16px;
   padding: 20px;
   display: flex;
   gap: 16px;
-  box-shadow: 0 2px 12px rgba(15, 23, 42, 0.05);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   transition: all 0.2s ease;
   cursor: pointer;
 }
 .notification-item.unread {
-  background: #fff9f0;
-  border-color: #fbd38d;
+  background: #fff5f5;
+  border-color: #feb2b2;
 }
 
 .note-icon {
@@ -159,17 +159,17 @@ const handleRead = async (note: NotificationItem) => {
   flex-shrink: 0;
 }
 .note-icon svg { width: 22px; height: 22px; }
-.icon--success { background: rgba(39,103,73,0.10); color: #276749; }
-.icon--system  { background: rgba(49,130,206,0.10); color: #3182ce; }
-.icon--alert   { background: rgba(226,125,36,0.12); color: #e27d24; }
+.icon--success { background: rgba(22,163,74,0.10); color: #16a34a; }
+.icon--system  { background: rgba(37,99,235,0.10); color: #2563eb; }
+.icon--alert   { background: rgba(197,48,48,0.10); color: #c53030; }
 
 .note-content { flex: 1; min-width: 0; }
-.note-content h4 { margin: 0 0 6px 0; font-size: 14.5px; color: #1a3b5c; font-weight: 700; }
+.note-content h4 { margin: 0 0 6px 0; font-size: 14.5px; color: #1e293b; font-weight: 700; }
 .note-content p { margin: 0 0 10px 0; font-size: 13.5px; color: #475569; line-height: 1.55; }
 .note-time { font-size: 11.5px; color: #94a3b8; font-weight: 500; }
 
 .note-status { display: flex; align-items: flex-start; padding-top: 4px; }
-.dot { width: 9px; height: 9px; background-color: #e27d24; border-radius: 50%; display: inline-block; }
+.dot { width: 9px; height: 9px; background-color: #c53030; border-radius: 50%; display: inline-block; }
 
 @media (max-width: 600px) {
   .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }

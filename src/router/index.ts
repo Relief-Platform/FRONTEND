@@ -267,6 +267,12 @@ const routes: RouteRecordRaw[] = [
     component: () => import('@/views/inventory/InventoryView.vue'),
     meta: { requiresAuth: true, title: 'Vật tư & tồn kho' },
   },
+  {
+    path: '/warehouse/notifications',
+    name: 'warehouse-notifications',
+    component: () => import('@/views/Warehouses/NotificationsView.vue'),
+    meta: { requiresAuth: true, title: 'Thông báo' },
+  },
 
   // ────────────────────────────────────────────────────────────
   //  ADMIN – admin only
@@ -359,6 +365,16 @@ const routes: RouteRecordRaw[] = [
       requiresAuth: true,
       roles: ['Admin'],
       title: 'Báo cáo & Xuất dữ liệu',
+    },
+  },
+  {
+    path: '/admin/notifications',
+    name: 'admin-notifications',
+    component: () => import('@/views/admin/NotificationsView.vue'),
+    meta: {
+      requiresAuth: true,
+      roles: ['Admin'],
+      title: 'Thông báo',
     },
   },
 

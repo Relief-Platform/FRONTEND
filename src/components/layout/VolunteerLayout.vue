@@ -104,12 +104,12 @@
             </button>
           </div>
 
-          <button class="topbar-icon-btn" :title="$t('nav.notifications')">
+          <button class="topbar-icon-btn" :title="$t('nav.notifications')" @click="router.push('/volunteer/notifications')">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
               <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
             </svg>
-            <span class="notif-dot" />
+            <span v-if="hasUnreadNotifications" class="notif-dot" />
           </button>
           <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu">
             <div class="topbar-avatar">{{ initials }}</div>
@@ -140,10 +140,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { getUnreadCount } from '@/features/notifications/notifications.api'
 
 const router = useRouter()
 const auth = useAuthStore()
@@ -152,6 +153,16 @@ const currentLang = computed(() => locale.value)
 
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
+const unreadCount = ref(0)
+const hasUnreadNotifications = computed(() => unreadCount.value > 0)
+
+onMounted(async () => {
+  try {
+    unreadCount.value = await getUnreadCount()
+  } catch {
+    unreadCount.value = 0
+  }
+})
 
 function changeLang(lang: 'vi' | 'en') {
   locale.value = lang

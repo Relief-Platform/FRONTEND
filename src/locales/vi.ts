@@ -32,6 +32,15 @@ export default {
     english: 'Tiếng Anh',
   },
 
+  // Trang Thông báo dùng chung cho Admin & Warehouse (Requester/Volunteer có
+  // key riêng trong namespace của từng role, giữ nguyên không đổi).
+  notifications: {
+    title: 'Thông báo',
+    mark_all_read: 'Đánh dấu tất cả đã đọc',
+    updating: 'Đang cập nhật...',
+    no_notifications: 'Bạn chưa có thông báo nào.',
+  },
+
   common: {
     loading: 'Đang tải...',
     save: 'Lưu thay đổi',
@@ -487,15 +496,15 @@ export default {
   },
 
   roleRequests: {
-    nav_label: 'Nâng quyền',
-    admin_title: 'Duyệt nguyện vọng nâng quyền',
-    admin_sub: 'Xem và duyệt các yêu cầu xin nâng quyền lên Quản lý kho hoặc Tổ chức',
-    no_pending: 'Không có nguyện vọng nào đang chờ duyệt',
+    nav_label: 'Quản lý quyền hạn',
+    admin_title: 'Duyệt đơn cấp quyền',
+    admin_sub: 'Xem và duyệt các yêu cầu xin cấp quyền lên Quản lý kho hoặc Tổ chức',
+    no_pending: 'Không có đơn nào đang chờ duyệt',
     col_user: 'Người dùng',
     col_current_role: 'Quyền hiện tại',
-    col_requested_role: 'Quyền muốn xin',
+    col_requested_role: 'Quyền muốn được cấp',
     col_reason: 'Lý do',
-    reject_modal_title: 'Từ chối nguyện vọng',
+    reject_modal_title: 'Từ chối',
   },
 
   openTasks: {
@@ -837,6 +846,9 @@ export default {
     under_construction: 'Trang này đang được xây dựng. Vui lòng quay lại sau.',
     back_to_dashboard: '← Về Dashboard',
     view_all: 'Xem tất cả →',
+    mark_all_read: 'Đánh dấu tất cả đã đọc',
+    updating: 'Đang cập nhật...',
+    no_notifications: 'Bạn chưa có thông báo nào.',
 
     // Skills
     skills_title: 'Đăng ký kỹ năng cứu trợ',

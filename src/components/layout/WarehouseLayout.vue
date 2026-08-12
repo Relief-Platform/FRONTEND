@@ -90,6 +90,14 @@
             </button>
           </div>
 
+          <button class="topbar-icon-btn" :title="$t('nav.notifications')" @click="router.push('/warehouse/notifications')">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+            <span v-if="hasUnreadNotifications" class="notif-dot" />
+          </button>
+
           <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
             <div class="topbar-avatar">{{ initials }}</div>
             <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
@@ -119,11 +127,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { useRoute, useRouter } from "vue-router"
 import { useI18n } from "vue-i18n"
 import { useAuthStore } from "@/stores/auth"
 import { ROLE_LABELS } from "@/features/auth/auth.types"
+import { getUnreadCount } from "@/features/notifications/notifications.api"
 
 const router = useRouter()
 const route = useRoute()
@@ -131,6 +140,16 @@ const auth = useAuthStore()
 const { locale, t } = useI18n()
 const sidebarCollapsed = ref(false)
 const showUserMenu = ref(false)
+const unreadCount = ref(0)
+const hasUnreadNotifications = computed(() => unreadCount.value > 0)
+
+onMounted(async () => {
+  try {
+    unreadCount.value = await getUnreadCount()
+  } catch {
+    unreadCount.value = 0
+  }
+})
 
 const currentLang = computed(() => locale.value)
 function changeLang(lang: 'vi' | 'en'): void {
@@ -239,6 +258,13 @@ const vClickOutside = {
 .topbar-page-info { font-size: 15px; }
 .topbar-name { color: #1a3b5c; font-weight: 700; }
 .topbar-right { display: flex; align-items: center; gap: 10px; }
+.topbar-icon-btn {
+  position: relative; width: 38px; height: 38px; border-radius: 10px;
+  background: #f8fafc; border: 1px solid #e9ecef; cursor: pointer; color: #4a5568;
+  display: flex; align-items: center; justify-content: center; transition: all 0.15s ease;
+}
+.topbar-icon-btn:hover { background: #f0f4f8; color: #1a3b5c; }
+.notif-dot { position: absolute; top: 7px; right: 8px; width: 8px; height: 8px; border-radius: 50%; background: #1a4f8d; border: 2px solid #fff; }
 .lang-switch { display: flex; align-items: center; gap: 4px; background: #f1f5f9; padding: 3px 8px; border-radius: 99px; border: 1px solid #e2e8f0; }
 .lang-btn { background: none; border: none; font-size: 12px; font-weight: 700; color: #64748b; cursor: pointer; padding: 3px 6px; border-radius: 99px; transition: all 0.15s ease; }
 .lang-btn:hover { color: #1a4f8d; }

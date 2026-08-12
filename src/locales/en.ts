@@ -32,6 +32,15 @@ export default {
     english: 'English',
   },
 
+  // Shared Notifications page for Admin & Warehouse (Requester/Volunteer keep
+  // their own keys under each role's namespace, unchanged).
+  notifications: {
+    title: 'Notifications',
+    mark_all_read: 'Mark all as read',
+    updating: 'Updating...',
+    no_notifications: "You don't have any notifications yet.",
+  },
+
   common: {
     loading: 'Loading...',
     save: 'Save Changes',
@@ -837,6 +846,9 @@ export default {
     under_construction: 'This page is under construction. Please check back later.',
     back_to_dashboard: '← Back to Dashboard',
     view_all: 'View all →',
+    mark_all_read: 'Mark all as read',
+    updating: 'Updating...',
+    no_notifications: "You don't have any notifications yet.",
 
     // Skills
     skills_title: 'Register Relief Skills',
