@@ -141,15 +141,16 @@
           <table v-else class="data-table">
             <thead>
               <tr>
-                <th>{{ $t('admin.col_volunteer') }}</th>
                 <th>{{ $t('admin.col_request') }}</th>
+                <th>{{ $t('admin.col_volunteer') }}</th>
                 <th>{{ $t('admin.col_cancellation') }}</th>
                 <th>{{ $t('admin.col_assigned_date') }}</th>
                 <th class="th-center">{{ $t('admin.col_actions') }}</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in pendingCancellations" :key="row.id" class="data-row">
+              <tr v-for="row in sortedPendingCancellations" :key="row.id" class="data-row">
+                <td class="td-req">{{ row.reliefRequestTitle }}</td>
                 <td class="td-vol">
                   <div class="vol-mini">
                     <div class="vol-mini__avatar">{{ row.volunteerFullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
@@ -157,7 +158,6 @@
                     <svg v-if="row.isTeamLead" class="vol-mini__lead-icon" width="13" height="13" viewBox="0 0 24 24" fill="currentColor" :title="$t('admin.team_lead_badge')"><path d="M12 2l2.4 7.2H22l-6 4.6 2.3 7.2L12 16.4l-6.3 4.6 2.3-7.2-6-4.6h7.6z"/></svg>
                   </div>
                 </td>
-                <td class="td-req">{{ row.reliefRequestTitle }}</td>
                 <td class="td-reason">{{ row.cancellationReason ?? '—' }}</td>
                 <td class="td-date">{{ row.cancellationRequestedAt ? fmtDate(row.cancellationRequestedAt) : '—' }}</td>
                 <td class="th-center" style="white-space: nowrap;">
@@ -499,6 +499,13 @@ const displayedRows = computed(() => {
     a.volunteerFullName.localeCompare(b.volunteerFullName),
   )
 })
+
+const sortedPendingCancellations = computed(() =>
+  [...pendingCancellations.value].sort((a, b) =>
+    a.reliefRequestTitle.localeCompare(b.reliefRequestTitle) ||
+    a.volunteerFullName.localeCompare(b.volunteerFullName),
+  ),
+)
 
 // ── Lọc theo ReliefRequestId khi điều hướng từ "Quản lý đội" (?requestId=) ──
 const filterRequestId = ref<string | null>(null)

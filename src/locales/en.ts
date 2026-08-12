@@ -766,6 +766,9 @@ export default {
     allocate_full_note: 'Target headcount reached — all Assign buttons are now locked.',
     fallback_no_nearby_note: 'No nearby volunteers found — showing all available volunteers instead.',
     assign_failed: 'Assignment failed.',
+    search_volunteers_title: 'Search for another volunteer',
+    search_volunteers_placeholder: 'Search by name or phone number...',
+    no_search_results: 'No matching volunteers found.',
     assign_status_locked_note: 'The request automatically switched to another status right after the first person was assigned, so no more assignments can be made right now. Close and reopen the request details, then try again.',
     auto_assign_status_locked_summary: 'Successfully assigned {success} people, then stopped — the request auto-changed status, so no more assignments could be made this round.',
 

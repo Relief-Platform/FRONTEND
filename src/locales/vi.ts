@@ -766,6 +766,9 @@ export default {
     allocate_full_note: 'Đã đủ số lượng theo Số người mục tiêu — các nút Phân công đã bị khoá.',
     fallback_no_nearby_note: 'Không có tình nguyện viên lân cận, hiển thị tất cả người đang rảnh.',
     assign_failed: 'Phân công thất bại.',
+    search_volunteers_title: 'Tìm tình nguyện viên khác',
+    search_volunteers_placeholder: 'Tìm theo tên hoặc số điện thoại...',
+    no_search_results: 'Không tìm thấy tình nguyện viên phù hợp.',
     assign_status_locked_note: 'Yêu cầu đã tự động chuyển sang trạng thái khác ngay sau người đầu tiên được phân công nên không thể phân công thêm lúc này. Hãy đóng và mở lại chi tiết yêu cầu rồi thử tiếp.',
     auto_assign_status_locked_summary: 'Đã phân công thành công {success} người rồi dừng lại — yêu cầu tự động chuyển trạng thái nên chưa thể phân công thêm trong lượt này.',
 

@@ -347,6 +347,44 @@
                     </button>
                   </div>
                 </div>
+                <!-- Tìm TNV khác — không giới hạn ở danh sách gợi ý lân cận -->
+                <div class="vol-search-block">
+                  <p class="modal-section__label" style="margin-bottom:8px">{{ $t('admin.search_volunteers_title') }}</p>
+                  <div class="vol-search-wrap">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                    <input
+                      v-model="volSearchQuery"
+                      class="vol-search-input"
+                      :placeholder="$t('admin.search_volunteers_placeholder')"
+                    />
+                  </div>
+                  <div v-if="volSearchQuery.trim()" class="vol-search-results">
+                    <div v-if="isLoadingAllVolunteers" class="suggest-loading"><div class="spinner" /> {{ $t('common.loading') }}</div>
+                    <div v-else-if="volSearchResults.length === 0" class="suggest-empty">{{ $t('admin.no_search_results') }}</div>
+                    <div v-else class="volunteer-cards">
+                      <div v-for="v in volSearchResults" :key="v.id" class="vol-card">
+                        <div class="vol-card__avatar">{{ v.fullName.split(' ').at(-1)?.[0] ?? '?' }}</div>
+                        <div class="vol-card__info">
+                          <p class="vol-card__name">{{ v.fullName }}</p>
+                          <div class="vol-card__tags">
+                            <span class="vol-tag">{{ v.phoneNumber }}</span>
+                            <span class="vol-tag vol-tag--exp">{{ $t('admin.experience_years_short', { years: v.experienceYears }) }}</span>
+                          </div>
+                        </div>
+                        <button
+                          class="btn-assign"
+                          :disabled="isFullyAllocated || (isAssigning && assigningId === v.id)"
+                          @click="assignSearchedVolunteer(v)"
+                        >
+                          <svg v-if="isAssigning && assigningId === v.id" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
+                          <svg v-else width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                          {{ $t('admin.btn_assign') }}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 <p v-if="assignMsg" class="status-msg" :class="assignMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ assignMsg }}</p>
               </div>
 
@@ -433,6 +471,7 @@ import type { ReliefRequestResponse, ReliefRequestStatus, InventoryIssueResult }
 import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.types'
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
 import { getAssignments, setTeamLead, adminCancelAssignment, type Assignment, type AssignmentStatus } from '@/features/tasks/assignments.api'
+import { getAdminVolunteers, type VolunteerSummary } from '@/features/volunteers/admin-volunteers.api'
 
 const { locale, t } = useI18n()
 const route = useRoute()
@@ -511,6 +550,11 @@ const isSuggestLoading    = ref(false)
 // true khi danh sách trên là fallback "toàn bộ người đang rảnh" (không tìm được ai lân cận)
 const isFallbackVolunteers = ref(false)
 
+// ── Tìm TNV theo tên/SĐT — không giới hạn ở danh sách gợi ý lân cận ─────────────
+const volSearchQuery       = ref('')
+const allVolunteersForSearch = ref<VolunteerSummary[]>([])
+const isLoadingAllVolunteers = ref(false)
+
 const isAssigning  = ref(false)
 const assigningId  = ref<string | null>(null)
 const assignMsg    = ref('')
@@ -567,6 +611,22 @@ function asnBadgeStyle(s: AssignmentStatus) {
   const c = ASN_STATUS_STYLE[s]
   return { background: c.bg, color: c.color }
 }
+
+// TNV đã có phân công đang hoạt động (chưa huỷ) trên CHÍNH yêu cầu đang mở — loại khỏi
+// kết quả tìm kiếm để khỏi gán trùng người đã có trong đội.
+const assignedVolunteerIds = computed(() =>
+  new Set(assignedTeam.value.filter(a => a.status !== 'Cancelled').map(a => a.volunteerProfileId)),
+)
+
+const volSearchResults = computed(() => {
+  const q = volSearchQuery.value.trim().toLowerCase()
+  if (!q) return []
+  return allVolunteersForSearch.value
+    .filter(v => v.status === 'Approved')
+    .filter(v => !assignedVolunteerIds.value.has(v.id))
+    .filter(v => v.fullName.toLowerCase().includes(q) || v.phoneNumber.includes(q))
+    .slice(0, 20)
+})
 
 // ── Computed ─────────────────────────────────────────────────
 const statusFilters = computed(() => {
@@ -654,11 +714,13 @@ async function openDetail(id: string, mode: 'full' | 'team' = 'full') {
   statusNoteInput.value = ''
   assignedTeam.value = []
   teamMsg.value = ''
+  volSearchQuery.value = ''
   isDetailLoading.value = true
   try {
     detail.value = await getReliefRequestById(id)
     if (detail.value?.status === 'Approved') {
       loadSuggested()
+      loadAllVolunteersForSearch()
     }
     if (detail.value && detail.value.status !== 'Pending') {
       loadTeam(id)
@@ -811,8 +873,12 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
     targetHeadcountInput.value = null
     statusNoteInput.value = ''
     // nếu vừa Approved → tải suggested volunteers
-    if (newStatus === 'Approved') loadSuggested()
-    else suggestedVolunteers.value = []
+    if (newStatus === 'Approved') {
+      loadSuggested()
+      loadAllVolunteersForSearch()
+    } else {
+      suggestedVolunteers.value = []
+    }
   } catch (e: unknown) {
     statusMsg.value = e instanceof Error ? e.message : 'Cập nhật thất bại.'
     statusMsgType.value = 'error'
@@ -866,6 +932,39 @@ async function assignVolunteer(vol: SuggestedVolunteer) {
     // === 'Approved', set ngay sẽ làm danh sách/tiến độ biến mất giữa chừng trong khi
     // admin còn đang phân bổ tiếp cho đủ targetHeadcount. Chỉ làm mới ngầm bảng danh
     // sách phía sau; trạng thái thật cập nhật khi đóng/mở lại modal.
+    getReliefRequests(1, 200)
+      .then((list) => { allRequests.value = list })
+      .catch(() => { /* làm mới ngầm — lỗi không quan trọng, bỏ qua */ })
+  } else {
+    assignMsg.value = result.statusLocked ? t('admin.assign_status_locked_note') : result.message
+    assignMsgType.value = 'error'
+  }
+  isAssigning.value = false
+  assigningId.value = null
+}
+
+async function loadAllVolunteersForSearch() {
+  isLoadingAllVolunteers.value = true
+  try {
+    allVolunteersForSearch.value = await getAdminVolunteers()
+  } catch (e) {
+    console.error(e)
+  } finally {
+    isLoadingAllVolunteers.value = false
+  }
+}
+
+async function assignSearchedVolunteer(v: VolunteerSummary) {
+  if (!detail.value || isFullyAllocated.value) return
+  isAssigning.value = true
+  assigningId.value = v.id
+  assignMsg.value = ''
+  const result = await assignOneVolunteer(v.id)
+  if (result.ok) {
+    assignMsg.value = `Đã phân công ${v.fullName} thành công!`
+    assignMsgType.value = 'ok'
+    allocatedCount.value += 1
+    loadTeam(detail.value.id)
     getReliefRequests(1, 200)
       .then((list) => { allRequests.value = list })
       .catch(() => { /* làm mới ngầm — lỗi không quan trọng, bỏ qua */ })
@@ -1409,6 +1508,16 @@ async function autoAssignTeam() {
   align-items: center;
   gap: 10px;
 }
+
+/* Tìm TNV khác — không giới hạn ở danh sách gợi ý lân cận */
+.vol-search-block { margin-top: 14px; padding-top: 14px; border-top: 1px dashed #e9ecef; }
+.vol-search-wrap {
+  display: flex; align-items: center; gap: 8px;
+  background: #fff; border: 1px solid #e9ecef; border-radius: 10px;
+  padding: 8px 14px; color: #9ca3af; max-width: 360px;
+}
+.vol-search-input { border: none; outline: none; font-size: 13px; color: #2d3748; width: 100%; background: transparent; }
+.vol-search-results { margin-top: 10px; }
 
 /* Đội tình nguyện đã gán (khu vực gộp trực tiếp vào modal, thay cho trang riêng) */
 .team-rows { display: flex; flex-direction: column; gap: 8px; }
