@@ -200,14 +200,11 @@
                   <div v-if="isGeocoding" class="map-suggestion map-suggestion--loading">
                     <span class="spinner-dot"></span> Đang nhận diện địa chỉ từ bản đồ...
                   </div>
-                  <div v-else-if="suggestedAddressText" class="map-suggestion">
+                  <div v-else-if="suggestedAddressText" class="map-suggestion map-suggestion--done">
                     <div class="suggestion-text">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
-                      <span>{{ suggestedAddressText }}</span>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>
+                      <span>Đã tự động điền: {{ suggestedAddressText }}</span>
                     </div>
-                    <button type="button" class="btn-use-suggestion" @click="applySuggestedAddress">
-                      Đồng bộ vào form
-                    </button>
                   </div>
                 </div>
               </div>
@@ -529,6 +526,35 @@ const PROVINCES_RAW = [
 ]
 const provinceOptions = ref(PROVINCES_RAW)
 
+// Bỏ dấu + chuẩn hoá để so khớp tên tỉnh/thành Nominatim trả về (VD: "Thành
+// phố Hà Nội", "Ho Chi Minh City") với đúng chuỗi hiển thị trong dropdown.
+// Duyệt theo code point sau NFD thay vì literal regex chứa ký tự dấu tổ hợp
+// trong source file (dễ bị lưu sai encoding) — cùng cách vn-provinces.ts dùng.
+function normalizeProvinceName(input: string): string {
+  let stripped = ''
+  for (const ch of input.normalize('NFD')) {
+    const code = ch.codePointAt(0) ?? 0
+    if (code >= 0x0300 && code <= 0x036f) continue
+    stripped += ch
+  }
+  return stripped
+    .replace(/đ/gi, 'd')
+    .toLowerCase()
+    .replace(/^(tp\.?|thanh pho|tinh)\s+/, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function matchProvinceOption(rawRegion: string): string | null {
+  const norm = normalizeProvinceName(rawRegion)
+  if (!norm) return null
+  return (
+    provinceOptions.value.find((p) => normalizeProvinceName(p) === norm) ??
+    provinceOptions.value.find((p) => normalizeProvinceName(p).includes(norm) || norm.includes(normalizeProvinceName(p))) ??
+    null
+  )
+}
+
 // Fix icon marker mặc định của Leaflet bị vỡ khi build qua bundler (Vite/Webpack):
 // đường dẫn ảnh trong CSS gốc của Leaflet không khớp với asset đã qua xử lý.
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl
@@ -779,12 +805,14 @@ async function reverseGeocode(lat: number, lng: number) {
     suggestedAddressText.value = String(data?.display_name ?? line ?? '')
     suggestedAddressParts.value = { line: line || String(data?.display_name ?? ''), region }
 
-    // Chỉ tự điền khi ô đang trống — không ghi đè nội dung người dùng đã gõ tay.
-    if (!form.value.address.trim() && suggestedAddressParts.value.line) {
+    // Ghim tới đâu, tự điền địa chỉ tới đó — ghi đè nội dung cũ vì marker vừa
+    // dời sang vị trí mới, nội dung cũ không còn đúng nữa.
+    if (suggestedAddressParts.value.line) {
       form.value.address = suggestedAddressParts.value.line
     }
-    if (!form.value.region.trim() && suggestedAddressParts.value.region) {
-      form.value.region = suggestedAddressParts.value.region
+    const matchedProvince = matchProvinceOption(suggestedAddressParts.value.region)
+    if (matchedProvince) {
+      form.value.region = matchedProvince
     }
   } catch (e) {
     console.error('[MyRequestsView] Reverse geocode failed', e)
@@ -1414,6 +1442,7 @@ textarea { resize: vertical; }
   min-width: 0;
 }
 .map-suggestion--loading { color: #94a3b8; font-style: italic; }
+.map-suggestion--done { color: #15803d; background: #f0fdf4; border-color: #bbf7d0; }
 .suggestion-text {
   display: flex;
   align-items: center;
@@ -1431,20 +1460,6 @@ textarea { resize: vertical; }
   white-space: nowrap;
   min-width: 0;
 }
-.btn-use-suggestion {
-  flex-shrink: 0;
-  background: #fff;
-  border: 1px solid #2563eb;
-  color: #2563eb;
-  padding: 5px 10px;
-  border-radius: 6px;
-  font-size: 11.5px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.btn-use-suggestion:hover { background: #eff6ff; }
-
 .needs-grid { display: flex; flex-direction: column; gap: 10px; }
 .need-item { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; cursor: pointer; margin: 0; }
 .need-item input { width: 15px; height: 15px; }
