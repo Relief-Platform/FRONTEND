@@ -701,9 +701,12 @@ function initMap() {
     setPosition(e.latlng.lat, e.latlng.lng)
   })
 
-  // Ghim mặc định (kể cả khi chưa tương tác) đồng bộ luôn vào form,
-  // tránh trường hợp submit toạ độ (0,0) giữa đại dương.
-  setPosition(start[0], start[1])
+  // Luôn sync lat/lng vào form theo vị trí marker để hai ô input không hiện
+  // giá trị lạc nhịp (ví dụ marker ở Hà Nội mà input hiện 0 / 0).
+  // - hasCoords=true  → toạ độ thật, cho phép reverse geocode bình thường.
+  // - hasCoords=false → DEFAULT_CENTER, chỉ sync số, KHÔNG geocode để tránh
+  //   tự điền địa chỉ mặc định "72 Đinh Tiên Hoàng" vào form.
+  setPosition(start[0], start[1], hasCoords)
 }
 
 function destroyMap() {
@@ -716,12 +719,16 @@ function destroyMap() {
   markerInstance = null
 }
 
-function setPosition(lat: number, lng: number) {
+// triggerGeocode=false khi init với DEFAULT_CENTER (chưa có toạ độ thật) để
+// tránh Nominatim dịch ngược ra địa chỉ mặc định (VD: "72 Đinh Tiên Hoàng").
+function setPosition(lat: number, lng: number, triggerGeocode = true) {
   isSyncingFromMap = true
   form.value.latitude = lat
   form.value.longitude = lng
   nextTick(() => { isSyncingFromMap = false })
-  scheduleReverseGeocode(lat, lng)
+  if (triggerGeocode) {
+    scheduleReverseGeocode(lat, lng)
+  }
 }
 
 // Gõ tay vào ô Vĩ độ/Kinh độ → di chuyển marker + pan bản đồ theo (2 chiều).
@@ -1404,9 +1411,26 @@ textarea { resize: vertical; }
   border-radius: 8px;
   font-size: 12px;
   color: #475569;
+  min-width: 0;
 }
-.map-suggestion span { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .map-suggestion--loading { color: #94a3b8; font-style: italic; }
+.suggestion-text {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+}
+.suggestion-text svg {
+  flex-shrink: 0;
+}
+.suggestion-text span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
 .btn-use-suggestion {
   flex-shrink: 0;
   background: #fff;
