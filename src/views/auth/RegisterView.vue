@@ -117,6 +117,12 @@ const handleRegister = async () => {
     errorMessage.value = 'Email là bắt buộc điền!'
     return
   }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(formData.email.trim())) {
+    errorMessage.value = 'Địa chỉ email không hợp lệ! (Ví dụ: example@gmail.com)'
+    return
+  }
   if (!formData.phoneNumber.trim()) {
     errorMessage.value = 'Số điện thoại là bắt buộc điền!'
     return
@@ -130,6 +136,21 @@ const handleRegister = async () => {
 
   if (!formData.password) {
     errorMessage.value = 'Mật khẩu là bắt buộc điền!'
+    return
+  }
+
+  if (/\s/.test(formData.password)) {
+    errorMessage.value = 'Mật khẩu không được chứa khoảng trắng!'
+    return
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(formData.password)) {
+    errorMessage.value = 'Mật khẩu không được chứa ký tự đặc biệt (chỉ được gồm chữ cái và số)!'
+    return
+  }
+
+  if (formData.password.length < 6) {
+    errorMessage.value = 'Mật khẩu phải có tối thiểu 6 ký tự!'
     return
   }
 

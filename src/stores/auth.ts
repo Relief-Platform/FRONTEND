@@ -53,6 +53,28 @@ export const useAuthStore = defineStore('auth', () => {
   const isCoordinator      = computed(() => hasRole('Coordinator'))
   const isOrganization     = computed(() => hasRole('Organization'))
 
+  // ── Session tracking for single device / single session ─────
+  const currentSessionId = ref<string | null>(localStorage.getItem('active_session_id'))
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('storage', (event) => {
+      if (event.key === 'active_session_id' && event.newValue && event.newValue !== currentSessionId.value) {
+        // Tài khoản vừa đăng nhập ở một cửa sổ/thiết bị khác
+        accessToken.value = null
+        user.value = null
+        tokenStorage.clearAll()
+        localStorage.removeItem(USER_KEY)
+        sessionStorage.setItem(
+          'logout_reason',
+          'Tài khoản của bạn vừa được đăng nhập trên một thiết bị hoặc phiên làm việc khác. Bạn đã bị đăng xuất.',
+        )
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login?reason=session_expired'
+        }
+      }
+    })
+  }
+
   // ── Actions ────────────────────────────────────────────────
 
   /**
@@ -65,6 +87,10 @@ export const useAuthStore = defineStore('auth', () => {
 
     accessToken.value = result.accessToken
     user.value        = toAuthUser(result)
+
+    const newSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9)
+    currentSessionId.value = newSessionId
+    localStorage.setItem('active_session_id', newSessionId)
 
     tokenStorage.set(result.accessToken)
     tokenStorage.setRefresh(result.refreshToken)
@@ -90,6 +116,7 @@ export const useAuthStore = defineStore('auth', () => {
 
     tokenStorage.clearAll()
     localStorage.removeItem(USER_KEY)
+    localStorage.removeItem('active_session_id')
   }
 
   /**
@@ -99,8 +126,25 @@ export const useAuthStore = defineStore('auth', () => {
   async function fetchMe(): Promise<void> {
     try {
       const me = await getMe()
-      // Giữ lại expiresAt từ store cũ vì /me không trả expiresAt
       const current = user.value
+
+      // Nếu role trả về từ server KHÁC với role trong store → Admin vừa đổi role!
+      if (current && me.role !== current.role) {
+        accessToken.value = null
+        user.value = null
+        tokenStorage.clearAll()
+        localStorage.removeItem(USER_KEY)
+        localStorage.removeItem('active_session_id')
+        sessionStorage.setItem(
+          'logout_reason',
+          `Vai trò tài khoản của bạn đã được thay đổi (từ "${current.role}" sang "${me.role}"). Vui lòng đăng nhập lại để cập nhật quyền truy cập.`,
+        )
+        if (window.location.pathname !== '/login') {
+          window.location.href = '/login?reason=session_expired'
+        }
+        return
+      }
+
       user.value = {
         userId:    me.userId,
         fullName:  me.fullName,

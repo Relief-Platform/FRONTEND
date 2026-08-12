@@ -131,8 +131,23 @@ const handleSubmit = async () => {
     return
   }
 
-  if (newPassword.value.length < 8) {
-    errorMessage.value = 'Mật khẩu mới phải có tối thiểu 8 ký tự.'
+  if (!newPassword.value) {
+    errorMessage.value = 'Mật khẩu là bắt buộc điền.'
+    return
+  }
+
+  if (/\s/.test(newPassword.value)) {
+    errorMessage.value = 'Mật khẩu không được chứa khoảng trắng.'
+    return
+  }
+
+  if (!/^[a-zA-Z0-9]+$/.test(newPassword.value)) {
+    errorMessage.value = 'Mật khẩu không được chứa ký tự đặc biệt (chỉ được gồm chữ cái và số).'
+    return
+  }
+
+  if (newPassword.value.length < 6) {
+    errorMessage.value = 'Mật khẩu mới phải có tối thiểu 6 ký tự.'
     return
   }
 
