@@ -46,6 +46,10 @@ export interface RawTask {
   locationName?: string
   latitude?: number
   longitude?: number
+  /** BE thật (AssignmentResponse) trả các field này — các mốc thời gian theo vòng đời assignment */
+  assignedAt?: string
+  acceptedAt?: string
+  completedAt?: string
   date?: string
   startDate?: string
   scheduleDate?: string

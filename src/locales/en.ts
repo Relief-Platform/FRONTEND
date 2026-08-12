@@ -503,6 +503,7 @@ export default {
     title: 'Open Tasks Board',
     sub: 'Approved relief requests still short on volunteers — join instantly, no need to wait for Admin assignment',
     no_tasks: 'No open tasks right now',
+    load_failed: 'Could not load open tasks. Please try again!',
     no_location: 'Area not resolved on the map',
     slots: 'Joined: {current}/{total} people',
     btn_join: 'Join',

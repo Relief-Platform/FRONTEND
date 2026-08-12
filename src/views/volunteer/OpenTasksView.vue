@@ -12,6 +12,7 @@
 
       <div class="card">
         <div v-if="isLoading" class="empty-state">{{ $t('common.loading') }}</div>
+        <div v-else-if="loadError" class="empty-state empty-state--error">{{ loadError }}</div>
         <div v-else-if="tasks.length === 0" class="empty-state">{{ $t('openTasks.no_tasks') }}</div>
 
         <div class="task-list" v-else>
@@ -56,22 +57,44 @@ import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getOpenTasks, joinOpenTask, type OpenTask } from '@/features/requests/open-tasks.api'
 import { formatDateTimeVI } from '@/features/requests/requests.helpers'
 import { resolveProvinceCenter } from '@/features/requests/vn-provinces'
+import { getMyTasks } from '@/features/tasks/tasks.api'
 
 const { t } = useI18n()
 
 const tasks = ref<OpenTask[]>([])
 const isLoading = ref(true)
+const loadError = ref('')
 const joiningId = ref<string | null>(null)
 const joinError = ref('')
 const joinSuccess = ref('')
 
-async function loadTasks() {
-  isLoading.value = true
+/**
+ * BE /open-tasks chỉ lọc theo slot còn trống, KHÔNG loại trừ nhiệm vụ mà
+ * chính volunteer đang gọi đã tham gia (nếu targetHeadcount > 1, request vẫn
+ * còn slot cho người khác) → phải tự lọc ở FE dựa trên assignment hiện có.
+ */
+async function fetchJoinedRequestIds(): Promise<Set<string>> {
   try {
-    const result = await getOpenTasks(1, 100)
-    tasks.value = result.items
+    const myTasks = await getMyTasks()
+    return new Set(
+      myTasks.filter((task) => task.rawStatus !== 'Cancelled').map((task) => task.reliefRequestId),
+    )
   } catch (e) {
     console.error(e)
+    return new Set()
+  }
+}
+
+async function loadTasks() {
+  isLoading.value = true
+  loadError.value = ''
+  try {
+    const [result, joinedIds] = await Promise.all([getOpenTasks(1, 100), fetchJoinedRequestIds()])
+    tasks.value = result.items.filter((task) => !joinedIds.has(task.id))
+  } catch (e) {
+    console.error(e)
+    tasks.value = []
+    loadError.value = e instanceof Error ? e.message : t('openTasks.load_failed')
   } finally {
     isLoading.value = false
   }
@@ -165,7 +188,9 @@ async function handleJoin(task: OpenTask) {
   try {
     await joinOpenTask(task.id)
     joinSuccess.value = t('openTasks.join_success', { title: task.title })
-    await loadTasks()
+    // Xoá khỏi danh sách ngay — BE không loại trừ nhiệm vụ mình đã tham gia
+    // khỏi /open-tasks nếu request còn thiếu người (targetHeadcount > 1).
+    tasks.value = tasks.value.filter((item) => item.id !== task.id)
   } catch (e: unknown) {
     joinError.value = e instanceof Error ? e.message : t('openTasks.join_failed')
   } finally {
@@ -185,6 +210,7 @@ async function handleJoin(task: OpenTask) {
 
 .card { background: #fff; border-radius: 16px; padding: 22px; border: 1px solid #e9ecef; box-shadow: 0 2px 12px rgba(0,0,0,0.05); }
 .empty-state { text-align: center; padding: 40px 0; color: #94a3b8; font-size: 14px; }
+.empty-state--error { color: #e11d48; }
 
 .task-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
 .task-card {

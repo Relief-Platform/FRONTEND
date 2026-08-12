@@ -109,6 +109,7 @@
       </div>
 
       <!-- ══════════ MODAL: CHI TIẾT NHIỆM VỤ ══════════ -->
+      <Teleport to="body">
       <div v-if="showDetail && selectedTask" class="modal-overlay" @click.self="closeDetail">
         <div class="modal-box">
 
@@ -139,7 +140,7 @@
               <div class="detail-field">
                 <span class="detail-icon">📅</span>
                 <div>
-                  <span class="detail-label">Ngày thực hiện</span>
+                  <span class="detail-label">Ngày duyệt & phân công</span>
                   <span class="detail-value">{{ selectedTask.date }} · {{ selectedTask.time }}</span>
                 </div>
               </div>
@@ -235,6 +236,7 @@
           </div><!-- /modal-body -->
         </div><!-- /modal-box -->
       </div><!-- /modal-overlay -->
+      </Teleport>
 
     </div><!-- /tasks-wrapper -->
   </VolunteerLayout>

@@ -22,6 +22,16 @@ function normalizeStatus(rawStatus?: string): TaskStatus {
   return 'upcoming'
 }
 
+/** Định dạng giờ:phút — nhận cả chuỗi "HH:mm" thuần lẫn ISO datetime (VD: assignedAt) */
+function formatTime(value?: string): string {
+  if (!value) return 'Chưa cập nhật'
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+  return String(value)
+}
+
 function statusLabel(status: TaskStatus): string {
   if (status === 'ongoing') return 'Đang thực hiện'
   if (status === 'completed') return 'Đã hoàn thành'
@@ -33,18 +43,21 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
   const address = String(
     raw.address ?? raw.location ?? raw.locationName ?? 'Địa điểm chưa cập nhật',
   )
-  const dateValue = raw.date ?? raw.startDate ?? raw.scheduleDate ?? raw.start_at
-  const timeValue = raw.time ?? raw.startTime ?? raw.endTime ?? raw.timeRange ?? raw.slot
-  const progress = Number(raw.progress ?? raw.percentage ?? raw.completedPercent ?? 0)
   const rawStatusStr = String(raw.status ?? raw.state ?? raw.taskStatus ?? '')
   const resolvedStatus = normalizeStatus(rawStatusStr)
+  // assignedAt = thời điểm admin duyệt đơn cứu trợ & phân công nhiệm vụ này —
+  // mốc cố định, không đổi theo tiến độ volunteer cập nhật sau đó.
+  const dateValue = raw.date ?? raw.startDate ?? raw.scheduleDate ?? raw.start_at ?? raw.assignedAt
+  const timeValue =
+    raw.time ?? raw.startTime ?? raw.endTime ?? raw.timeRange ?? raw.slot ?? raw.assignedAt
+  const progress = Number(raw.progress ?? raw.percentage ?? raw.completedPercent ?? 0)
 
   const lat = Number(raw.latitude)
   const lng = Number(raw.longitude)
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)
 
   return {
-    id: Number(raw.id ?? index + 1),
+    id: String(raw.id ?? index + 1),
     assignmentId: String(raw.id ?? ''),
     reliefRequestId: String(raw.reliefRequestId ?? ''),
     title,
@@ -55,7 +68,7 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
     date: dateValue
       ? new Date(String(dateValue)).toLocaleDateString('vi-VN')
       : 'Chưa cập nhật',
-    time: String(timeValue ?? 'Chưa cập nhật'),
+    time: formatTime(timeValue),
     progress: Number.isFinite(progress) ? progress : 0,
     status: resolvedStatus,
     rawStatus: rawStatusStr,
