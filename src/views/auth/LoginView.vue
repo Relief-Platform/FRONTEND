@@ -79,16 +79,27 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { reactive, ref, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 
+const route     = useRoute()
 const router    = useRouter()
 const authStore = useAuthStore()
 
 const showPassword   = ref(false)
 const isLoading      = ref(false)
 const errorMessage   = ref('')
+
+onMounted(() => {
+  const reason = sessionStorage.getItem('logout_reason')
+  if (reason) {
+    errorMessage.value = reason
+    sessionStorage.removeItem('logout_reason')
+  } else if (route.query.reason === 'session_expired') {
+    errorMessage.value = 'Phiên đăng nhập đã bị hủy do tài khoản được đăng nhập ở thiết bị khác hoặc hết hạn.'
+  }
+})
 
 const formData = reactive({
   usernameOrEmail: '',

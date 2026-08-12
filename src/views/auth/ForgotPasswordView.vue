@@ -73,8 +73,15 @@ const isLoading = ref(false)
 const errorMessage = ref('')
 
 const handleSubmit = async () => {
-  if (!email.value || !email.value.includes('@')) {
-    errorMessage.value = 'Vui lòng nhập địa chỉ email hợp lệ.'
+  const trimmedEmail = email.value.trim()
+  if (!trimmedEmail) {
+    errorMessage.value = 'Vui lòng nhập địa chỉ email.'
+    return
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  if (!emailRegex.test(trimmedEmail)) {
+    errorMessage.value = 'Địa chỉ email không hợp lệ (Ví dụ: example@gmail.com).'
     return
   }
 

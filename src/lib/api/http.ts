@@ -69,10 +69,16 @@ function rejectPendingRequests(error: unknown): void {
   pendingQueue = []
 }
 
-function forceLogoutRedirect(): void {
+export function forceLogoutRedirect(reason?: string): void {
   tokenStorage.clearAll()
+  localStorage.removeItem('auth_user')
+  localStorage.removeItem('active_session_id')
+  sessionStorage.setItem(
+    'logout_reason',
+    reason || 'Tài khoản của bạn đã được đăng nhập từ thiết bị khác hoặc phiên làm việc đã hết hạn. Vui lòng đăng nhập lại.',
+  )
   if (window.location.pathname !== '/login') {
-    window.location.href = '/login'
+    window.location.href = '/login?reason=session_expired'
   }
 }
 

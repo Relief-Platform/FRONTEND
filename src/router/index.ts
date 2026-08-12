@@ -386,9 +386,18 @@ const router = createRouter({
   scrollBehavior: () => ({ top: 0 }),
 })
 
+import { useAuthStore } from '@/stores/auth'
+
 // ── Global auth + RBAC guard ─────────────────────────────────
-router.beforeEach((to) => {
+router.beforeEach(async (to) => {
   const isLoggedIn = tokenStorage.exists()
+
+  if (isLoggedIn) {
+    const authStore = useAuthStore()
+    // Kiểm tra đồng bộ thông tin role mới nhất từ BE.
+    // Nếu role đã bị Admin thay đổi, fetchMe() sẽ phát hiện và tự động đăng xuất.
+    await authStore.fetchMe()
+  }
 
   // Đọc role từ user đã persist trong localStorage
   let userRole: UserRole | null = null
