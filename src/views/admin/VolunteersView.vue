@@ -297,7 +297,7 @@ const pendingCount = computed(() => {
 })
 
 const filteredVolunteers = computed(() => {
-  return volunteers.value.filter(v => {
+  const list = volunteers.value.filter(v => {
     // Filter by search query (name/email)
     const matchQuery =
       v.fullName.toLowerCase().includes(searchQuery.value.toLowerCase()) ||
@@ -308,6 +308,8 @@ const filteredVolunteers = computed(() => {
 
     return matchQuery && matchStatus
   })
+  // Đơn đang chờ duyệt lên đầu danh sách để admin xử lý trước
+  return [...list].sort((a, b) => (a.status === 'Pending' ? -1 : 0) - (b.status === 'Pending' ? -1 : 0))
 })
 
 // ── Actions ──────────────────────────────────────────────────
