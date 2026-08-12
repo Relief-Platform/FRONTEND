@@ -276,10 +276,6 @@
                     <span class="allocate-progress" :class="{ 'allocate-progress--full': isFullyAllocated }">
                       {{ $t('admin.allocate_progress', { current: allocatedCount, target: targetHeadcountValue }) }}
                     </span>
-                    <button class="btn-refresh" @click="loadSuggested" :disabled="isSuggestLoading">
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" :class="{ 'spin-icon': isSuggestLoading }"><path d="M21 12a9 9 0 0 1-9 9 9 9 0 0 1-9-9 9 9 0 0 1 9-9"/><path d="M21 3v4h-4"/></svg>
-                      {{ $t('admin.btn_refresh') }}
-                    </button>
                   </div>
                 </div>
                 <p v-if="isFullyAllocated" class="allocate-full-note">{{ $t('admin.allocate_full_note') }}</p>
@@ -1522,23 +1518,6 @@ async function autoAssignTeam() {
   padding: 8px 12px;
   margin: 0 0 10px;
 }
-.btn-refresh {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 12px;
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  background: #f1f5f9;
-  font-size: 12px;
-  font-weight: 600;
-  color: #1d4ed8;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-.btn-refresh:hover { background: #e2e8f0; border-color: #cbd5e1; transform: translateY(-1px); }
-.btn-refresh:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-
 .suggest-loading, .suggest-empty {
   padding: 24px;
   text-align: center;

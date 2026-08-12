@@ -751,7 +751,6 @@ export default {
     inventory_issued: 'đã cấp {issued} / yêu cầu {requested}',
     inventory_shortfall: 'kho không đủ, cần Coordinator nhập thêm',
     suggested_volunteers: 'Tình nguyện viên gợi ý gần nhất',
-    btn_refresh: 'Làm mới',
     suggest_searching: 'Đang tìm...',
     no_suggested_volunteers: 'Không có tình nguyện viên phù hợp trong khu vực.',
     completed_assignments_short: '{count} lượt hoàn thành',

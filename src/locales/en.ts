@@ -751,7 +751,6 @@ export default {
     inventory_issued: 'issued {issued} / requested {requested}',
     inventory_shortfall: 'insufficient stock, Coordinator needs to restock',
     suggested_volunteers: 'Nearest Suggested Volunteers',
-    btn_refresh: 'Refresh',
     suggest_searching: 'Searching...',
     no_suggested_volunteers: 'No suitable volunteers found in this area.',
     completed_assignments_short: '{count} completed',

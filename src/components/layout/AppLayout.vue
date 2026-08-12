@@ -61,27 +61,37 @@
                   {{ $t('nav.profile') }}
                 </router-link>
 
-                <!-- Các mục quản trị gộp vào Avatar Dropdown khi log role Admin -->
+                <!-- Các mục quản trị gộp vào Avatar Dropdown khi log role Admin — đồng bộ
+                     y hệt navItems của AdminLayout (sidebar/topbar khi đang ở Dashboard). -->
                 <template v-if="auth.hasRole('Admin')">
                   <div class="dropdown-divider" />
                   <div class="dropdown-section-title">Quản trị hệ thống</div>
                   <router-link to="/admin" class="dropdown-item dropdown-item--admin" @click="showMenu = false">
-                    Bảng điều khiển Admin
-                  </router-link>
-                  <router-link to="/requester" class="dropdown-item" @click="showMenu = false">
-                    {{ $t('nav.requests') }}
-                  </router-link>
-                  <router-link to="/volunteer" class="dropdown-item" @click="showMenu = false">
-                    {{ $t('nav.volunteer') }}
-                  </router-link>
-                  <router-link to="/warehouses" class="dropdown-item" @click="showMenu = false">
-                    {{ $t('nav.warehouse') }}
-                  </router-link>
-                  <router-link to="/coordinator" class="dropdown-item" @click="showMenu = false">
-                    {{ $t('nav.coordination') }}
+                    {{ $t('admin.nav_dashboard') }}
                   </router-link>
                   <router-link to="/users" class="dropdown-item" @click="showMenu = false">
-                    {{ $t('nav.users') }}
+                    {{ $t('admin.nav_users') }}
+                  </router-link>
+                  <router-link to="/admin/relief-requests" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('admin.nav_requests') }}
+                  </router-link>
+                  <router-link to="/admin/assignments" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('admin.nav_coordination') }}
+                  </router-link>
+                  <router-link to="/admin/volunteers" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('admin.nav_volunteers') }}
+                  </router-link>
+                  <router-link to="/admin/skills" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('admin.nav_skills') }}
+                  </router-link>
+                  <router-link to="/admin/donations" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('donations.nav_label') }}
+                  </router-link>
+                  <router-link to="/admin/role-requests" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('roleRequests.nav_label') }}
+                  </router-link>
+                  <router-link to="/admin/reports" class="dropdown-item" @click="showMenu = false">
+                    {{ $t('admin.nav_reports') }}
                   </router-link>
                 </template>
 
