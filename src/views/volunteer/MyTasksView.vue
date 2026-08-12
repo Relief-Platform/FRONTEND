@@ -80,17 +80,14 @@
               </svg>
               <span>{{ task.time }}</span>
             </div>
+            <div v-if="task.isTeamLead" class="meta-item meta-item--lead">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+              </svg>
+              <span>Nhóm trưởng</span>
+            </div>
           </div>
 
-          <div class="progress-block">
-            <div class="progress-top">
-              <span>{{ $t('volunteer.tasks_progress') }}</span>
-              <strong>{{ task.progress }}%</strong>
-            </div>
-            <div class="progress-bar">
-              <span :style="{ width: `${task.progress}%` }" />
-            </div>
-          </div>
 
           <div class="map-block">
             <div
@@ -103,10 +100,131 @@
 
           <div class="task-footer">
             <span class="task-note">{{ task.note }}</span>
-            <button class="detail-btn">{{ $t('volunteer.tasks_btn_detail') }}</button>
+            <button class="detail-btn" @click="openDetail(task)">{{ $t('volunteer.tasks_btn_detail') }}</button>
           </div>
         </article>
       </div>
+
+    <!-- ══════════ MODAL: CHI TIẾT NHIỆM VỤ ══════════ -->
+    <Teleport to="body">
+      <div v-if="showDetail && selectedTask" class="modal-overlay" @click.self="closeDetail">
+        <div class="modal-box">
+        <!-- Header -->
+        <div class="modal-header">
+          <div class="modal-header-info">
+            <span class="task-status" :class="`status--${selectedTask.status}`">
+              {{ $t(`volunteer.tasks_status_${selectedTask.status}`) }}
+            </span>
+            <h3>{{ selectedTask.title }}</h3>
+            <p class="modal-address">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              {{ selectedTask.address }}
+              <template v-if="selectedTask.region"> · {{ selectedTask.region }}</template>
+            </p>
+          </div>
+          <button class="modal-close" @click="closeDetail">✕</button>
+        </div>
+
+        <!-- Body -->
+        <div class="modal-body">
+          <!-- Info grid -->
+          <div class="detail-grid">
+            <div class="detail-field">
+              <span class="detail-icon">📅</span>
+              <div>
+                <span class="detail-label">Ngày thực hiện</span>
+                <span class="detail-value">{{ selectedTask.date }} · {{ selectedTask.time }}</span>
+              </div>
+            </div>
+            <div class="detail-field" v-if="selectedTask.affectedPeople">
+              <span class="detail-icon">👥</span>
+              <div>
+                <span class="detail-label">Số người ảnh hưởng</span>
+                <span class="detail-value">{{ selectedTask.affectedPeople }} người</span>
+              </div>
+            </div>
+            <div class="detail-field" v-if="selectedTask.contactPhone">
+              <span class="detail-icon">📞</span>
+              <div>
+                <span class="detail-label">Liên hệ người cần trợ giúp</span>
+                <span class="detail-value">{{ selectedTask.contactPhone }}</span>
+              </div>
+            </div>
+            <div class="detail-field" v-if="selectedTask.emergencyLevel">
+              <span class="detail-icon">🚨</span>
+              <div>
+                <span class="detail-label">Mức độ khẩn cấp</span>
+                <span class="detail-value">{{ emergencyLevelLabel(selectedTask.emergencyLevel) }}</span>
+              </div>
+            </div>
+            <div class="detail-field" v-if="selectedTask.isTeamLead">
+              <span class="detail-icon">⭐</span>
+              <div>
+                <span class="detail-label">Vai trò</span>
+                <span class="detail-value" style="color: #b45309; font-weight: 700;">Nhóm trưởng</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div v-if="selectedTask.description" class="detail-section">
+            <span class="detail-section-label">Mô tả yêu cầu</span>
+            <p class="detail-section-text">{{ selectedTask.description }}</p>
+          </div>
+
+          <!-- Note -->
+          <div class="detail-section">
+            <span class="detail-section-label">Ghi chú nhiệm vụ</span>
+            <p class="detail-section-text">{{ selectedTask.note }}</p>
+          </div>
+
+          <!-- Progress -->
+          <div class="detail-section">
+            <div class="progress-top">
+              <span class="detail-section-label" style="margin:0">Tiến độ</span>
+              <strong>{{ selectedTask.progress }}%</strong>
+            </div>
+            <div class="progress-bar" style="margin-top: 8px;">
+              <span :style="{ width: `${selectedTask.progress}%` }" />
+            </div>
+          </div>
+
+          <!-- Status flow -->
+          <div class="status-flow">
+            <span class="detail-section-label">Luồng trạng thái</span>
+            <div class="status-steps">
+              <div
+                v-for="step in statusFlow"
+                :key="step.value"
+                :class="['status-step', { active: isCurrentOrPast(step.value), current: step.value === selectedTask.rawStatus }]"
+              >
+                <div class="status-step-dot"></div>
+                <span class="status-step-label">{{ step.label }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error msg -->
+          <p v-if="statusError" class="error-text">{{ statusError }}</p>
+
+          <!-- Action buttons -->
+          <div class="modal-actions">
+            <button class="btn-outline" @click="closeDetail">Đóng</button>
+            <template v-if="nextStatus(selectedTask.rawStatus)">
+              <button
+                class="btn-primary btn-status"
+                :disabled="isUpdating"
+                @click="handleStatusUpdate"
+              >
+                <svg v-if="isUpdating" class="spinner-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none" opacity="0.3"/><path fill="currentColor" d="M4 12a8 8 0 018-8v8z"/></svg>
+                {{ isUpdating ? 'Đang cập nhật...' : nextStatusLabel(selectedTask.rawStatus) }}
+              </button>
+            </template>
+          </div>
+        </div>
+        </div>
+      </div>
+    </Teleport>
     </div>
   </VolunteerLayout>
 </template>
@@ -118,15 +236,56 @@ import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import VolunteerLayout from '@/components/layout/VolunteerLayout.vue'
 import { getMyTasks } from '@/features/tasks/tasks.api'
+import { updateAssignmentStatus, type AssignmentStatus } from '@/features/tasks/assignments.api'
 import type { TaskItem, TaskStatus } from '@/features/tasks/tasks.types'
 
-// Màu marker theo trạng thái nhiệm vụ — đồng bộ tinh thần với dotStyle bên
-// requests.helpers.ts (Requester), nhưng TaskStatus của Volunteer là bộ giá
-// trị khác (ongoing/upcoming/completed) nên định nghĩa riêng ở đây.
+// Màu marker theo trạng thái nhiệm vụ
 const TASK_STATUS_MARKER_COLOR: Record<TaskStatus, string> = {
   ongoing: '#e27d24',
   upcoming: '#3182ce',
   completed: '#276749',
+}
+
+// Luồng trạng thái assignment theo thứ tự
+const STATUS_FLOW: { value: string; label: string }[] = [
+  { value: 'Assigned', label: 'Đã phân công' },
+  { value: 'Accepted', label: 'Đã chấp nhận' },
+  { value: 'OnTheWay', label: 'Đang di chuyển' },
+  { value: 'Completed', label: 'Hoàn thành' },
+]
+
+const STATUS_ORDER = STATUS_FLOW.map((s) => s.value)
+
+/** Trạng thái kế tiếp trong luồng (null nếu đã xong hoặc bị huỷ) */
+function nextStatus(raw: string): AssignmentStatus | null {
+  const idx = STATUS_ORDER.indexOf(raw)
+  if (idx === -1 || idx >= STATUS_ORDER.length - 1) return null
+  return STATUS_ORDER[idx + 1] as AssignmentStatus
+}
+
+function nextStatusLabel(raw: string): string {
+  const next = nextStatus(raw)
+  if (!next) return ''
+  const labels: Record<string, string> = {
+    Accepted: '✅ Xác nhận chấp nhận nhiệm vụ',
+    OnTheWay: '🚗 Bắt đầu di chuyển',
+    Completed: '🏁 Đánh dấu hoàn thành',
+  }
+  return labels[next] ?? `Chuyển sang ${next}`
+}
+
+function isCurrentOrPast(stepValue: string): boolean {
+  if (!selectedTask.value) return false
+  const taskIdx = STATUS_ORDER.indexOf(selectedTask.value.rawStatus)
+  const stepIdx = STATUS_ORDER.indexOf(stepValue)
+  return taskIdx >= stepIdx
+}
+
+function emergencyLevelLabel(level: number | null): string {
+  if (level === 1) return '🟢 Cần hỗ trợ thường'
+  if (level === 2) return '🟠 Quy mô vừa / Cần gấp'
+  if (level === 3) return '🔴 Rất nghiêm trọng / Khẩn cấp'
+  return '—'
 }
 
 const { t } = useI18n()
@@ -174,9 +333,51 @@ const activeCount = computed(() => tasks.value.filter((task) => task.status === 
 const upcomingCount = computed(() => tasks.value.filter((task) => task.status === 'upcoming').length)
 const completedCount = computed(() => tasks.value.filter((task) => task.status === 'completed').length)
 
+// ── Modal detail + status update ───────────────────────────────
+const showDetail = ref(false)
+const selectedTask = ref<TaskItem | null>(null)
+const isUpdating = ref(false)
+const statusError = ref('')
+const statusFlow = STATUS_FLOW
+
+function openDetail(task: TaskItem) {
+  selectedTask.value = task
+  statusError.value = ''
+  showDetail.value = true
+}
+
+function closeDetail() {
+  showDetail.value = false
+  selectedTask.value = null
+  statusError.value = ''
+}
+
+async function handleStatusUpdate() {
+  if (!selectedTask.value) return
+  const next = nextStatus(selectedTask.value.rawStatus)
+  if (!next) return
+
+  isUpdating.value = true
+  statusError.value = ''
+  try {
+    await updateAssignmentStatus(selectedTask.value.assignmentId, next)
+    // Reload danh sách và đồng bộ task đang chọn
+    await loadTasks()
+    // Tìm lại task sau reload để update modal
+    const updated = tasks.value.find((t) => t.assignmentId === selectedTask.value?.assignmentId)
+    if (updated) {
+      selectedTask.value = updated
+    } else {
+      closeDetail()
+    }
+  } catch (err: any) {
+    statusError.value = err?.response?.data?.message || err?.message || 'Cập nhật trạng thái thất bại.'
+  } finally {
+    isUpdating.value = false
+  }
+}
+
 // ── Bản đồ mini theo từng card (Leaflet + OpenStreetMap) ───
-// Cùng pattern đã dùng ở TrackingView.vue (Requester): circleMarker màu theo
-// status, tắt tương tác vì chỉ để xem nhanh trong danh sách.
 const mapEls = new Map<string, HTMLElement>()
 const mapInstances = new Map<string, L.Map>()
 
@@ -229,10 +430,11 @@ function renderMaps() {
   }
 }
 
-watch(filteredTasks, async () => {
-  await nextTick()
+// flush: 'post' đảm bảo watch chạy SAU khi Vue cập nhật DOM xong
+// (refs trong mapEls đã được set đầy đủ trước khi renderMaps() khởi tạo Leaflet).
+watch(filteredTasks, () => {
   renderMaps()
-})
+}, { flush: 'post' })
 
 onBeforeUnmount(() => {
   destroyMaps()
@@ -314,17 +516,9 @@ onBeforeUnmount(() => {
   box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
 }
 
-.summary-card--active {
-  border-left: 4px solid #e27d24;
-}
-
-.summary-card--upcoming {
-  border-left: 4px solid #3182ce;
-}
-
-.summary-card--done {
-  border-left: 4px solid #276749;
-}
+.summary-card--active  { border-left: 4px solid #e27d24; }
+.summary-card--upcoming{ border-left: 4px solid #3182ce; }
+.summary-card--done    { border-left: 4px solid #276749; }
 
 .summary-label {
   margin: 0 0 6px;
@@ -422,20 +616,9 @@ onBeforeUnmount(() => {
   white-space: nowrap;
 }
 
-.status--ongoing {
-  background: #fef3e2;
-  color: #b45309;
-}
-
-.status--upcoming {
-  background: #ebf8ff;
-  color: #2b6cb0;
-}
-
-.status--completed {
-  background: #e8f5ee;
-  color: #276749;
-}
+.status--ongoing   { background: #fef3e2; color: #b45309; }
+.status--upcoming  { background: #ebf8ff; color: #2b6cb0; }
+.status--completed { background: #e8f5ee; color: #276749; }
 
 .task-meta {
   display: flex;
@@ -452,9 +635,15 @@ onBeforeUnmount(() => {
   font-size: 13px;
 }
 
-.progress-block {
-  margin-bottom: 14px;
+.meta-item--lead {
+  color: #b45309;
+  font-weight: 700;
+  background: #fef3e2;
+  border-radius: 999px;
+  padding: 2px 10px;
 }
+
+
 
 .progress-top {
   display: flex;
@@ -467,7 +656,7 @@ onBeforeUnmount(() => {
 
 .progress-bar {
   width: 100%;
-  height: 10px;
+  height: 8px;
   border-radius: 999px;
   background: #edf2f7;
   overflow: hidden;
@@ -484,6 +673,7 @@ onBeforeUnmount(() => {
 .map-block {
   margin-bottom: 14px;
 }
+
 
 .task-map {
   width: 100%;
@@ -521,35 +711,601 @@ onBeforeUnmount(() => {
   border: none;
   background: #276749;
   color: #fff;
-  padding: 8px 12px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.18s ease;
 }
 
 .detail-btn:hover {
   background: #1f5337;
 }
 
-@media (max-width: 900px) {
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
+/* ── Modal ── */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
 
-  .page-header {
-    flex-direction: column;
-  }
+.modal-box {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.modal-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.modal-header-info h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modal-address {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #64748b;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px;
+}
+.modal-close:hover { color: #0f172a; }
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.detail-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.detail-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.detail-section-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+.detail-section-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+/* Status flow */
+.status-flow {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.status-steps {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-top: 10px;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 6px;
+}
+
+.status-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 10px);
+  right: calc(-50% + 10px);
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.status-step.active:not(:last-child)::after {
+  background: #276749;
+}
+
+.status-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 3px solid #e2e8f0;
+  z-index: 1;
+  transition: all 0.2s;
+}
+
+.status-step.active .status-step-dot {
+  background: #276749;
+  border-color: #276749;
+}
+
+.status-step.current .status-step-dot {
+  background: #fff;
+  border-color: #276749;
+  box-shadow: 0 0 0 3px rgba(39, 103, 73, 0.25);
+}
+
+.status-step-label {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-step.active .status-step-label {
+  color: #276749;
+}
+
+.status-step.current .status-step-label {
+  color: #276749;
+  font-weight: 700;
+}
+
+/* Actions */
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.btn-outline {
+  background: none;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.btn-outline:hover { border-color: #94a3b8; color: #1e293b; }
+
+.btn-primary {
+  background: linear-gradient(135deg, #276749, #48bb78);
+  border: none;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.btn-primary:not(:disabled):hover { opacity: 0.88; }
+
+.btn-status {
+  white-space: nowrap;
+}
+
+.error-text {
+  color: #e11d48;
+  font-size: 13px;
+  margin: 0;
+  padding: 10px 14px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+}
+
+.spinner-icon {
+  width: 15px;
+  height: 15px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  100% { transform: rotate(360deg); }
+}
+
+@media (max-width: 900px) {
+  .summary-grid { grid-template-columns: 1fr; }
+  .page-header  { flex-direction: column; }
 }
 
 @media (max-width: 640px) {
   .task-card__header,
-  .task-footer {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+  .task-footer { flex-direction: column; align-items: flex-start; }
+  .task-map { height: 160px; }
+  .status-step-label { font-size: 9.5px; }
+}
+</style>
 
-  .task-map {
-    height: 160px;
-  }
+<!-- Modal CSS không scoped vì Teleport đưa nó ra <body> -->
+<style>
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+}
+
+.modal-box {
+  background: #fff;
+  border-radius: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.18);
+  overflow: hidden;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #f1f5f9;
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 1;
+}
+
+.modal-header-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+
+.modal-header-info h3 {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.modal-address {
+  margin: 0;
+  font-size: 12.5px;
+  color: #64748b;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.modal-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #64748b;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 2px;
+}
+.modal-close:hover { color: #0f172a; }
+
+.modal-body {
+  padding: 20px 24px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.detail-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detail-field {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.detail-icon {
+  font-size: 16px;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.detail-label {
+  display: block;
+  font-size: 11.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 2px;
+}
+
+.detail-value {
+  display: block;
+  font-size: 14px;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+.detail-section {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.detail-section-label {
+  display: block;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  margin-bottom: 8px;
+}
+
+.detail-section-text {
+  margin: 0;
+  font-size: 13.5px;
+  color: #334155;
+  line-height: 1.6;
+}
+
+.status-flow {
+  border-top: 1px solid #f1f5f9;
+  padding-top: 14px;
+}
+
+.status-steps {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+}
+
+.status-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+  gap: 6px;
+}
+
+.status-step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 8px;
+  left: calc(50% + 10px);
+  right: calc(-50% + 10px);
+  height: 2px;
+  background: #e2e8f0;
+  z-index: 0;
+}
+
+.status-step.active:not(:last-child)::after {
+  background: #276749;
+}
+
+.status-step-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 3px solid #e2e8f0;
+  z-index: 1;
+  transition: all 0.2s;
+}
+
+.status-step.active .status-step-dot {
+  background: #276749;
+  border-color: #276749;
+}
+
+.status-step.current .status-step-dot {
+  background: #fff;
+  border-color: #276749;
+  box-shadow: 0 0 0 3px rgba(39, 103, 73, 0.25);
+}
+
+.status-step-label {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-step.active .status-step-label { color: #276749; }
+.status-step.current .status-step-label { color: #276749; font-weight: 700; }
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 4px;
+}
+
+.modal-box .btn-outline {
+  background: none;
+  border: 1.5px solid #e2e8f0;
+  color: #64748b;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.modal-box .btn-outline:hover { border-color: #94a3b8; color: #1e293b; }
+
+.modal-box .btn-primary {
+  background: linear-gradient(135deg, #276749, #48bb78);
+  border: none;
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.18s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+.modal-box .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+.modal-box .btn-primary:not(:disabled):hover { opacity: 0.88; }
+
+.modal-box .error-text {
+  color: #e11d48;
+  font-size: 13px;
+  margin: 0;
+  padding: 10px 14px;
+  background: #fff1f2;
+  border: 1px solid #fecdd3;
+  border-radius: 8px;
+}
+
+.modal-box .progress-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  color: #4a5568;
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+.modal-box .progress-bar {
+  width: 100%;
+  height: 8px;
+  border-radius: 999px;
+  background: #edf2f7;
+  overflow: hidden;
+}
+
+.modal-box .progress-bar span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #276749 0%, #48bb78 100%);
+  transition: width 0.25s ease;
+}
+
+/* Status badges in modal */
+.modal-box .task-status {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11.5px;
+  font-weight: 700;
+  white-space: nowrap;
+  display: inline-block;
+}
+.modal-box .status--ongoing   { background: #fef3e2; color: #b45309; }
+.modal-box .status--upcoming  { background: #ebf8ff; color: #2b6cb0; }
+.modal-box .status--completed { background: #e8f5ee; color: #276749; }
+
+.spinner-icon {
+  width: 15px;
+  height: 15px;
+  animation: modal-spin 1s linear infinite;
+}
+
+@keyframes modal-spin {
+  100% { transform: rotate(360deg); }
 }
 </style>

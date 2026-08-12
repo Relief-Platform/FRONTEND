@@ -17,7 +17,7 @@ function normalizeStatus(rawStatus?: string): TaskStatus {
 
   if (['done', 'completed', 'complete', 'finished', 'finish', 'success'].includes(status))
     return 'completed'
-  if (['inprogress', 'ongoing', 'active', 'in_progress', 'processing', 'working'].includes(status))
+  if (['inprogress', 'ongoing', 'active', 'in_progress', 'processing', 'working', 'ontheway', 'on_the_way'].includes(status))
     return 'ongoing'
   return 'upcoming'
 }
@@ -29,7 +29,7 @@ function statusLabel(status: TaskStatus): string {
 }
 
 export function normalizeTask(raw: RawTask, index: number): TaskItem {
-  const title = String(raw.title ?? raw.name ?? raw.taskName ?? `Nhiệm vụ ${index + 1}`)
+  const title = String(raw.title ?? raw.name ?? raw.taskName ?? raw.reliefRequestTitle ?? `Nhiệm vụ ${index + 1}`)
   const address = String(
     raw.address ?? raw.location ?? raw.locationName ?? 'Địa điểm chưa cập nhật',
   )
@@ -45,8 +45,11 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
 
   return {
     id: Number(raw.id ?? index + 1),
+    assignmentId: String(raw.id ?? ''),
+    reliefRequestId: String(raw.reliefRequestId ?? ''),
     title,
     address,
+    region: String(raw.region ?? ''),
     latitude: hasCoords ? lat : null,
     longitude: hasCoords ? lng : null,
     date: dateValue
@@ -55,10 +58,17 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
     time: String(timeValue ?? 'Chưa cập nhật'),
     progress: Number.isFinite(progress) ? progress : 0,
     status: resolvedStatus,
+    rawStatus: rawStatusStr,
     statusLabel: statusLabel(resolvedStatus),
     note: String(raw.note ?? raw.description ?? raw.summary ?? 'Chưa có ghi chú'),
+    affectedPeople: raw.affectedPeople != null ? Number(raw.affectedPeople) : null,
+    emergencyLevel: raw.emergencyLevel != null ? Number(raw.emergencyLevel) : null,
+    contactPhone: String(raw.contactPhone ?? ''),
+    description: String(raw.description ?? raw.summary ?? raw.note ?? ''),
+    isTeamLead: Boolean(raw.isTeamLead),
   }
 }
+
 
 function extractList(payload: unknown): RawTask[] {
   if (Array.isArray(payload)) return payload as RawTask[]
