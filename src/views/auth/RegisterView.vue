@@ -18,22 +18,22 @@
       <form @submit.prevent="handleRegister">
         <div class="step-section">
           <div class="form-group">
-            <label>Họ và tên</label>
+            <label>Họ và tên <span class="required">*</span></label>
             <input type="text" v-model="formData.fullName" placeholder="Nguyễn Văn A" required />
           </div>
 
           <div class="form-group">
-            <label>Email</label>
+            <label>Email <span class="required">*</span></label>
             <input type="email" v-model="formData.email" placeholder="example@email.com" required />
           </div>
 
           <div class="form-group">
-            <label>Số điện thoại</label>
+            <label>Số điện thoại <span class="required">*</span></label>
             <input type="tel" v-model="formData.phoneNumber" placeholder="0912245678" required />
           </div>
 
           <div class="form-group">
-            <label>Mật khẩu</label>
+            <label>Mật khẩu <span class="required">*</span></label>
             <div class="input-with-icon">
               <input :type="showPassword ? 'text' : 'password'" v-model="formData.password" placeholder="••••••••••" required />
               <button type="button" class="icon-btn" @click="showPassword = !showPassword" :aria-label="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'">
@@ -50,7 +50,7 @@
           </div>
 
           <div class="form-group">
-            <label>Xác nhận mật khẩu</label>
+            <label>Xác nhận mật khẩu <span class="required">*</span></label>
             <input type="password" v-model="formData.confirmPassword" placeholder="••••••••••" required />
             <span v-if="passwordMismatch" class="error-text">Mật khẩu xác nhận không khớp!</span>
           </div>
@@ -58,7 +58,7 @@
           <div class="form-group checkbox-group">
             <input type="checkbox" id="commitment" v-model="formData.isCommitted" required />
             <label for="commitment">
-              Tôi đồng ý tạo tài khoản và có thể hoàn thiện hồ sơ sau khi đăng nhập.
+              Tôi đồng ý tạo tài khoản và có thể hoàn thiện hồ sơ sau khi đăng nhập. <span class="required">*</span>
             </label>
           </div>
         </div>
@@ -109,8 +109,42 @@ const passwordMismatch = computed(() => {
 })
 
 const handleRegister = async () => {
+  if (!formData.fullName.trim()) {
+    errorMessage.value = 'Họ và tên là bắt buộc điền!'
+    return
+  }
+  if (!formData.email.trim()) {
+    errorMessage.value = 'Email là bắt buộc điền!'
+    return
+  }
+  if (!formData.phoneNumber.trim()) {
+    errorMessage.value = 'Số điện thoại là bắt buộc điền!'
+    return
+  }
+
+  const phoneRegex = /^(0|84)[3|5|7|8|9][0-9]{8}$/
+  if (!phoneRegex.test(formData.phoneNumber.trim())) {
+    errorMessage.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678)'
+    return
+  }
+
+  if (!formData.password) {
+    errorMessage.value = 'Mật khẩu là bắt buộc điền!'
+    return
+  }
+
+  if (!formData.confirmPassword) {
+    errorMessage.value = 'Xác nhận mật khẩu là bắt buộc điền!'
+    return
+  }
+
   if (passwordMismatch.value) {
     errorMessage.value = 'Mật khẩu xác nhận không khớp!'
+    return
+  }
+
+  if (!formData.isCommitted) {
+    errorMessage.value = 'Vui lòng xác nhận đồng ý điều khoản trước khi đăng ký!'
     return
   }
 
@@ -135,6 +169,7 @@ const handleRegister = async () => {
     tokenStorage.setRefresh(result.refreshToken)
     authStore.accessToken = result.accessToken
     authStore.user        = toAuthUser(result)
+    authStore.user.phoneNumber = formData.phoneNumber
     localStorage.setItem('auth_user', JSON.stringify(authStore.user))
     // Mặc định Requester → redirect về /requester
     await router.push('/requester')
@@ -340,6 +375,12 @@ const handleRegister = async () => {
   background-color: #123766;
 }
 
+
+.required {
+  color: #dc2626;
+  font-weight: bold;
+  margin-left: 2px;
+}
 
 .error-text {
   color: #e53e3e;

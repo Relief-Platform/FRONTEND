@@ -485,6 +485,7 @@
 import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
+import { useAuthStore } from '@/stores/auth'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -545,6 +546,7 @@ const DEFAULT_ZOOM = 13
 const route = useRoute()
 const router = useRouter()
 const { t } = useI18n()
+const authStore = useAuthStore()
 
 // Nhãn trạng thái dịch trên FE, gộp theo cùng nhóm với STATUS_LABEL_VI cũ
 const STATUS_LABEL_KEY: Record<ReliefRequestStatus, string> = {
@@ -646,7 +648,7 @@ const emptyForm = (): CreateReliefRequestPayload => ({
   needMedicine: false,
   needBlanket: false,
   needShelter: false,
-  contactPhone: '',
+  contactPhone: authStore.user?.phoneNumber || '',
   foodQuantity: null,
   waterQuantity: null,
   medicineQuantity: null,
@@ -820,20 +822,32 @@ function validateStep(step: number): boolean {
   createError.value = ''
   if (step === 1) {
     if (!form.value.title.trim()) {
-      createError.value = 'Vui lòng nhập tiêu đề yêu cầu hỗ trợ'
+      createError.value = 'Bắt buộc điền tiêu đề yêu cầu hỗ trợ'
       return false
     }
+    if (!form.value.affectedPeople || form.value.affectedPeople <= 0) {
+      createError.value = 'Bắt buộc điền số người ảnh hưởng hợp lệ'
+      return false
+    }
+    const phoneRegex = /^(0|84)[3|5|7|8|9][0-9]{8}$/
     if (!form.value.contactPhone.trim()) {
-      createError.value = 'Vui lòng nhập số điện thoại liên hệ'
+      createError.value = 'Bắt buộc điền số điện thoại liên hệ'
+      return false
+    } else if (!phoneRegex.test(form.value.contactPhone.trim())) {
+      createError.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678)'
       return false
     }
     if (!form.value.description.trim()) {
-      createError.value = 'Vui lòng nhập mô tả chi tiết hoàn cảnh'
+      createError.value = 'Bắt buộc điền mô tả chi tiết hoàn cảnh'
       return false
     }
   } else if (step === 2) {
+    if (!form.value.region || !form.value.region.trim()) {
+      createError.value = 'Bắt buộc chọn Tỉnh / Thành phố'
+      return false
+    }
     if (!form.value.address.trim()) {
-      createError.value = 'Vui lòng nhập địa chỉ chi tiết'
+      createError.value = 'Bắt buộc điền địa chỉ chi tiết (Thôn/Xóm/Số nhà)'
       return false
     }
   }
@@ -884,6 +898,9 @@ onBeforeUnmount(() => {
 })
 
 const handleCreateSubmit = async () => {
+  if (!validateStep(1) || !validateStep(2)) {
+    return
+  }
   createError.value = ''
   isSubmitting.value = true
   console.log('[MyRequestsView] Submitting form data:', form.value)
@@ -959,6 +976,7 @@ const handleCancelRequest = async (item: ReliefRequestResponse) => {
 .page-header h2 { font-size: 24px; font-weight: 800; color: #1a1a2e; letter-spacing: -0.5px; margin: 0 0 4px 0; }
 .subtitle { font-size: 13.5px; color: #718096; margin: 0; }
 
+.required { color: #dc2626; font-weight: bold; margin-left: 2px; }
 .btn-primary { background-color: #e11d48; color: white; border: none; padding: 12px 20px; border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer; transition: background 0.2s ease; }
 .btn-primary:hover { background-color: #be123c; }
 .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
