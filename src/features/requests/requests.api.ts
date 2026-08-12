@@ -122,7 +122,25 @@ export async function getReliefRequests(
       '/relief-requests',
       { params: { pageNumber, pageSize } },
     )
-    return unwrapItems(data)
+    const items = unwrapItems(data)
+
+    // Mọi nơi gọi hàm này (dashboard, thống kê, bộ lọc trạng thái...) đều coi đây là "lấy TẤT
+    // CẢ yêu cầu", không phải phân trang thật. Trước đây chỉ lấy đúng trang 1 (vd 200 bản ghi) —
+    // khi tổng số yêu cầu trong hệ thống vượt quá pageSize, các yêu cầu cũ hơn (thường là các
+    // yêu cầu đã "Hoàn thành" từ lâu) bị rớt khỏi trang 1, khiến số đếm theo trạng thái sai lệch.
+    // Nếu BE báo còn nhiều trang hơn, tự động gọi tiếp cho đến khi lấy đủ.
+    if (!Array.isArray(data) && pageNumber === 1) {
+      const totalPages = data.totalPages ?? Math.ceil((data.totalCount ?? items.length) / pageSize)
+      for (let p = 2; p <= totalPages; p++) {
+        const { data: nextData } = await http.get<PagedResult<ReliefRequestResponse> | ReliefRequestResponse[]>(
+          '/relief-requests',
+          { params: { pageNumber: p, pageSize } },
+        )
+        items.push(...unwrapItems(nextData))
+      }
+    }
+
+    return items
   } catch (err) {
     console.warn('[requests.api] Không lấy được từ server, dùng dữ liệu offline:', err)
     return readOfflineRequests()

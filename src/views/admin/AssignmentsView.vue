@@ -94,7 +94,7 @@
             </thead>
             <tbody>
               <tr
-                v-for="row in displayedRows"
+                v-for="row in paginatedRows"
                 :key="row.id"
                 class="data-row"
                 @click="openDrawer(row)"
@@ -125,6 +125,13 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination -->
+          <div v-if="displayedRows.length > pageSize" class="admin-pagination">
+            <button class="page-btn" :disabled="!hasPrevAll" @click="changePageAll(-1)">{{ $t('admin.page_prev') }}</button>
+            <span class="page-info">{{ $t('admin.page_info', { page: currentPageAll, total: totalPagesAll }) }}</span>
+            <button class="page-btn" :disabled="!hasNextAll" @click="changePageAll(1)">{{ $t('admin.page_next') }}</button>
+          </div>
         </div>
       </template>
 
@@ -149,7 +156,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="row in sortedPendingCancellations" :key="row.id" class="data-row">
+              <tr v-for="row in paginatedPendingCancellations" :key="row.id" class="data-row">
                 <td class="td-req">{{ row.reliefRequestTitle }}</td>
                 <td class="td-vol">
                   <div class="vol-mini">
@@ -185,6 +192,13 @@
               </tr>
             </tbody>
           </table>
+
+          <!-- Pagination -->
+          <div v-if="sortedPendingCancellations.length > pageSize" class="admin-pagination">
+            <button class="page-btn" :disabled="!hasPrevPending" @click="changePagePending(-1)">{{ $t('admin.page_prev') }}</button>
+            <span class="page-info">{{ $t('admin.page_info', { page: currentPagePending, total: totalPagesPending }) }}</span>
+            <button class="page-btn" :disabled="!hasNextPending" @click="changePagePending(1)">{{ $t('admin.page_next') }}</button>
+          </div>
         </div>
         <p v-if="pendingMsg" class="global-msg" :class="pendingMsgType === 'error' ? 'msg--error' : 'msg--ok'">{{ pendingMsg }}</p>
       </template>
@@ -362,7 +376,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -506,6 +520,35 @@ const sortedPendingCancellations = computed(() =>
     a.volunteerFullName.localeCompare(b.volunteerFullName),
   ),
 )
+
+// ── Phân trang (giống trang Quản lý người dùng) — mỗi tab giữ trang riêng ──────
+const pageSize = 10
+
+const currentPageAll = ref(1)
+const totalPagesAll  = computed(() => Math.ceil(displayedRows.value.length / pageSize) || 1)
+const hasPrevAll      = computed(() => currentPageAll.value > 1)
+const hasNextAll      = computed(() => currentPageAll.value < totalPagesAll.value)
+const paginatedRows  = computed(() =>
+  displayedRows.value.slice((currentPageAll.value - 1) * pageSize, currentPageAll.value * pageSize),
+)
+function changePageAll(delta: number) {
+  currentPageAll.value = Math.min(Math.max(1, currentPageAll.value + delta), totalPagesAll.value)
+}
+watch([activeStatusFilter, searchQuery], () => { currentPageAll.value = 1 })
+// Danh sách co lại sau khi duyệt/huỷ... — kéo về trang cuối hợp lệ thay vì kẹt ở trang trống
+watch(totalPagesAll, (tp) => { if (currentPageAll.value > tp) currentPageAll.value = tp })
+
+const currentPagePending = ref(1)
+const totalPagesPending  = computed(() => Math.ceil(sortedPendingCancellations.value.length / pageSize) || 1)
+const hasPrevPending      = computed(() => currentPagePending.value > 1)
+const hasNextPending      = computed(() => currentPagePending.value < totalPagesPending.value)
+const paginatedPendingCancellations = computed(() =>
+  sortedPendingCancellations.value.slice((currentPagePending.value - 1) * pageSize, currentPagePending.value * pageSize),
+)
+function changePagePending(delta: number) {
+  currentPagePending.value = Math.min(Math.max(1, currentPagePending.value + delta), totalPagesPending.value)
+}
+watch(totalPagesPending, (tp) => { if (currentPagePending.value > tp) currentPagePending.value = tp })
 
 // ── Lọc theo ReliefRequestId khi điều hướng từ "Quản lý đội" (?requestId=) ──
 const filterRequestId = ref<string | null>(null)
@@ -792,6 +835,17 @@ function removePending(id: string) {
 
 /* ── Table ─────────────────────────────────────────────────── */
 .table-card { background: #fff; border-radius: 16px; border: 1px solid #e9ecef; box-shadow: 0 2px 12px rgba(0,0,0,0.05); overflow: hidden; }
+.admin-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 14px; border-top: 1px solid #e9ecef;
+}
+.page-btn {
+  padding: 7px 16px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: #1a4f8d; transition: all 0.15s ease;
+}
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-btn:not(:disabled):hover { border-color: #1a4f8d; background: rgba(26,79,141,0.05); }
+.page-info { font-size: 13px; color: #718096; }
 .data-table { width: 100%; border-collapse: collapse; }
 .data-table th { background: #f8fafc; padding: 13px 16px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.4px; border-bottom: 1px solid #e9ecef; text-align: left; }
 .th-center { text-align: center !important; }

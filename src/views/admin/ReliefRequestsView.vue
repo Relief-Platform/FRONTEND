@@ -75,7 +75,7 @@
           </thead>
           <tbody>
             <tr
-              v-for="req in displayedRows"
+              v-for="req in paginatedRows"
               :key="req.id"
               class="data-row"
               @click="openDetail(req.id)"
@@ -119,6 +119,13 @@
             </tr>
           </tbody>
         </table>
+
+        <!-- Pagination -->
+        <div v-if="displayedRows.length > pageSize" class="admin-pagination">
+          <button class="page-btn" :disabled="!hasPrevPage" @click="changePage(-1)">{{ $t('admin.page_prev') }}</button>
+          <span class="page-info">{{ $t('admin.page_info', { page: currentPage, total: totalPages }) }}</span>
+          <button class="page-btn" :disabled="!hasNextPage" @click="changePage(1)">{{ $t('admin.page_next') }}</button>
+        </div>
       </div>
 
       <!-- ── Detail Modal ──────────────────────────────── -->
@@ -441,7 +448,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, nextTick } from 'vue'
+import { ref, computed, onMounted, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import AdminLayout from '@/components/layout/AdminLayout.vue'
@@ -703,6 +710,23 @@ const displayedRows = computed(() => {
   if (sortBy.value === 'emergency-asc')  list.sort((a, b) => a.emergencyLevel - b.emergencyLevel)
   return list
 })
+
+// ── Phân trang (giống trang Quản lý người dùng) ─────────────────
+const pageSize    = 10
+const currentPage = ref(1)
+const totalPages  = computed(() => Math.ceil(displayedRows.value.length / pageSize) || 1)
+const hasPrevPage = computed(() => currentPage.value > 1)
+const hasNextPage = computed(() => currentPage.value < totalPages.value)
+const paginatedRows = computed(() =>
+  displayedRows.value.slice((currentPage.value - 1) * pageSize, currentPage.value * pageSize),
+)
+function changePage(delta: number) {
+  currentPage.value = Math.min(Math.max(1, currentPage.value + delta), totalPages.value)
+}
+// Lọc/tìm/sắp xếp thay đổi → quay về trang 1 để khỏi kẹt ở trang trống
+watch([activeFilter, searchQuery, sortBy], () => { currentPage.value = 1 })
+// Danh sách co lại sau khi đổi trạng thái... — kéo về trang cuối hợp lệ thay vì kẹt ở trang trống
+watch(totalPages, (tp) => { if (currentPage.value > tp) currentPage.value = tp })
 
 // ── Lifecycle ────────────────────────────────────────────────
 // Cho phép Coordinator Dashboard mở thẳng chi tiết 1 yêu cầu qua query (?id=...)
@@ -1212,6 +1236,17 @@ async function autoAssignTeam() {
   box-shadow: 0 2px 12px rgba(0,0,0,0.05);
   overflow: hidden;
 }
+.admin-pagination {
+  display: flex; align-items: center; justify-content: center; gap: 16px;
+  padding: 14px; border-top: 1px solid #e9ecef;
+}
+.page-btn {
+  padding: 7px 16px; border-radius: 8px; border: 1.5px solid #e2e8f0; background: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer; color: #1a4f8d; transition: all 0.15s ease;
+}
+.page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.page-btn:not(:disabled):hover { border-color: #1a4f8d; background: rgba(26,79,141,0.05); }
+.page-info { font-size: 13px; color: #718096; }
 .data-table {
   width: 100%;
   border-collapse: collapse;
