@@ -44,13 +44,15 @@
 
         <!-- Logged-in: avatar dropdown -->
         <template v-else>
-          <div class="user-menu" @click="showMenu = !showMenu" v-click-outside="() => (showMenu = false)">
-            <div class="user-avatar">{{ initials }}</div>
-            <div class="user-info">
-              <span class="user-name">{{ auth.user?.fullName }}</span>
-              <span class="user-role" :style="{ color: roleColor }">{{ roleLabel }}</span>
+          <div class="user-menu" v-click-outside="() => (showMenu = false)">
+            <div class="user-trigger" @click="showMenu = !showMenu">
+              <div class="user-avatar">{{ initials }}</div>
+              <div class="user-info">
+                <span class="user-name">{{ auth.user?.fullName }}</span>
+                <span class="user-role" :style="{ color: roleColor }">{{ roleLabel }}</span>
+              </div>
+              <span class="chevron" :class="{ rotated: showMenu }">▾</span>
             </div>
-            <span class="chevron" :class="{ rotated: showMenu }">▾</span>
 
             <!-- Dropdown khi click vào Avatar của người dùng -->
             <Transition name="fade">
@@ -404,13 +406,14 @@ const vClickOutside = {
 .nav-btn--primary:hover { background: #123766; color: #fff; }
 
 /* ── User menu ── */
-.user-menu {
+.user-menu { position: relative; }
+.user-trigger {
   display: flex; align-items: center; gap: var(--space-2);
   cursor: pointer; padding: 6px var(--space-2); border-radius: var(--radius-md);
-  position: relative; user-select: none;
+  user-select: none;
   transition: background var(--transition-fast);
 }
-.user-menu:hover { background: #f8fafc; }
+.user-trigger:hover { background: #f8fafc; }
 
 .user-avatar {
   width: 34px; height: 34px; border-radius: 50%;

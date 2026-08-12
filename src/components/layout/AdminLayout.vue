@@ -102,9 +102,11 @@
             <span v-if="hasUnreadNotifications" class="notif-dot" />
           </button>
 
-          <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
-            <div class="topbar-avatar">{{ initials }}</div>
-            <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
+          <div class="topbar-user-menu" v-click-outside="() => (showUserMenu = false)">
+            <div class="topbar-user-trigger" @click="showUserMenu = !showUserMenu">
+              <div class="topbar-avatar">{{ initials }}</div>
+              <span class="topbar-chevron" :class="{ rotated: showUserMenu }">&#9662;</span>
+            </div>
             <Transition name="fade">
               <div v-if="showUserMenu" class="topbar-dropdown">
                 <router-link
@@ -314,8 +316,9 @@ const vClickOutside = {
 .lang-btn:hover { color: #2d3748; }
 .lang-btn.active { background: #e2e8f0; color: #1a202c; font-weight: 700; }
 .lang-divider { color: #cbd5e0; font-size: 11px; }
-.topbar-user-menu { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid #e9ecef; background: #f8fafc; position: relative; user-select: none; transition: all 0.15s ease; }
-.topbar-user-menu:hover { background: #f0f4f8; }
+.topbar-user-menu { position: relative; }
+.topbar-user-trigger { display: flex; align-items: center; gap: 6px; cursor: pointer; padding: 5px 10px; border-radius: 10px; border: 1px solid #e9ecef; background: #f8fafc; user-select: none; transition: all 0.15s ease; }
+.topbar-user-trigger:hover { background: #f0f4f8; }
 .topbar-avatar { width: 30px; height: 30px; border-radius: 50%; background: linear-gradient(135deg, #c53030, #e53e3e); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 800; }
 .topbar-chevron { font-size: 12px; color: #a0aec0; transition: transform 0.15s ease; }
 .topbar-chevron.rotated { transform: rotate(180deg); }

@@ -114,9 +114,11 @@
           </button>
 
           <!-- User Menu -->
-          <div class="topbar-user-menu" @click="showUserMenu = !showUserMenu" v-click-outside="() => (showUserMenu = false)">
-            <div class="topbar-avatar">{{ initials }}</div>
-            <span class="topbar-chevron" :class="{ rotated: showUserMenu }">▾</span>
+          <div class="topbar-user-menu" v-click-outside="() => (showUserMenu = false)">
+            <div class="topbar-user-trigger" @click="showUserMenu = !showUserMenu">
+              <div class="topbar-avatar">{{ initials }}</div>
+              <span class="topbar-chevron" :class="{ rotated: showUserMenu }">▾</span>
+            </div>
             <Transition name="fade">
               <div v-if="showUserMenu" class="topbar-dropdown">
                 <router-link to="/profile" class="dropdown-item" @click="showUserMenu = false">
@@ -573,7 +575,8 @@ const vClickOutside = {
   border: 2px solid #fff;
 }
 
-.topbar-user-menu {
+.topbar-user-menu { position: relative; }
+.topbar-user-trigger {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -582,11 +585,10 @@ const vClickOutside = {
   border-radius: 10px;
   border: 1px solid #e9ecef;
   background: #f8fafc;
-  position: relative;
   user-select: none;
   transition: all 0.15s ease;
 }
-.topbar-user-menu:hover { background: #f0f4f8; }
+.topbar-user-trigger:hover { background: #f0f4f8; }
 .topbar-avatar {
   width: 30px;
   height: 30px;
