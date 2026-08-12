@@ -214,13 +214,15 @@
                   <div v-if="STATUS_TRANSITIONS[detail.status]?.length" class="status-inputs">
                     <label class="status-input-field">
                       {{ $t('admin.target_headcount_label') }}
+                      <span v-if="detail.status === 'Pending'" class="required-mark">*</span>
                       <span v-if="detail.suggestedHeadcountMin != null" class="status-input-hint">
                         {{ $t('admin.suggested_headcount_hint', { min: detail.suggestedHeadcountMin, max: detail.suggestedHeadcountMax }) }}
                       </span>
                       <input
                         v-model.number="targetHeadcountInput"
                         type="number"
-                        min="0"
+                        min="1"
+                        :required="detail.status === 'Pending'"
                         :placeholder="detail.targetHeadcount != null ? String(detail.targetHeadcount) : ''"
                       />
                     </label>
@@ -235,7 +237,8 @@
                       :key="s"
                       class="flow-btn"
                       :class="`flow-btn--${s.toLowerCase()}`"
-                      :disabled="isUpdating"
+                      :disabled="isUpdating || (s === 'Approved' && !isTargetHeadcountValid)"
+                      :title="s === 'Approved' && !isTargetHeadcountValid ? $t('admin.target_headcount_required') : ''"
                       @click="changeStatus(s)"
                     >
                       <svg v-if="isUpdating && pendingStatus === s" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
@@ -285,19 +288,9 @@
                 <template v-else>
                   <p v-if="isFallbackVolunteers" class="fallback-note">{{ $t('admin.fallback_no_nearby_note') }}</p>
                   <div class="auto-assign-bar">
-                    <label class="auto-assign-label">
-                      {{ $t('admin.auto_assign_label') }}
-                      <input
-                        type="number"
-                        class="auto-assign-input"
-                        min="1"
-                        :max="suggestedVolunteers.length"
-                        v-model.number="autoAssignCount"
-                      />
-                    </label>
                     <button
                       class="btn-auto-assign"
-                      :disabled="isAutoAssigning || autoAssignCount < 1 || isFullyAllocated"
+                      :disabled="isAutoAssigning || isFullyAllocated"
                       @click="autoAssignTeam"
                     >
                       <svg v-if="isAutoAssigning" class="spin-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 12a9 9 0 1 1-9-9"/></svg>
@@ -542,13 +535,50 @@ const NEED_CATEGORY_LABELS: Record<string, string> = {
 function needCategoryLabel(category: string): string {
   return NEED_CATEGORY_LABELS[category] ?? category
 }
+
 const targetHeadcountInput = ref<number | null>(null)
+
+// Duyệt đơn (Pending → Approved) bắt buộc phải điền số người tối thiểu cứu trợ —
+// các bước chuyển trạng thái khác không cần (đã có targetHeadcount từ lúc duyệt).
+const isTargetHeadcountValid = computed(() => {
+  if (detail.value?.status !== 'Pending') return true
+  return targetHeadcountInput.value != null && targetHeadcountInput.value >= 1
+})
 const statusNoteInput = ref('')
 
-const suggestedVolunteers = ref<SuggestedVolunteer[]>([])
+const suggestedVolunteersRaw = ref<SuggestedVolunteer[]>([])
 const isSuggestLoading    = ref(false)
 // true khi danh sách trên là fallback "toàn bộ người đang rảnh" (không tìm được ai lân cận)
 const isFallbackVolunteers = ref(false)
+
+// ── TNV đã nhận đủ số nhiệm vụ đang hoạt động tối đa cho phép — loại khỏi gợi ý/tìm
+// kiếm để tránh phân công chồng chéo, dồn việc lên 1 người (đếm trên TOÀN hệ thống,
+// không chỉ riêng yêu cầu đang mở).
+const MAX_ACTIVE_TASKS_PER_VOLUNTEER = 2
+const busyVolunteerIds = ref<Set<string>>(new Set())
+
+const suggestedVolunteers = computed(() =>
+  suggestedVolunteersRaw.value.filter((v) => !busyVolunteerIds.value.has(v.volunteerProfileId)),
+)
+
+async function loadVolunteerWorkloads() {
+  try {
+    const all = await getAssignments(1, 200)
+    const counts = new Map<string, number>()
+    for (const a of all) {
+      if (a.status === 'Assigned' || a.status === 'Accepted' || a.status === 'OnTheWay') {
+        counts.set(a.volunteerProfileId, (counts.get(a.volunteerProfileId) ?? 0) + 1)
+      }
+    }
+    busyVolunteerIds.value = new Set(
+      [...counts.entries()]
+        .filter(([, count]) => count >= MAX_ACTIVE_TASKS_PER_VOLUNTEER)
+        .map(([id]) => id),
+    )
+  } catch (e) {
+    console.error(e)
+  }
+}
 
 // ── Tìm TNV theo tên/SĐT — không giới hạn ở danh sách gợi ý lân cận ─────────────
 const volSearchQuery       = ref('')
@@ -573,7 +603,6 @@ interface AutoAssignResult {
   ok: boolean
   message: string
 }
-const autoAssignCount   = ref(2)
 const isAutoAssigning   = ref(false)
 const autoAssignResults = ref<AutoAssignResult[]>([])
 const autoAssignSummary = ref('')
@@ -624,6 +653,7 @@ const volSearchResults = computed(() => {
   return allVolunteersForSearch.value
     .filter(v => v.status === 'Approved')
     .filter(v => !assignedVolunteerIds.value.has(v.id))
+    .filter(v => !busyVolunteerIds.value.has(v.id))
     .filter(v => v.fullName.toLowerCase().includes(q) || v.phoneNumber.includes(q))
     .slice(0, 20)
 })
@@ -702,7 +732,7 @@ async function openDetail(id: string, mode: 'full' | 'team' = 'full') {
   drawerOpen.value = true
   modalMode.value = mode
   detail.value = null
-  suggestedVolunteers.value = []
+  suggestedVolunteersRaw.value = []
   isFallbackVolunteers.value = false
   allocatedCount.value = 0
   statusMsg.value = ''
@@ -819,27 +849,30 @@ const UNLIMITED_DISTANCE_KM = 100000
 async function loadSuggested() {
   if (!detail.value) return
   isSuggestLoading.value = true
-  suggestedVolunteers.value = []
+  suggestedVolunteersRaw.value = []
   isFallbackVolunteers.value = false
   allocatedCount.value = 0
   try {
+    await loadVolunteerWorkloads()
+    const isFree = (v: SuggestedVolunteer) => !busyVolunteerIds.value.has(v.volunteerProfileId)
+
     // Bước 1 — ưu tiên lân cận + đang rảnh (BE mặc định bán kính 50km).
     const nearby = await getSuggestedVolunteers(detail.value.id)
 
-    if (nearby.length > 0) {
-      suggestedVolunteers.value = nearby
+    if (nearby.some(isFree)) {
+      suggestedVolunteersRaw.value = nearby
     } else {
-      // Bước 2 — không ai lân cận rảnh → fallback lấy TẤT CẢ người đang rảnh,
-      // bỏ giới hạn khoảng cách (vẫn cùng 1 endpoint, chỉ đổi maxDistanceKm).
+      // Bước 2 — không ai lân cận còn nhận thêm việc được → fallback lấy TẤT CẢ
+      // người đang rảnh, bỏ giới hạn khoảng cách (vẫn cùng 1 endpoint, chỉ đổi
+      // maxDistanceKm).
       const allAvailable = await getSuggestedVolunteers(detail.value.id, {
         maxDistanceKm: UNLIMITED_DISTANCE_KM,
         top: 50,
       })
-      suggestedVolunteers.value = allAvailable
-      isFallbackVolunteers.value = allAvailable.length > 0
+      suggestedVolunteersRaw.value = allAvailable
+      isFallbackVolunteers.value = allAvailable.some(isFree)
     }
 
-    autoAssignCount.value = Math.max(1, Math.min(2, suggestedVolunteers.value.length))
     autoAssignResults.value = []
     autoAssignSummary.value = ''
   } catch (e) {
@@ -851,6 +884,11 @@ async function loadSuggested() {
 
 async function changeStatus(newStatus: ReliefRequestStatus) {
   if (!detail.value) return
+  if (newStatus === 'Approved' && !isTargetHeadcountValid.value) {
+    statusMsg.value = t('admin.target_headcount_required')
+    statusMsgType.value = 'error'
+    return
+  }
   isUpdating.value = true
   pendingStatus.value = newStatus
   statusMsg.value = ''
@@ -877,7 +915,7 @@ async function changeStatus(newStatus: ReliefRequestStatus) {
       loadSuggested()
       loadAllVolunteersForSearch()
     } else {
-      suggestedVolunteers.value = []
+      suggestedVolunteersRaw.value = []
     }
   } catch (e: unknown) {
     statusMsg.value = e instanceof Error ? e.message : 'Cập nhật thất bại.'
@@ -990,8 +1028,10 @@ function goToTeamManagement(reliefRequestId: string) {
 async function autoAssignTeam() {
   if (!detail.value || isFullyAllocated.value) return
 
-  const requested = autoAssignCount.value
-  const candidates = suggestedVolunteers.value.slice(0, Math.max(1, requested))
+  // Tự tính số người còn thiếu so với targetHeadcount — không cho admin tự gõ số nữa,
+  // tránh lệch với số đã duyệt ở bước "Chi tiết yêu cầu".
+  const requested = Math.max(1, targetHeadcountValue.value - allocatedCount.value)
+  const candidates = suggestedVolunteers.value.slice(0, requested)
 
   isAutoAssigning.value = true
   autoAssignResults.value = []
@@ -1396,6 +1436,7 @@ async function autoAssignTeam() {
 .status-inputs { display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
 .status-input-field { display: flex; flex-direction: column; gap: 4px; font-size: 12.5px; font-weight: 600; color: #4a5568; }
 .status-input-hint { font-size: 11.5px; font-weight: 500; color: #a0aec0; }
+.required-mark { color: #e53e3e; margin-left: 2px; }
 .status-input-field input,
 .status-input-field textarea {
   font: inherit;
@@ -1601,7 +1642,6 @@ async function autoAssignTeam() {
 .auto-assign-bar {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   flex-wrap: wrap;
   gap: 10px;
   padding: 10px 14px;
@@ -1609,22 +1649,6 @@ async function autoAssignTeam() {
   background: #eff6ff;
   border: 1px solid #bfdbfe;
   border-radius: 10px;
-}
-.auto-assign-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12.5px;
-  font-weight: 600;
-  color: #1e3a5f;
-}
-.auto-assign-input {
-  width: 56px;
-  padding: 5px 8px;
-  border: 1px solid #cbd5e1;
-  border-radius: 6px;
-  font: inherit;
-  text-align: center;
 }
 .btn-auto-assign {
   display: inline-flex;
