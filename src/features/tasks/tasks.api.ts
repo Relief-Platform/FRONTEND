@@ -17,9 +17,19 @@ function normalizeStatus(rawStatus?: string): TaskStatus {
 
   if (['done', 'completed', 'complete', 'finished', 'finish', 'success'].includes(status))
     return 'completed'
-  if (['inprogress', 'ongoing', 'active', 'in_progress', 'processing', 'working'].includes(status))
+  if (['inprogress', 'ongoing', 'active', 'in_progress', 'processing', 'working', 'ontheway', 'on_the_way'].includes(status))
     return 'ongoing'
   return 'upcoming'
+}
+
+/** Định dạng giờ:phút — nhận cả chuỗi "HH:mm" thuần lẫn ISO datetime (VD: assignedAt) */
+function formatTime(value?: string): string {
+  if (!value) return 'Chưa cập nhật'
+  const parsed = new Date(value)
+  if (!Number.isNaN(parsed.getTime())) {
+    return parsed.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
+  }
+  return String(value)
 }
 
 function statusLabel(status: TaskStatus): string {
@@ -29,36 +39,49 @@ function statusLabel(status: TaskStatus): string {
 }
 
 export function normalizeTask(raw: RawTask, index: number): TaskItem {
-  const title = String(raw.title ?? raw.name ?? raw.taskName ?? `Nhiệm vụ ${index + 1}`)
+  const title = String(raw.title ?? raw.name ?? raw.taskName ?? raw.reliefRequestTitle ?? `Nhiệm vụ ${index + 1}`)
   const address = String(
     raw.address ?? raw.location ?? raw.locationName ?? 'Địa điểm chưa cập nhật',
   )
-  const dateValue = raw.date ?? raw.startDate ?? raw.scheduleDate ?? raw.start_at
-  const timeValue = raw.time ?? raw.startTime ?? raw.endTime ?? raw.timeRange ?? raw.slot
-  const progress = Number(raw.progress ?? raw.percentage ?? raw.completedPercent ?? 0)
   const rawStatusStr = String(raw.status ?? raw.state ?? raw.taskStatus ?? '')
   const resolvedStatus = normalizeStatus(rawStatusStr)
+  // assignedAt = thời điểm admin duyệt đơn cứu trợ & phân công nhiệm vụ này —
+  // mốc cố định, không đổi theo tiến độ volunteer cập nhật sau đó.
+  const dateValue = raw.date ?? raw.startDate ?? raw.scheduleDate ?? raw.start_at ?? raw.assignedAt
+  const timeValue =
+    raw.time ?? raw.startTime ?? raw.endTime ?? raw.timeRange ?? raw.slot ?? raw.assignedAt
+  const progress = Number(raw.progress ?? raw.percentage ?? raw.completedPercent ?? 0)
 
   const lat = Number(raw.latitude)
   const lng = Number(raw.longitude)
   const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) && !(lat === 0 && lng === 0)
 
   return {
-    id: Number(raw.id ?? index + 1),
+    id: String(raw.id ?? index + 1),
+    assignmentId: String(raw.id ?? ''),
+    reliefRequestId: String(raw.reliefRequestId ?? ''),
     title,
     address,
+    region: String(raw.region ?? ''),
     latitude: hasCoords ? lat : null,
     longitude: hasCoords ? lng : null,
     date: dateValue
       ? new Date(String(dateValue)).toLocaleDateString('vi-VN')
       : 'Chưa cập nhật',
-    time: String(timeValue ?? 'Chưa cập nhật'),
+    time: formatTime(timeValue),
     progress: Number.isFinite(progress) ? progress : 0,
     status: resolvedStatus,
+    rawStatus: rawStatusStr,
     statusLabel: statusLabel(resolvedStatus),
     note: String(raw.note ?? raw.description ?? raw.summary ?? 'Chưa có ghi chú'),
+    affectedPeople: raw.affectedPeople != null ? Number(raw.affectedPeople) : null,
+    emergencyLevel: raw.emergencyLevel != null ? Number(raw.emergencyLevel) : null,
+    contactPhone: String(raw.contactPhone ?? ''),
+    description: String(raw.description ?? raw.summary ?? raw.note ?? ''),
+    isTeamLead: Boolean(raw.isTeamLead),
   }
 }
+
 
 function extractList(payload: unknown): RawTask[] {
   if (Array.isArray(payload)) return payload as RawTask[]

@@ -503,6 +503,7 @@ export default {
     title: 'Bảng nhiệm vụ mở',
     sub: 'Các yêu cầu cứu trợ đã duyệt, còn thiếu người — tự nhận việc ngay, không cần chờ Admin phân công',
     no_tasks: 'Hiện không có nhiệm vụ nào đang mở',
+    load_failed: 'Không thể tải danh sách nhiệm vụ mở. Vui lòng thử lại!',
     no_location: 'Chưa xác định được khu vực trên bản đồ',
     slots: 'Đã nhận: {current}/{total} người',
     btn_join: 'Tham gia',
