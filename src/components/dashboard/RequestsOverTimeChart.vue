@@ -120,7 +120,6 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { getRequestsOverTime, type RequestsOverTimeItem } from '@/features/dashboard/dashboard.api'
-import { formatDateVNWithOptions } from '@/utils/datetime'
 
 const { locale, t } = useI18n()
 
@@ -215,7 +214,8 @@ const tooltipStyle = computed(() => {
 })
 
 function formatDate(iso: string): string {
-  return formatDateVNWithOptions(iso, locale.value === 'vi' ? 'vi' : 'en', { day: '2-digit', month: '2-digit' })
+  const d = new Date(iso)
+  return d.toLocaleDateString(locale.value === 'vi' ? 'vi-VN' : 'en-US', { day: '2-digit', month: '2-digit' })
 }
 </script>
 

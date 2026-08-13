@@ -4,7 +4,6 @@
 // ============================================================
 
 import { http } from '@/lib/api/http'
-import { formatDateVN, formatTimeVN } from '@/utils/datetime'
 import type { RawTask, TaskItem, TaskStatus } from './tasks.types'
 
 // ── Helpers chuẩn hoá dữ liệu ────────────────────────────────
@@ -28,7 +27,7 @@ function formatTime(value?: string): string {
   if (!value) return 'Chưa cập nhật'
   const parsed = new Date(value)
   if (!Number.isNaN(parsed.getTime())) {
-    return formatTimeVN(parsed)
+    return parsed.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })
   }
   return String(value)
 }
@@ -66,7 +65,9 @@ export function normalizeTask(raw: RawTask, index: number): TaskItem {
     region: String(raw.region ?? ''),
     latitude: hasCoords ? lat : null,
     longitude: hasCoords ? lng : null,
-    date: dateValue ? formatDateVN(String(dateValue)) : 'Chưa cập nhật',
+    date: dateValue
+      ? new Date(String(dateValue)).toLocaleDateString('vi-VN')
+      : 'Chưa cập nhật',
     time: formatTime(timeValue),
     progress: Number.isFinite(progress) ? progress : 0,
     status: resolvedStatus,

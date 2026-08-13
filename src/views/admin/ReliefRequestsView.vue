@@ -468,14 +468,14 @@ import { STATUS_GROUP_MAP, STATUS_LABEL_VI } from '@/features/requests/requests.
 import type { SuggestedVolunteer } from '@/features/requests/admin-requests.api'
 import { getAssignments, setTeamLead, adminCancelAssignment, type Assignment, type AssignmentStatus } from '@/features/tasks/assignments.api'
 import { getAdminVolunteers, type VolunteerSummary } from '@/features/volunteers/admin-volunteers.api'
-import { formatDateTimeVN } from '@/utils/datetime'
 
 const { locale, t } = useI18n()
 const route = useRoute()
 const router = useRouter()
 
 const formatDate = (dateStr: string) => {
-  return formatDateTimeVN(dateStr, locale.value === 'vi' ? 'vi' : 'en')
+  const _ = locale.value
+  return new Date(dateStr).toLocaleString(locale.value === 'vi' ? 'vi-VN' : 'en-US')
 }
 
 // ── Const maps ───────────────────────────────────────────────
