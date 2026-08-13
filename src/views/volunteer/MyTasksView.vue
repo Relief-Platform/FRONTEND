@@ -186,17 +186,6 @@
               <p class="detail-section-text">{{ selectedTask.note }}</p>
             </div>
 
-            <!-- Progress -->
-            <div class="detail-section">
-              <div class="progress-top">
-                <span class="detail-section-label" style="margin:0">Tiến độ</span>
-                <strong>{{ selectedTask.progress }}%</strong>
-              </div>
-              <div class="progress-bar" style="margin-top: 8px;">
-                <span :style="{ width: `${selectedTask.progress}%` }" />
-              </div>
-            </div>
-
             <!-- Status flow -->
             <div class="status-flow">
               <span class="detail-section-label">Luồng trạng thái</span>
@@ -831,32 +820,6 @@ onBeforeUnmount(() => { destroyMaps() })
   font-size: 13.5px;
   color: #334155;
   line-height: 1.6;
-}
-
-/* Progress (in modal) */
-.progress-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  color: #4a5568;
-  font-size: 13px;
-  margin-bottom: 8px;
-}
-
-.progress-bar {
-  width: 100%;
-  height: 8px;
-  border-radius: 999px;
-  background: #edf2f7;
-  overflow: hidden;
-}
-
-.progress-bar span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: linear-gradient(90deg, #276749 0%, #48bb78 100%);
-  transition: width 0.25s ease;
 }
 
 /* Status flow */

@@ -166,7 +166,8 @@ async function loadRoles(): Promise<void> {
   }
 }
 
-const availableRoles = computed(() => fetchedRoles.value)
+// Hệ thống không cho gán role Admin qua UI — chỉ được đổi sang các role khác.
+const availableRoles = computed(() => fetchedRoles.value.filter((r) => r.value !== 'Admin'))
 
 function onOpen(): void {
   activeTab.value = 'info'

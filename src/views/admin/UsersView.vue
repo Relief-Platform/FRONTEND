@@ -84,8 +84,10 @@
                   </svg>
                   Chỉnh sửa
                 </button>
-                <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">{{ $t('admin.btn_lock') }}</button>
-                <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">{{ $t('admin.btn_unlock') }}</button>
+                <template v-if="user.role !== 'Admin'">
+                  <button v-if="user.isActive" class="action-btn action-btn--delete" @click="toggleStatus(user)">{{ $t('admin.btn_lock') }}</button>
+                  <button v-else class="action-btn action-btn--activate" @click="toggleStatus(user)">{{ $t('admin.btn_unlock') }}</button>
+                </template>
               </td>
             </tr>
           </tbody>

@@ -74,7 +74,8 @@ const form = reactive({
 // Roles
 const rolesLoading = ref(false)
 const fetchedRoles = ref<{ value: string; label: string }[]>([])
-const availableRoles = computed(() => fetchedRoles.value)
+// Hệ thống không cho tạo tài khoản Admin qua UI — chỉ được chọn các role khác.
+const availableRoles = computed(() => fetchedRoles.value.filter((r) => r.value !== 'Admin'))
 
 async function loadRoles(): Promise<void> {
   if (fetchedRoles.value.length > 0) return
