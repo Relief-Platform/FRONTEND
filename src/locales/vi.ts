@@ -928,7 +928,6 @@ export default {
     profile_guide_title: 'Hướng dẫn tình nguyện viên',
     profile_guide_1: 'Hãy đảm bảo địa chỉ và tọa độ của bạn chính xác để hệ thống gợi ý nhiệm vụ gần nhất.',
     profile_guide_2: 'Bạn có thể tìm kiếm tọa độ thông qua các trang bản đồ trực tuyến.',
-    profile_guide_3: 'Các kỹ năng đăng ký sẽ được Điều phối viên phê duyệt trước khi giao nhiệm vụ chuyên sâu.',
     profile_msg_load_failed: 'Không thể tải hồ sơ tình nguyện viên.',
     profile_msg_update_success: 'Đã cập nhật hồ sơ tình nguyện viên thành công!',
     profile_msg_create_success: 'Đã tạo hồ sơ mới thành công! Vui lòng chờ Admin duyệt.',
