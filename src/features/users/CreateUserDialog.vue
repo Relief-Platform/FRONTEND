@@ -14,7 +14,7 @@
         <el-input v-model="form.email" type="email" placeholder="email@example.com" />
       </el-form-item>
       <el-form-item label="Số điện thoại">
-        <PhoneInput v-model="form.phoneNumber" placeholder="0912 345 678 (tuỳ chọn)" />
+        <el-input v-model="form.phoneNumber" placeholder="0xxxxxxxxx (tuỳ chọn)" />
       </el-form-item>
       <el-form-item label="Mật khẩu tạm" required>
         <el-input v-model="form.password" type="password" placeholder="Tối thiểu 8 ký tự" show-password />
@@ -46,8 +46,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUsersStore } from '@/stores/users'
 import { getRoles } from './roles.api'
-import { isValidName, isValidPhoneNumber } from '@/utils/validation'
-import PhoneInput from '@/components/common/PhoneInput.vue'
+import { isValidName } from '@/utils/validation'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{
@@ -115,10 +114,6 @@ async function handleSubmit(): Promise<void> {
   }
   if (!isValidName(form.fullName)) {
     ElMessage.warning('Họ và tên không được chứa số hoặc ký tự đặc biệt.')
-    return
-  }
-  if (form.phoneNumber.trim() && !isValidPhoneNumber(form.phoneNumber)) {
-    ElMessage.warning('Số điện thoại không hợp lệ! (Ví dụ: 0912345678 hoặc +84912345678)')
     return
   }
   if (form.password.length < 8) {

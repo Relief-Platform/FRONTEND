@@ -23,7 +23,7 @@
             <el-input v-model="form.fullName" placeholder="Nguyễn Văn A" />
           </el-form-item>
           <el-form-item label="Số điện thoại">
-            <PhoneInput v-model="form.phoneNumber" placeholder="0912 345 678 (tuỳ chọn)" />
+            <el-input v-model="form.phoneNumber" placeholder="0xxxxxxxxx (tuỳ chọn)" />
           </el-form-item>
         </el-form>
       </el-tab-pane>
@@ -96,8 +96,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUsersStore } from '@/stores/users'
 import { getRoles } from './roles.api'
-import { isValidName, isValidPhoneNumber } from '@/utils/validation'
-import PhoneInput from '@/components/common/PhoneInput.vue'
+import { isValidName } from '@/utils/validation'
 import type { User } from './users.types'
 
 // ── Props & Emits ────────────────────────────────────────────
@@ -213,9 +212,6 @@ async function handleSubmit(): Promise<void> {
     errors.push('Họ và tên không được để trống.')
   } else if (!isValidName(form.fullName)) {
     errors.push('Họ và tên không được chứa số hoặc ký tự đặc biệt.')
-  }
-  if (form.phoneNumber.trim() && !isValidPhoneNumber(form.phoneNumber)) {
-    errors.push('Số điện thoại không hợp lệ! (Ví dụ: 0912345678 hoặc +84912345678)')
   }
   if (form.newPassword && form.newPassword.length < 8) {
     errors.push('Mật khẩu mới phải có ít nhất 8 ký tự.')
