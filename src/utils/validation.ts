@@ -12,16 +12,24 @@ export function isValidName(name: string): boolean {
 }
 
 /**
- * Regex kiểm tra số điện thoại Việt Nam hợp lệ:
- * - Chấp nhận đầu số 0, 84 hoặc +84 (VD: 0912345678, 84912345678, +84912345678)
- * - Theo sau là các đầu số nhà mạng 3, 5, 7, 8, 9 và 8 chữ số
- * - Cho phép khoảng trắng hoặc dấu gạch ngang giữa các cụm số
+ * Regex số điện thoại Việt Nam (dạng nội địa):
+ * - Đầu số 0 hoặc 84/+84 + nhà mạng 3,5,7,8,9 + 8 chữ số
  */
-export const PHONE_REGEX = /^(\+?84|0)[\s.-]?[35789](\d[\s.-]?){8}$/
+export const VN_PHONE_REGEX = /^(\+?84|0)[\s.-]?[35789](\d[\s.-]?){8}$/
+
+/**
+ * Regex số điện thoại quốc tế E.164:
+ * - Bắt đầu bằng + và mã vùng (1-3 chữ số) rồi 6-12 chữ số
+ * - VD: +18274612345, +44 20 7946 0958, +6591234567
+ */
+export const INTL_PHONE_REGEX = /^\+[1-9]\d{0,2}[\s.-]?\d[\s.-]?\d{5,13}$/
 
 export function isValidPhoneNumber(phone: string): boolean {
   if (!phone) return false
   const trimmed = phone.trim()
-  return PHONE_REGEX.test(trimmed)
+  // Chấp nhận số VN nội địa (0xxx) hoặc bất kỳ số quốc tế hợp lệ (+xxx)
+  return VN_PHONE_REGEX.test(trimmed) || INTL_PHONE_REGEX.test(trimmed)
 }
+
+
 
