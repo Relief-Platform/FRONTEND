@@ -87,18 +87,60 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import AppLayout from '@/components/layout/AppLayout.vue'
+import { getPublicHighlights, type PublicStats } from '@/features/public/public.api'
 
 const { t } = useI18n()
 
-const stats = computed(() => [
-  { value: '10,000+', label: t('about.stat_requests'), desc: 'Realtime verified' },
-  { value: '5,000+', label: t('about.stat_volunteers'), desc: 'Ready for emergency' },
-  { value: '120+', label: t('about.stat_warehouses'), desc: 'Nationwide coverage' },
-  { value: '98%', label: t('about.stat_success'), desc: 'Completion rate' },
-])
+const loadingStats = ref(true)
+const realStats = ref<PublicStats | null>(null)
+
+onMounted(async () => {
+  try {
+    const highlights = await getPublicHighlights()
+    realStats.value = highlights.stats
+  } catch (e) {
+    console.error('Không thể tải dữ liệu thống kê:', e)
+  } finally {
+    loadingStats.value = false
+  }
+})
+
+const stats = computed(() => {
+  if (!realStats.value) {
+    return [
+      { value: '...', label: t('about.stat_requests'), desc: 'Yêu cầu hoàn thành' },
+      { value: '...', label: t('about.stat_volunteers'), desc: 'Sẵn sàng ứng phó' },
+      { value: '...', label: t('home.stat_provinces'), desc: 'Tỉnh/thành phủ sóng' },
+      { value: '...', label: t('about.stat_success'), desc: 'Nhiệm vụ cứu trợ' },
+    ]
+  }
+
+  return [
+    {
+      value: realStats.value.completedRequestCount.toLocaleString(),
+      label: t('about.stat_requests'),
+      desc: 'Yêu cầu cứu trợ đã hoàn thành',
+    },
+    {
+      value: realStats.value.approvedVolunteerCount.toLocaleString(),
+      label: t('about.stat_volunteers'),
+      desc: 'Tình nguyện viên đã xác thực',
+    },
+    {
+      value: realStats.value.provincesCoveredCount.toLocaleString(),
+      label: t('home.stat_provinces'),
+      desc: 'Tỉnh/thành có điểm kết nối',
+    },
+    {
+      value: realStats.value.completedAssignmentCount.toLocaleString(),
+      label: t('about.stat_success'),
+      desc: 'Nhiệm vụ phân công hoàn thành',
+    },
+  ]
+})
 
 const coreValues = computed(() => [
   {
