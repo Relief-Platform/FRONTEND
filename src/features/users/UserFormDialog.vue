@@ -96,6 +96,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUsersStore } from '@/stores/users'
 import { getRoles } from './roles.api'
+import { isValidName } from '@/utils/validation'
 import type { User } from './users.types'
 
 // ── Props & Emits ────────────────────────────────────────────
@@ -208,6 +209,8 @@ async function handleSubmit(): Promise<void> {
   // Validate
   if (!form.fullName.trim()) {
     errors.push('Họ và tên không được để trống.')
+  } else if (!isValidName(form.fullName)) {
+    errors.push('Họ và tên không được chứa số hoặc ký tự đặc biệt.')
   }
   if (form.newPassword && form.newPassword.length < 8) {
     errors.push('Mật khẩu mới phải có ít nhất 8 ký tự.')

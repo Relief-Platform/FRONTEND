@@ -46,6 +46,7 @@ import { useI18n } from 'vue-i18n'
 import { ElMessage } from 'element-plus'
 import { useUsersStore } from '@/stores/users'
 import { getRoles } from './roles.api'
+import { isValidName } from '@/utils/validation'
 
 const props = defineProps<{ modelValue: boolean }>()
 const emit = defineEmits<{
@@ -108,6 +109,10 @@ function resetForm(): void {
 async function handleSubmit(): Promise<void> {
   if (!form.fullName.trim() || !form.email.trim() || !form.password || !form.roleName) {
     ElMessage.warning('Vui lòng điền đầy đủ các trường bắt buộc.')
+    return
+  }
+  if (!isValidName(form.fullName)) {
+    ElMessage.warning('Họ và tên không được chứa số hoặc ký tự đặc biệt.')
     return
   }
   if (form.password.length < 8) {

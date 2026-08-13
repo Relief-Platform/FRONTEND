@@ -85,6 +85,7 @@ import { registerUser, toAuthUser } from '@/features/auth/auth.api'
 import { tokenStorage } from '@/lib/api/token-storage'
 import { useAuthStore } from '@/stores/auth'
 import type { RegisterPayload } from '@/features/auth/auth.types'
+import { isValidName } from '@/utils/validation'
 
 const router    = useRouter()
 const authStore = useAuthStore()
@@ -111,6 +112,10 @@ const passwordMismatch = computed(() => {
 const handleRegister = async () => {
   if (!formData.fullName.trim()) {
     errorMessage.value = 'Họ và tên là bắt buộc điền!'
+    return
+  }
+  if (!isValidName(formData.fullName)) {
+    errorMessage.value = 'Họ và tên không được chứa số hoặc ký tự đặc biệt!'
     return
   }
   if (!formData.email.trim()) {
