@@ -144,10 +144,9 @@
 
                 <div class="form-group half">
                   <label>Số điện thoại liên hệ <span class="required">*</span></label>
-                  <input
+                  <PhoneInput
                     v-model="form.contactPhone"
-                    type="tel"
-                    placeholder="VD: 0912345678"
+                    placeholder="0912 345 678"
                     required
                   />
                 </div>
@@ -483,6 +482,8 @@ import { ref, computed, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/auth'
+import { isValidPhoneNumber } from '@/utils/validation'
+import PhoneInput from '@/components/common/PhoneInput.vue'
 import L from 'leaflet'
 import 'leaflet/dist/leaflet.css'
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png'
@@ -864,12 +865,11 @@ function validateStep(step: number): boolean {
       createError.value = 'Bắt buộc điền số người ảnh hưởng hợp lệ'
       return false
     }
-    const phoneRegex = /^(0|84)[3|5|7|8|9][0-9]{8}$/
     if (!form.value.contactPhone.trim()) {
       createError.value = 'Bắt buộc điền số điện thoại liên hệ'
       return false
-    } else if (!phoneRegex.test(form.value.contactPhone.trim())) {
-      createError.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678)'
+    } else if (!isValidPhoneNumber(form.value.contactPhone)) {
+      createError.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678 hoặc +84912345678)'
       return false
     }
     if (!form.value.description.trim()) {

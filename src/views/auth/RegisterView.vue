@@ -29,7 +29,7 @@
 
           <div class="form-group">
             <label>Số điện thoại <span class="required">*</span></label>
-            <input type="tel" v-model="formData.phoneNumber" placeholder="0912245678" required />
+            <PhoneInput v-model="formData.phoneNumber" placeholder="0912345678" required />
           </div>
 
           <div class="form-group">
@@ -85,7 +85,8 @@ import { registerUser, toAuthUser } from '@/features/auth/auth.api'
 import { tokenStorage } from '@/lib/api/token-storage'
 import { useAuthStore } from '@/stores/auth'
 import type { RegisterPayload } from '@/features/auth/auth.types'
-import { isValidName } from '@/utils/validation'
+import { isValidName, isValidPhoneNumber } from '@/utils/validation'
+import PhoneInput from '@/components/common/PhoneInput.vue'
 
 const router    = useRouter()
 const authStore = useAuthStore()
@@ -133,9 +134,8 @@ const handleRegister = async () => {
     return
   }
 
-  const phoneRegex = /^(0|84)[3|5|7|8|9][0-9]{8}$/
-  if (!phoneRegex.test(formData.phoneNumber.trim())) {
-    errorMessage.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678)'
+  if (!isValidPhoneNumber(formData.phoneNumber)) {
+    errorMessage.value = 'Số điện thoại không hợp lệ! (Ví dụ: 0912345678 hoặc +84912345678)'
     return
   }
 

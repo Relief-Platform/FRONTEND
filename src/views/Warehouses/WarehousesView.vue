@@ -87,7 +87,7 @@
 
             <div class="form-group">
               <label>{{ $t('warehouse.form_phone') }} <span class="required">*</span></label>
-              <input v-model="form.contactPhone" type="tel" required />
+              <PhoneInput v-model="form.contactPhone" placeholder="0912 345 678" required />
             </div>
 
             <div class="form-group" v-if="editingId">
@@ -126,6 +126,8 @@ import type {
   WarehouseResponse,
   UpdateWarehousePayload,
 } from '@/features/warehouses/warehouses.types'
+import { isValidPhoneNumber } from '@/utils/validation'
+import PhoneInput from '@/components/common/PhoneInput.vue'
 
 const { t } = useI18n()
 
@@ -213,6 +215,10 @@ const useCurrentLocation = () => {
 
 const handleSubmit = async () => {
   formError.value = ''
+  if (!form.value.contactPhone.trim() || !isValidPhoneNumber(form.value.contactPhone)) {
+    formError.value = 'Số điện thoại liên hệ không hợp lệ! (Ví dụ: 0912345678 hoặc +84912345678)'
+    return
+  }
   isSubmitting.value = true
   try {
     if (editingId.value) {
